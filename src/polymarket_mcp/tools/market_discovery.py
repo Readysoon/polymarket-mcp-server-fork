@@ -102,16 +102,25 @@ async def search_markets(
         List of markets matching the query
     """
     try:
-        # Fetch markets with search
-        params = {"query": query}
+        params = {"active": "true", "closed": "false"}
 
         if filters:
             params.update(filters)
 
-        markets = await _fetch_gamma_markets("/markets", params, limit)
+        # Fetch a larger batch and filter client-side (Gamma API has no text search)
+        markets = await _fetch_gamma_markets("/markets", params, limit=200)
 
-        logger.info(f"Found {len(markets)} markets for query: {query}")
-        return markets
+        query_lower = query.lower()
+        markets = [
+            m for m in markets
+            if query_lower in m.get("question", "").lower()
+            or query_lower in m.get("description", "").lower()
+            or query_lower in m.get("slug", "").lower()
+        ]
+
+        result = markets[:limit]
+        logger.info(f"Found {len(result)} markets for query: {query}")
+        return result
 
     except Exception as e:
         logger.error(f"Failed to search markets: {e}")
@@ -133,8 +142,8 @@ async def get_trending_markets(
         Top markets by volume in the specified timeframe
     """
     try:
-        # Fetch all active markets
-        markets = await _fetch_gamma_markets("/markets", {"active": "true"}, limit=100)
+        # Fetch all active, non-closed markets
+        markets = await _fetch_gamma_markets("/markets", {"active": "true", "closed": "false"}, limit=100)
 
         # Sort by volume based on timeframe
         volume_key_map = {
@@ -179,15 +188,26 @@ async def filter_markets_by_category(
         Markets in the specified category
     """
     try:
-        params = {"tag": category}
+        params = {"closed": "false"}
 
         if active_only:
             params["active"] = "true"
 
-        markets = await _fetch_gamma_markets("/markets", params, limit)
+        # Fetch a larger batch and filter client-side (tag param is not supported)
+        markets = await _fetch_gamma_markets("/markets", params, limit=200)
 
-        logger.info(f"Found {len(markets)} markets in category: {category}")
-        return markets
+        category_lower = category.lower()
+        markets = [
+            m for m in markets
+            if category_lower in m.get("question", "").lower()
+            or category_lower in m.get("description", "").lower()
+            or category_lower in (m.get("category") or "").lower()
+            or any(category_lower in str(t).lower() for t in (m.get("tags") or []))
+        ]
+
+        result = markets[:limit]
+        logger.info(f"Found {len(result)} markets in category: {category}")
+        return result
 
     except Exception as e:
         logger.error(f"Failed to filter markets by category: {e}")
@@ -246,7 +266,7 @@ async def get_featured_markets(limit: int = 10) -> List[Dict[str, Any]]:
     """
     try:
         # Fetch markets with featured flag
-        params = {"featured": "true", "active": "true"}
+        params = {"featured": "true", "active": "true", "closed": "false"}
         markets = await _fetch_gamma_markets("/markets", params, limit)
 
         # If no featured flag exists, return highest volume markets
@@ -281,8 +301,8 @@ async def get_closing_soon_markets(
         cutoff_time = datetime.utcnow() + timedelta(hours=hours)
         cutoff_timestamp = int(cutoff_time.timestamp())
 
-        # Fetch active markets
-        markets = await _fetch_gamma_markets("/markets", {"active": "true"}, limit=100)
+        # Fetch active open markets
+        markets = await _fetch_gamma_markets("/markets", {"active": "true", "closed": "false"}, limit=200)
 
         # Filter markets closing within timeframe
         closing_soon = []
@@ -332,18 +352,31 @@ async def get_sports_markets(
         Sports markets
     """
     try:
-        params = {"tag": "Sports", "active": "true"}
+        params = {"active": "true", "closed": "false"}
 
-        markets = await _fetch_gamma_markets("/markets", params, limit=100)
+        markets = await _fetch_gamma_markets("/markets", params, limit=200)
+
+        # Filter by sports keywords client-side
+        sports_keywords = {
+            "nfl", "nba", "mlb", "nhl", "mls", "ufc", "mma", "tennis", "golf",
+            "soccer", "football", "basketball", "baseball", "hockey", "rugby",
+            "cricket", "boxing", "champion", "championship", "world cup", "olympics",
+            "league", "playoff", "tournament", "match", "win", "score", "fifa",
+            "super bowl", "nascar", "f1", "formula"
+        }
+        markets = [
+            m for m in markets
+            if any(kw in m.get("question", "").lower() for kw in sports_keywords)
+            or any(kw in (m.get("category") or "").lower() for kw in {"sports", "sport"})
+        ]
 
         # Further filter by sport type if specified
         if sport_type:
             sport_type_lower = sport_type.lower()
             markets = [
                 m for m in markets
-                if sport_type_lower in m.get("question", "").lower() or
-                   sport_type_lower in m.get("title", "").lower() or
-                   any(sport_type_lower in tag.lower() for tag in m.get("tags", []))
+                if sport_type_lower in m.get("question", "").lower()
+                or any(sport_type_lower in str(t).lower() for t in (m.get("tags") or []))
             ]
 
         result = markets[:limit]
@@ -371,18 +404,37 @@ async def get_crypto_markets(
         Crypto-related markets
     """
     try:
-        params = {"tag": "Crypto", "active": "true"}
+        # Try with tag filter first
+        params = {"active": "true", "closed": "false", "tag": "crypto"}
+        markets = await _fetch_gamma_markets("/markets", params, limit=200)
 
-        markets = await _fetch_gamma_markets("/markets", params, limit=100)
+        # Fallback: fetch more markets and filter client-side
+        if not markets:
+            params_fallback = {"active": "true", "closed": "false"}
+            markets = await _fetch_gamma_markets("/markets", params_fallback, limit=500)
+
+        # Filter by crypto keywords client-side
+        crypto_keywords = {
+            "bitcoin", "btc", "ethereum", "eth", "crypto", "cryptocurrency",
+            "solana", "sol", "xrp", "ripple", "bnb", "doge", "dogecoin",
+            "polygon", "matic", "chainlink", "link", "avalanche", "avax",
+            "cardano", "ada", "polkadot", "dot", "uniswap", "defi", "nft",
+            "token", "coin", "blockchain", "web3", "altcoin", "stablecoin",
+            "usdc", "usdt", "tether", "coinbase", "binance"
+        }
+        markets = [
+            m for m in markets
+            if any(kw in m.get("question", "").lower() for kw in crypto_keywords)
+            or any(kw in (m.get("category") or "").lower() for kw in {"crypto", "cryptocurrency"})
+        ]
 
         # Further filter by symbol if specified
         if symbol:
             symbol_upper = symbol.upper()
             markets = [
                 m for m in markets
-                if symbol_upper in m.get("question", "").upper() or
-                   symbol_upper in m.get("title", "").upper() or
-                   any(symbol_upper in tag.upper() for tag in m.get("tags", []))
+                if symbol_upper in m.get("question", "").upper()
+                or any(symbol_upper in str(t).upper() for t in (m.get("tags") or []))
             ]
 
         result = markets[:limit]

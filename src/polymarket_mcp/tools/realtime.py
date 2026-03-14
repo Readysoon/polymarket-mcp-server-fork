@@ -219,6 +219,14 @@ def get_tools() -> List[types.Tool]:
     ]
 
 
+async def handle_tool(name: str, arguments: Dict[str, Any], ws_manager=None, server_instance=None) -> List[types.TextContent]:
+    """Alias for handle_tool_call matching server.py call signature."""
+    global websocket_manager
+    if ws_manager is not None:
+        websocket_manager = ws_manager
+    return await handle_tool_call(name, arguments)
+
+
 async def handle_tool_call(name: str, arguments: Dict[str, Any]) -> List[types.TextContent]:
     """
     Handle real-time tool calls.

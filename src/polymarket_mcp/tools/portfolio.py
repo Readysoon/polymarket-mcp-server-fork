@@ -417,7 +417,7 @@ async def get_portfolio_value(
         # Get balance
         await rate_limiter.acquire(EndpointCategory.CLOB_GENERAL)
         balance_data = await polymarket_client.get_balance()
-        cash_balance = float(balance_data.get('balance', 0))
+        cash_balance = float(balance_data.get('usdc', balance_data.get('balance', 0)))
 
         # Get all positions
         await rate_limiter.acquire(EndpointCategory.DATA_API)

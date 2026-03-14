@@ -135,9 +135,9 @@ async def get_market_details(
     try:
         # Determine which identifier to use
         if slug:
-            data = await _fetch_gamma_api(f"/markets/{slug}")
+            data = await _fetch_gamma_api("/markets", {"slug": slug})
         elif condition_id:
-            data = await _fetch_gamma_api(f"/markets", {"condition_id": condition_id})
+            data = await _fetch_gamma_api("/markets", {"condition_id": condition_id})
         elif market_id:
             data = await _fetch_gamma_api(f"/markets/{market_id}")
         else:

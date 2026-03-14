@@ -129,8 +129,8 @@ class PolymarketClient:
         try:
             logger.info("Creating API credentials...")
 
-            # Use the client's built-in method to create credentials
-            creds = self.client.create_api_key()
+            # Derive API credentials deterministically from private key
+            creds = self.client.derive_api_key()
 
             # Store credentials
             self.api_creds = ApiCreds(
@@ -402,20 +402,25 @@ class PolymarketClient:
 
     async def get_balance(self) -> Dict[str, float]:
         """
-        Get user's USDC balance.
+        Get user's USDC balance via Polygon RPC.
 
         Returns:
             Dictionary with balance info
-
-        Raises:
-            RuntimeError: If L2 credentials not available
         """
-        if not self.api_creds:
-            raise RuntimeError("L2 API credentials required")
-
         try:
-            balance_data = self.client.get_balance(self.address)
-            return balance_data
+            import httpx
+            usdc_contract = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+            data = "0x70a08231" + self.address[2:].lower().zfill(64)
+            async with httpx.AsyncClient() as http_client:
+                r = await http_client.post(
+                    "https://1rpc.io/matic",
+                    json={"jsonrpc": "2.0", "method": "eth_call",
+                          "params": [{"to": usdc_contract, "data": data}, "latest"], "id": 1},
+                    timeout=10.0
+                )
+                result = r.json().get("result", "0x0")
+                usdc_balance = int(result, 16) / 10**6
+            return {"usdc": usdc_balance, "address": self.address}
 
         except Exception as e:
             logger.error(f"Failed to fetch balance: {e}")

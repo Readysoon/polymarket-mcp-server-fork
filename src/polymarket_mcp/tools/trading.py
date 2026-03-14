@@ -109,16 +109,19 @@ class TradingTools:
             # Get orderbook for validation
             orderbook = await self.client.get_orderbook(token_id)
 
-            # Parse orderbook data
-            bids = orderbook.get('bids', [])
-            asks = orderbook.get('asks', [])
+            # Parse orderbook data (OrderBookSummary has .bids/.asks attributes)
+            bids = getattr(orderbook, 'bids', None) or (orderbook.get('bids', []) if isinstance(orderbook, dict) else [])
+            asks = getattr(orderbook, 'asks', None) or (orderbook.get('asks', []) if isinstance(orderbook, dict) else [])
 
-            best_bid = float(bids[0]['price']) if bids else 0.0
-            best_ask = float(asks[0]['price']) if asks else 1.0
+            def _get(obj, key):
+                return getattr(obj, key, None) or (obj[key] if isinstance(obj, dict) else 0)
+
+            best_bid = float(_get(bids[0], 'price')) if bids else 0.0
+            best_ask = float(_get(asks[0], 'price')) if asks else 1.0
 
             # Calculate liquidity
-            bid_liquidity = sum(float(b['price']) * float(b['size']) for b in bids[:10])
-            ask_liquidity = sum(float(a['price']) * float(a['size']) for a in asks[:10])
+            bid_liquidity = sum(float(_get(b, 'price')) * float(_get(b, 'size')) for b in bids[:10])
+            ask_liquidity = sum(float(_get(a, 'price')) * float(_get(a, 'size')) for a in asks[:10])
 
             market_data = MarketData(
                 market_id=market_id,
@@ -183,10 +186,16 @@ class TradingTools:
                 expiration=expiration
             )
 
+            # order_response may be dict or object
+            def _resp_get(key, default=None):
+                if isinstance(order_response, dict):
+                    return order_response.get(key, default)
+                return getattr(order_response, key, default)
+
             result = {
                 "success": True,
-                "order_id": order_response.get('orderID'),
-                "status": order_response.get('status', 'submitted'),
+                "order_id": _resp_get('orderID') or _resp_get('order_id'),
+                "status": _resp_get('status', 'submitted'),
                 "details": {
                     "market_id": market_id,
                     "token_id": token_id,
