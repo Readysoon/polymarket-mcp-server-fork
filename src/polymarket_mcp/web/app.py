@@ -317,15 +317,18 @@ async def get_portfolio():
                         market_name = markets[0].get("question", market_name)
                         market_active = markets[0].get("active", True)
                         market_resolved = markets[0].get("closed", False)
-                        # Build Polymarket URL from slug or condition_id
-                        slug = markets[0].get("slug", "")
-                        condition_id = markets[0].get("condition_id", "")
-                        if slug:
-                            market_url = f"https://polymarket.com/event/{slug}"
-                        elif condition_id:
-                            market_url = f"https://polymarket.com/event/{condition_id}"
-                        else:
-                            market_url = ""
+                        # Build Polymarket URL: /event/{event_slug}/{market_slug}
+                        market_slug = markets[0].get("slug", "")
+                        event_slug = ""
+                        events = markets[0].get("events", [])
+                        if events and isinstance(events, list):
+                            event_slug = events[0].get("slug", "")
+                        if event_slug and market_slug:
+                            market_url = f"https://polymarket.com/event/{event_slug}/{market_slug}"
+                        elif event_slug:
+                            market_url = f"https://polymarket.com/event/{event_slug}"
+                        elif market_slug:
+                            market_url = f"https://polymarket.com/event/{market_slug}"
                 except Exception:
                     pass
 
