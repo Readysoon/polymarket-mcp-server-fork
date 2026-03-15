@@ -318,11 +318,17 @@
         .token-name { font-size: 0.7rem; color: #6b7280; }
         .token-amount { font-size: 0.95rem; font-weight: 600; }
 
+        @media (max-width: 1024px) {
+            .dash-container { padding: 1rem; }
+            .pnl-panel { min-width: 280px; }
+        }
         @media (max-width: 768px) {
-            .profile-header { flex-direction: column; }
+            .dash-container { padding: 0.75rem; }
+            .profile-header { flex-direction: column; gap: 1rem; }
             .pnl-panel { min-width: unset; width: 100%; }
             .stats-row { gap: 1.5rem; flex-wrap: wrap; }
-            .treemap { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+            .treemap { grid-template-columns: 1fr; }
+            .controls { flex-direction: column; gap: 0.75rem; align-items: flex-start; }
         }
     </style>
 </head>
