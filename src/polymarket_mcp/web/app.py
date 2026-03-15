@@ -84,13 +84,16 @@ async def load_mcp_config():
         logger.info("Loading MCP configuration...")
         config = load_config()
 
-        # Initialize client
+        # Initialize client - load .env for API_SECRET which isn't in the config model
+        from dotenv import load_dotenv
+        load_dotenv()
+        api_secret = os.environ.get("POLYMARKET_API_SECRET", config.POLYMARKET_PASSPHRASE)
         client = create_polymarket_client(
             private_key=config.POLYGON_PRIVATE_KEY,
             address=config.POLYGON_ADDRESS,
             chain_id=config.POLYMARKET_CHAIN_ID,
             api_key=config.POLYMARKET_API_KEY,
-            api_secret=config.POLYMARKET_PASSPHRASE,
+            api_secret=api_secret,
             passphrase=config.POLYMARKET_PASSPHRASE,
         )
 
@@ -212,17 +215,156 @@ async def monitoring_page(request: Request):
         "uptime": str(datetime.now() - stats["uptime_start"]).split('.')[0],
     }
 
+    # MCP status
+    mcp_status = {
+        "connected": config is not None and client is not None,
+        "mode": "FULL" if (client and client.has_api_credentials()) else "READ-ONLY",
+        "address": config.POLYGON_ADDRESS if config else "Not configured",
+        "chain_id": config.POLYMARKET_CHAIN_ID if config else None,
+        "tools_available": 45 if (client and client.has_api_credentials()) else 25,
+    }
+
     return templates.TemplateResponse("monitoring.html", {
         "request": request,
         "stats": stats,
         "rate_status": rate_status,
         "system_info": system_info,
+        "mcp_status": mcp_status,
     })
 
 
 # ============================================================================
 # API Endpoints
 # ============================================================================
+
+@app.get("/api/portfolio")
+async def get_portfolio():
+    """Get active positions and trade history"""
+    stats["api_calls"] += 1
+
+    if not client or not client.has_api_credentials():
+        return JSONResponse({"positions": [], "balance": 0, "error": "Not authenticated"})
+
+    try:
+        import httpx
+
+        # Get trades from CLOB API
+        clob = client.get_client()
+        trades = clob.get_trades()
+
+        # Get on-chain USDC balance
+        address = config.POLYGON_ADDRESS
+        usdc_contract = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+        data_hex = "0x70a08231" + address[2:].lower().zfill(64)
+
+        async with httpx.AsyncClient() as http_client:
+            r = await http_client.post(
+                "https://1rpc.io/matic",
+                json={"jsonrpc": "2.0", "method": "eth_call",
+                      "params": [{"to": usdc_contract, "data": data_hex}, "latest"], "id": 1},
+                timeout=10.0
+            )
+            result = r.json().get("result", "0x0")
+            usdc_balance = int(result, 16) / 10**6 if result and result != "0x" else 0.0
+
+        # Group trades by market and resolve market names
+        market_trades = {}
+        for trade in trades:
+            market_id = trade.get("market", "unknown")
+            if market_id not in market_trades:
+                market_trades[market_id] = []
+            market_trades[market_id].append(trade)
+
+        # Resolve market names from Gamma API
+        positions = []
+        async with httpx.AsyncClient() as http_client:
+            for market_id, mkt_trades in market_trades.items():
+                # Try to get market name
+                market_name = market_id[:20] + "..."
+                try:
+                    r = await http_client.get(
+                        "https://gamma-api.polymarket.com/markets",
+                        params={"clob_token_ids": mkt_trades[0].get("asset_id", "")},
+                        timeout=5.0
+                    )
+                    markets = r.json()
+                    if markets:
+                        market_name = markets[0].get("question", market_name)
+                except Exception:
+                    pass
+
+                # Calculate position
+                total_shares = 0
+                total_cost = 0
+                outcome = mkt_trades[0].get("outcome", "Yes")
+                for t in mkt_trades:
+                    size = float(t.get("size", 0))
+                    price = float(t.get("price", 0))
+                    if t.get("side") == "BUY":
+                        total_shares += size
+                        total_cost += size * price
+                    else:
+                        total_shares -= size
+                        total_cost -= size * price
+
+                if total_shares > 0:
+                    avg_price = total_cost / total_shares if total_shares else 0
+
+                    # Get current price
+                    current_price = avg_price  # fallback
+                    try:
+                        r = await http_client.get(
+                            "https://gamma-api.polymarket.com/markets",
+                            params={"clob_token_ids": mkt_trades[0].get("asset_id", "")},
+                            timeout=5.0
+                        )
+                        markets = r.json()
+                        if markets:
+                            # outcomePrices is a JSON string like "[\"0.57\",\"0.43\"]"
+                            prices_str = markets[0].get("outcomePrices", "")
+                            if prices_str:
+                                import json as _json
+                                prices = _json.loads(prices_str)
+                                if outcome == "Yes" and len(prices) > 0:
+                                    current_price = float(prices[0])
+                                elif outcome == "No" and len(prices) > 1:
+                                    current_price = float(prices[1])
+                    except Exception:
+                        pass
+
+                    current_value = total_shares * current_price
+                    pnl = current_value - total_cost
+                    pnl_pct = (pnl / total_cost * 100) if total_cost > 0 else 0
+
+                    positions.append({
+                        "market": market_name,
+                        "outcome": outcome,
+                        "shares": round(total_shares, 4),
+                        "avg_price": round(avg_price, 4),
+                        "current_price": round(current_price, 4),
+                        "cost": round(total_cost, 2),
+                        "value": round(current_value, 2),
+                        "pnl": round(pnl, 2),
+                        "pnl_pct": round(pnl_pct, 1),
+                        "status": "CONFIRMED",
+                        "tx": mkt_trades[0].get("transaction_hash", ""),
+                    })
+
+        total_value = usdc_balance + sum(p["value"] for p in positions)
+
+        return JSONResponse({
+            "positions": positions,
+            "usdc_balance": round(usdc_balance, 2),
+            "total_value": round(total_value, 2),
+            "total_pnl": round(sum(p["pnl"] for p in positions), 2),
+            "trade_count": len(trades),
+        })
+
+    except Exception as e:
+        logger.error(f"Portfolio fetch failed: {e}")
+        stats["errors"] += 1
+        return JSONResponse({"positions": [], "balance": 0, "error": str(e)})
+
 
 @app.get("/api/status")
 async def get_status():
@@ -445,11 +587,12 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         # Send initial status
+        safe_stats = {k: (v.isoformat() if isinstance(v, datetime) else v) for k, v in stats.items()}
         await websocket.send_json({
             "type": "status",
             "data": {
                 "connected": config is not None,
-                "stats": stats,
+                "stats": safe_stats,
             }
         })
 
@@ -458,10 +601,11 @@ async def websocket_endpoint(websocket: WebSocket):
             await asyncio.sleep(5)  # Update every 5 seconds
 
             # Send stats update
+            safe_stats = {k: (v.isoformat() if isinstance(v, datetime) else v) for k, v in stats.items()}
             await websocket.send_json({
                 "type": "stats_update",
                 "data": {
-                    "stats": stats,
+                    "stats": safe_stats,
                     "timestamp": datetime.now().isoformat(),
                 }
             })

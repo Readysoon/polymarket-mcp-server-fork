@@ -25,6 +25,76 @@
     <main class="container main-content">
         <h1>System Monitoring</h1>
 
+        <!-- MCP Status & Dashboard Statistics -->
+        <section class="card-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h3>MCP Status</h3>
+                </div>
+                <div class="card-body">
+                    <div class="stat-item">
+                        <span class="stat-label">Mode</span>
+                        <span class="stat-value">{{ mcp_status.mode }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Address</span>
+                        <span class="stat-value mono">{{ mcp_status.address[:10] }}...{{ mcp_status.address[-8:] if mcp_status.address != "Not configured" else "" }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Chain ID</span>
+                        <span class="stat-value">{{ mcp_status.chain_id }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Tools Available</span>
+                        <span class="stat-value">{{ mcp_status.tools_available }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3>Dashboard Statistics</h3>
+                </div>
+                <div class="card-body">
+                    <div class="stat-item">
+                        <span class="stat-label">Total Requests</span>
+                        <span class="stat-value" id="total-requests">{{ stats.requests_total }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Markets Viewed</span>
+                        <span class="stat-value" id="markets-viewed">{{ stats.markets_viewed }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">API Calls</span>
+                        <span class="stat-value" id="api-calls">{{ stats.api_calls }}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Errors</span>
+                        <span class="stat-value text-error" id="errors">{{ stats.errors }}</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Actions -->
+        <section class="section">
+            <h2>Quick Actions</h2>
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="testConnection()">
+                    Test Connection
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='/markets'">
+                    Browse Markets
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='/config'">
+                    Configure Settings
+                </button>
+                <button class="btn btn-secondary" onclick="refreshStatus()">
+                    Refresh Status
+                </button>
+            </div>
+        </section>
+
         <!-- System Information -->
         <section class="card-grid">
             <div class="card">
@@ -53,24 +123,24 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h3>Performance Stats</h3>
+                    <h3>WebSocket & Connection</h3>
                 </div>
                 <div class="card-body">
                     <div class="stat-item">
-                        <span class="stat-label">Total Requests</span>
-                        <span class="stat-value" id="total-requests">{{ stats.requests_total }}</span>
+                        <span class="stat-label">MCP Server Version</span>
+                        <span class="stat-value">0.1.0</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-label">API Calls</span>
-                        <span class="stat-value" id="api-calls">{{ stats.api_calls }}</span>
+                        <span class="stat-label">Dashboard Version</span>
+                        <span class="stat-value">0.1.0</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-label">Markets Viewed</span>
-                        <span class="stat-value" id="markets-viewed">{{ stats.markets_viewed }}</span>
+                        <span class="stat-label">WebSocket</span>
+                        <span class="stat-value" id="ws-status">Connecting...</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-label">Errors</span>
-                        <span class="stat-value text-error" id="errors">{{ stats.errors }}</span>
+                        <span class="stat-label">Last Updated</span>
+                        <span class="stat-value" id="last-updated">Just now</span>
                     </div>
                 </div>
             </div>
@@ -88,11 +158,11 @@
                             <strong>{{ category }}</strong>
                             <div class="progress-bar">
                                 <div class="progress-fill"
-                                     style="width: {{ (status.remaining / status.limit * 100) if status.limit > 0 else 0 }}%">
+                                     style="width: {{ (status.available_tokens / status.max_tokens * 100) if status.max_tokens > 0 else 0 }}%">
                                 </div>
                             </div>
                             <span class="rate-limit-text">
-                                {{ status.remaining }} / {{ status.limit }} remaining
+                                {{ status.available_tokens | round(1) }} / {{ status.max_tokens }} remaining
                             </span>
                         </div>
                         {% endfor %}
@@ -160,14 +230,46 @@
             timestamps: [],
         };
 
-        // Initialize charts
         document.addEventListener('DOMContentLoaded', () => {
             initCharts();
             startMonitoring();
+            initWebSocket();
         });
 
+        async function testConnection() {
+            showNotification('Testing connection...', 'info');
+            try {
+                const response = await fetch('/api/test-connection');
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification('Connection successful!', 'success');
+                } else {
+                    showNotification('Connection failed: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showNotification('Connection test failed: ' + error.message, 'error');
+            }
+        }
+
+        async function refreshStatus() {
+            showNotification('Refreshing status...', 'info');
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+
+                if (data.connected) {
+                    showNotification('Status updated successfully', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification('MCP not connected', 'warning');
+                }
+            } catch (error) {
+                showNotification('Failed to refresh status: ' + error.message, 'error');
+            }
+        }
+
         function initCharts() {
-            // Request Rate Chart
             const requestCtx = document.getElementById('request-chart').getContext('2d');
             requestChart = new Chart(requestCtx, {
                 type: 'line',
@@ -185,34 +287,14 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false,
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)',
-                            },
-                            ticks: {
-                                color: '#9ca3af',
-                            }
-                        },
-                        x: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)',
-                            },
-                            ticks: {
-                                color: '#9ca3af',
-                            }
-                        }
+                        y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#9ca3af' } },
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#9ca3af' } }
                     }
                 }
             });
 
-            // API Usage Chart
             const apiCtx = document.getElementById('api-chart').getContext('2d');
             apiChart = new Chart(apiCtx, {
                 type: 'bar',
@@ -227,50 +309,27 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false,
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)',
-                            },
-                            ticks: {
-                                color: '#9ca3af',
-                            }
-                        },
-                        x: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)',
-                            },
-                            ticks: {
-                                color: '#9ca3af',
-                            }
-                        }
+                        y: { beginAtZero: true, grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#9ca3af' } },
+                        x: { grid: { color: 'rgba(255, 255, 255, 0.1)' }, ticks: { color: '#9ca3af' } }
                     }
                 }
             });
         }
 
         function startMonitoring() {
-            // Update stats every 5 seconds
             setInterval(async () => {
                 try {
                     const response = await fetch('/api/stats');
                     const data = await response.json();
 
-                    // Update stats display
                     document.getElementById('total-requests').textContent = data.requests_total;
                     document.getElementById('api-calls').textContent = data.api_calls;
                     document.getElementById('markets-viewed').textContent = data.markets_viewed;
                     document.getElementById('errors').textContent = data.errors;
 
-                    // Update charts
                     updateCharts(data);
-
                 } catch (error) {
                     console.error('Failed to fetch stats:', error);
                 }
@@ -281,7 +340,6 @@
             const now = new Date();
             const timeLabel = now.toLocaleTimeString();
 
-            // Keep only last 20 data points
             if (activityData.timestamps.length >= 20) {
                 activityData.timestamps.shift();
                 activityData.requests.shift();
@@ -292,12 +350,10 @@
             activityData.requests.push(stats.requests_total);
             activityData.apiCalls.push(stats.api_calls);
 
-            // Update request chart
             requestChart.data.labels = activityData.timestamps;
             requestChart.data.datasets[0].data = activityData.requests;
             requestChart.update();
 
-            // Update API chart
             apiChart.data.labels = activityData.timestamps;
             apiChart.data.datasets[0].data = activityData.apiCalls;
             apiChart.update();
@@ -305,7 +361,6 @@
 
         function refreshLogs() {
             showNotification('Refreshing activity log...', 'info');
-
             const logContainer = document.getElementById('activity-log');
             logContainer.innerHTML = `
                 <div class="log-entry">
@@ -315,17 +370,30 @@
             `;
         }
 
-        // WebSocket connection for real-time updates
-        const ws = new WebSocket(`ws://${window.location.host}/ws`);
+        function initWebSocket() {
+            const ws = new WebSocket(`ws://${window.location.host}/ws`);
 
-        ws.onmessage = (event) => {
-            const message = JSON.parse(event.data);
+            ws.onopen = () => {
+                document.getElementById('ws-status').textContent = 'Connected';
+                document.getElementById('ws-status').className = 'stat-value text-success';
+            };
 
-            if (message.type === 'stats_update') {
-                // Stats are already being polled, but we could use WS for instant updates
-                console.log('Stats update received:', message.data);
-            }
-        };
+            ws.onclose = () => {
+                document.getElementById('ws-status').textContent = 'Disconnected';
+                document.getElementById('ws-status').className = 'stat-value text-error';
+            };
+
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                if (message.type === 'stats_update') {
+                    document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        }
     </script>
 </body>
 </html>
