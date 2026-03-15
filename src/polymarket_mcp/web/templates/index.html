@@ -56,9 +56,6 @@
             font-size: 1.4rem;
             font-weight: 700;
         }
-        .stat-val.green { color: #10b981; }
-        .stat-val.red { color: #ef4444; }
-        .stat-val.purple { color: #a855f7; }
 
         /* PnL Chart Area */
         .pnl-panel {
@@ -75,10 +72,7 @@
             margin-bottom: 0.5rem;
         }
         .pnl-title { font-size: 0.85rem; color: #9ca3af; }
-        .pnl-value {
-            font-size: 1.8rem;
-            font-weight: 700;
-        }
+        .pnl-value { font-size: 1.8rem; font-weight: 700; }
 
         /* Tabs */
         .tabs {
@@ -137,72 +131,62 @@
         }
         .size-label { font-size: 0.75rem; color: #6b7280; }
 
-        /* Treemap */
-        .treemap {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 4px;
+        /* Treemap container - absolute positioning for real treemap */
+        .treemap-wrap {
+            position: relative;
+            width: 100%;
             margin-bottom: 2rem;
         }
         .treemap-item {
-            border-radius: 8px;
-            padding: 0.75rem;
-            min-height: 100px;
+            position: absolute;
+            border-radius: 6px;
+            padding: 0.6rem;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             cursor: pointer;
             transition: opacity 0.2s;
-            position: relative;
             overflow: hidden;
         }
-        .treemap-item:hover { opacity: 0.85; }
-        /* P&L gradient intensities set via JS inline styles */
-        .treemap-item.neutral {
-            background: linear-gradient(135deg, #1a1a2e, #2a2a4a);
-            border: 1px solid #374151;
-        }
-        /* Realized (resolved) overlay */
-        .treemap-item.realized {
-            border-style: dashed !important;
-            opacity: 0.85;
-        }
+        .treemap-item:hover { opacity: 0.85; z-index: 2; }
+        .treemap-item.realized { border-style: dashed !important; opacity: 0.85; }
         .treemap-item.realized::after {
             content: 'RESOLVED';
             position: absolute;
-            top: 8px;
-            right: 8px;
-            background: rgba(0,0,0,0.6);
+            top: 6px; right: 6px;
+            background: rgba(0,0,0,0.7);
             color: #fbbf24;
-            font-size: 0.55rem;
-            font-weight: 700;
-            padding: 2px 6px;
-            border-radius: 4px;
+            font-size: 0.5rem; font-weight: 700;
+            padding: 2px 5px; border-radius: 3px;
             letter-spacing: 0.05em;
         }
         .status-badge-pos {
-            font-size: 0.55rem;
-            font-weight: 600;
-            padding: 2px 6px;
-            border-radius: 4px;
-            display: inline-block;
-            margin-left: 6px;
+            font-size: 0.5rem; font-weight: 600;
+            padding: 1px 5px; border-radius: 3px;
+            display: inline-block; margin-left: 4px;
         }
         .status-badge-pos.live { background: rgba(16,185,129,0.2); color: #34d399; }
         .status-badge-pos.settled { background: rgba(251,191,36,0.2); color: #fbbf24; }
         .treemap-title {
-            font-size: 0.8rem;
-            font-weight: 600;
-            line-height: 1.3;
-            margin-bottom: 0.25rem;
+            font-size: 0.75rem; font-weight: 600;
+            line-height: 1.25; margin-bottom: 0.15rem;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+        .treemap-item.tm-small .treemap-title {
+            font-size: 0.65rem;
+            -webkit-line-clamp: 1;
+        }
+        .treemap-item.tm-tiny .treemap-title {
+            font-size: 0.6rem;
+            -webkit-line-clamp: 1;
+        }
+        .treemap-item.tm-tiny .treemap-bottom { display: none; }
+        .treemap-item.tm-tiny .treemap-outcome { font-size: 0.55rem; }
         .treemap-outcome {
-            font-size: 0.7rem;
-            font-weight: 700;
+            font-size: 0.65rem; font-weight: 700;
             text-transform: uppercase;
         }
         .treemap-outcome.yes { color: #34d399; }
@@ -212,24 +196,13 @@
             justify-content: space-between;
             align-items: flex-end;
         }
-        .treemap-price {
-            font-size: 0.75rem;
-            color: #9ca3af;
-        }
-        .treemap-pnl {
-            font-size: 0.95rem;
-            font-weight: 700;
-        }
+        .treemap-price { font-size: 0.65rem; color: #9ca3af; }
+        .treemap-pnl { font-size: 0.85rem; font-weight: 700; }
+        .treemap-item.tm-small .treemap-pnl { font-size: 0.75rem; }
         .treemap-pnl.positive { color: #34d399; }
         .treemap-pnl.negative { color: #f87171; }
 
         /* Trending Section */
-        .section-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            color: #9ca3af;
-        }
         .market-card {
             background: #111118;
             border: 1px solid #1e1e2e;
@@ -257,19 +230,11 @@
             100% { background-position: 200% 0; }
         }
 
-        /* Empty */
-        .empty-state {
-            text-align: center;
-            padding: 3rem;
-            color: #4b5563;
-        }
+        .empty-state { text-align: center; padding: 3rem; color: #4b5563; }
 
-        /* TX link */
         .tx-link {
-            font-size: 0.65rem;
-            color: #6366f1;
-            text-decoration: none;
-            font-family: monospace;
+            font-size: 0.6rem; color: #6366f1;
+            text-decoration: none; font-family: monospace;
         }
         .tx-link:hover { text-decoration: underline; }
 
@@ -282,14 +247,10 @@
             margin-bottom: 1.5rem;
         }
         .wallet-title {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #6b7280;
+            font-size: 0.75rem; text-transform: uppercase;
+            letter-spacing: 0.1em; color: #6b7280;
             margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            display: flex; align-items: center; gap: 0.5rem;
         }
         .wallet-title .dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; }
         .wallet-grid {
@@ -298,17 +259,12 @@
             gap: 0.75rem;
         }
         .wallet-token {
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
+            display: flex; align-items: center; gap: 0.6rem;
             padding: 0.5rem 0.6rem;
-            background: #0a0a14;
-            border-radius: 8px;
-            border: 1px solid #1e1e2e;
+            background: #0a0a14; border-radius: 8px; border: 1px solid #1e1e2e;
         }
         .token-icon {
-            width: 28px; height: 28px;
-            border-radius: 50%;
+            width: 28px; height: 28px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             font-size: 0.7rem; font-weight: 700;
         }
@@ -327,7 +283,6 @@
             .profile-header { flex-direction: column; gap: 1rem; }
             .pnl-panel { min-width: unset; width: 100%; }
             .stats-row { gap: 1.5rem; flex-wrap: wrap; }
-            .treemap { grid-template-columns: 1fr; }
             .controls { flex-direction: column; gap: 0.75rem; align-items: flex-start; }
         }
     </style>
@@ -426,25 +381,23 @@
 
         <!-- Controls -->
         <div class="controls" id="positions-controls">
-            <div class="toggle-group">
-                <button class="toggle-btn active">Active</button>
-                <button class="toggle-btn">Closed</button>
+            <div class="toggle-group" id="status-toggle">
+                <button class="toggle-btn active" onclick="setFilter('active')">Active</button>
+                <button class="toggle-btn" onclick="setFilter('closed')">Closed</button>
             </div>
             <div class="view-controls">
                 <span class="size-label">Size by:</span>
-                <div class="toggle-group">
-                    <button class="toggle-btn active">P&L</button>
-                    <button class="toggle-btn">Value</button>
+                <div class="toggle-group" id="size-toggle">
+                    <button class="toggle-btn active" onclick="setSizeBy('pnl')">P&L</button>
+                    <button class="toggle-btn" onclick="setSizeBy('value')">Value</button>
                 </div>
             </div>
         </div>
 
         <!-- Positions Treemap -->
         <div id="positions-tab">
-            <div class="treemap" id="treemap-container">
-                <div class="loading-skeleton" style="height: 120px;"></div>
-                <div class="loading-skeleton" style="height: 120px;"></div>
-                <div class="loading-skeleton" style="height: 120px;"></div>
+            <div class="treemap-wrap" id="treemap-container">
+                <div class="loading-skeleton" style="height: 300px;"></div>
             </div>
         </div>
 
@@ -460,6 +413,11 @@
 
     <script src="/static/js/app.js"></script>
     <script>
+        // Global state
+        let allPositions = [];
+        let currentFilter = 'active'; // 'active' or 'closed'
+        let currentSizeBy = 'pnl';    // 'pnl' or 'value'
+
         document.addEventListener('DOMContentLoaded', () => {
             loadPortfolio();
             loadTrendingMarkets();
@@ -468,10 +426,175 @@
         function showTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
-
             document.getElementById('positions-tab').style.display = tab === 'positions' ? '' : 'none';
             document.getElementById('trending-tab').style.display = tab === 'trending' ? '' : 'none';
             document.getElementById('positions-controls').style.display = tab === 'positions' ? '' : 'none';
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('#status-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderTreemap();
+        }
+
+        function setSizeBy(mode) {
+            currentSizeBy = mode;
+            document.querySelectorAll('#size-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderTreemap();
+        }
+
+        // ── Squarified Treemap Algorithm ──
+        function squarify(items, x, y, w, h) {
+            if (items.length === 0) return [];
+            if (items.length === 1) {
+                return [{ ...items[0], x, y, w, h }];
+            }
+
+            const total = items.reduce((s, d) => s + d._area, 0);
+            if (total <= 0) return [];
+
+            const results = [];
+            let row = [];
+            let rowArea = 0;
+            const isWide = w >= h;
+            const side = isWide ? h : w;
+
+            function worstRatio(row, rowArea) {
+                if (row.length === 0) return Infinity;
+                const s2 = (rowArea * side / total) ** 2;
+                if (s2 === 0) return Infinity;
+                let worst = 0;
+                for (const item of row) {
+                    const r = item._area / total * side * side / s2 * (rowArea / item._area);
+                    const r2 = item._area / total * s2 / (rowArea * rowArea) * total * total / (side * side) * item._area;
+                    const ratio = Math.max(
+                        (rowArea / total * side) / (item._area / rowArea * (total / side)),
+                        (item._area / rowArea * (total / side)) / (rowArea / total * side)
+                    );
+                    worst = Math.max(worst, ratio);
+                }
+                return worst;
+            }
+
+            // Simplified squarify: split into two halves recursively
+            // Sort by area descending
+            const sorted = [...items].sort((a, b) => b._area - a._area);
+            let half = 0;
+            let sum = 0;
+            const halfTotal = total / 2;
+            for (let i = 0; i < sorted.length; i++) {
+                sum += sorted[i]._area;
+                if (sum >= halfTotal) {
+                    half = i + 1;
+                    break;
+                }
+            }
+            if (half === 0) half = 1;
+            if (half >= sorted.length) half = sorted.length - 1;
+
+            const first = sorted.slice(0, half);
+            const second = sorted.slice(half);
+            const firstTotal = first.reduce((s, d) => s + d._area, 0);
+            const ratio = firstTotal / total;
+
+            if (isWide) {
+                const splitX = x + w * ratio;
+                results.push(...squarify(first, x, y, w * ratio, h));
+                results.push(...squarify(second, splitX, y, w * (1 - ratio), h));
+            } else {
+                const splitY = y + h * ratio;
+                results.push(...squarify(first, x, y, w, h * ratio));
+                results.push(...squarify(second, x, splitY, w, h * (1 - ratio)));
+            }
+
+            return results;
+        }
+
+        function getItemStyle(pos, maxAbsPnl) {
+            const isRealized = pos.realized || false;
+            const intensity = 0.15 + 0.85 * (Math.abs(pos.pnl) / maxAbsPnl);
+            let bg, border;
+            if (pos.pnl > 0.01) {
+                const r1 = Math.round(6 * intensity), g1 = Math.round(78 * intensity), b1 = Math.round(59 * intensity);
+                const r2 = Math.round(6 * intensity), g2 = Math.round(95 * intensity), b2 = Math.round(70 * intensity);
+                bg = `linear-gradient(135deg, rgb(${r1},${g1},${b1}), rgb(${r2},${g2},${b2}))`;
+                border = `1px ${isRealized ? 'dashed' : 'solid'} rgba(16,185,129,${(0.3 + 0.7 * intensity).toFixed(2)})`;
+            } else if (pos.pnl < -0.01) {
+                const r1 = Math.round(69 * intensity), g1 = Math.round(10 * intensity), b1 = Math.round(10 * intensity);
+                const r2 = Math.round(127 * intensity), g2 = Math.round(29 * intensity), b2 = Math.round(29 * intensity);
+                bg = `linear-gradient(135deg, rgb(${r1},${g1},${b1}), rgb(${r2},${g2},${b2}))`;
+                border = `1px ${isRealized ? 'dashed' : 'solid'} rgba(239,68,68,${(0.3 + 0.7 * intensity).toFixed(2)})`;
+            } else {
+                bg = 'linear-gradient(135deg, #1a1a2e, #2a2a4a)';
+                border = `1px ${isRealized ? 'dashed' : 'solid'} #374151`;
+            }
+            return { bg, border };
+        }
+
+        function renderTreemap() {
+            const container = document.getElementById('treemap-container');
+            const filtered = allPositions.filter(p =>
+                currentFilter === 'active' ? !p.realized : p.realized
+            );
+
+            if (filtered.length === 0) {
+                const msg = currentFilter === 'active'
+                    ? 'No active positions.<br><span style="font-size:0.85rem">Place trades via the MCP server to see them here.</span>'
+                    : 'No closed/resolved positions.';
+                container.innerHTML = `<div class="empty-state">${msg}</div>`;
+                container.style.height = 'auto';
+                return;
+            }
+
+            // Calculate area values based on sizeBy mode
+            const items = filtered.map(p => ({
+                ...p,
+                _area: currentSizeBy === 'pnl'
+                    ? Math.max(Math.abs(p.pnl), 0.01)
+                    : Math.max(p.value, 0.01)
+            }));
+
+            const containerWidth = container.offsetWidth || 800;
+            // Scale height based on number of positions
+            const baseHeight = Math.min(800, Math.max(300, filtered.length * 25));
+            container.style.height = baseHeight + 'px';
+
+            const GAP = 3;
+            const rects = squarify(items, 0, 0, containerWidth, baseHeight);
+            const maxAbsPnl = Math.max(...filtered.map(p => Math.abs(p.pnl)), 0.01);
+
+            container.innerHTML = rects.map(r => {
+                const pos = r;
+                const { bg, border } = getItemStyle(pos, maxAbsPnl);
+                const isRealized = pos.realized || false;
+                const pnlCls = pos.pnl >= 0 ? 'positive' : 'negative';
+                const pnlStr = pos.pnl >= 0 ? '+$' + pos.pnl.toFixed(2) : '-$' + Math.abs(pos.pnl).toFixed(2);
+                const badge = isRealized
+                    ? '<span class="status-badge-pos settled">RESOLVED</span>'
+                    : '<span class="status-badge-pos live">LIVE</span>';
+
+                // Size class based on area
+                const area = r.w * r.h;
+                const sizeClass = area < 3000 ? 'tm-tiny' : area < 8000 ? 'tm-small' : '';
+
+                return `<div class="treemap-item ${isRealized ? 'realized' : ''} ${sizeClass}"
+                    style="left:${r.x + GAP/2}px; top:${r.y + GAP/2}px; width:${r.w - GAP}px; height:${r.h - GAP}px; background:${bg}; border:${border};"
+                    ${pos.tx ? `onclick="window.open('https://polygonscan.com/tx/${pos.tx}','_blank')"` : ''}>
+                    <div>
+                        <div class="treemap-title">${pos.market}</div>
+                        <div class="treemap-outcome ${pos.outcome.toLowerCase()}">${pos.outcome}${badge}</div>
+                    </div>
+                    <div class="treemap-bottom">
+                        <div>
+                            <div class="treemap-price">${pos.shares} @ $${pos.current_price.toFixed(2)}</div>
+                            ${pos.tx && area >= 5000 ? `<a class="tx-link" href="https://polygonscan.com/tx/${pos.tx}" target="_blank" onclick="event.stopPropagation()">${pos.tx.substring(0,10)}...</a>` : ''}
+                        </div>
+                        <div class="treemap-pnl ${pnlCls}">${pnlStr}</div>
+                    </div>
+                </div>`;
+            }).join('');
         }
 
         async function loadPortfolio() {
@@ -497,82 +620,13 @@
                 pnlEl.textContent = (pnl >= 0 ? '+$' : '-$') + Math.abs(pnl).toFixed(2);
                 pnlEl.style.color = pnl >= 0 ? '#10b981' : '#ef4444';
 
-                // Treemap
-                const container = document.getElementById('treemap-container');
-                if (data.positions && data.positions.length > 0) {
-                    // Sort by absolute PnL for sizing
-                    const sorted = [...data.positions].sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl));
+                // Store and render
+                allPositions = data.positions || [];
+                renderTreemap();
 
-                    // Find max absolute PnL for gradient scaling
-                    const maxAbsPnl = Math.max(...data.positions.map(p => Math.abs(p.pnl)), 0.01);
-
-                    container.innerHTML = sorted.map(pos => {
-                        const pnlCls = pos.pnl >= 0 ? 'positive' : 'negative';
-                        const pnlStr = pos.pnl >= 0 ? '+$' + pos.pnl.toFixed(2) : '-$' + Math.abs(pos.pnl).toFixed(2);
-                        const isRealized = pos.realized || false;
-                        const realizedCls = isRealized ? 'realized' : '';
-
-                        // Gradient intensity based on P&L magnitude (0.15 to 1.0)
-                        const intensity = 0.15 + 0.85 * (Math.abs(pos.pnl) / maxAbsPnl);
-                        let bgStyle, borderColor;
-                        if (pos.pnl > 0.01) {
-                            // Green gradient - more intense = deeper green
-                            const r1 = Math.round(6 * intensity);
-                            const g1 = Math.round(78 * intensity);
-                            const b1 = Math.round(59 * intensity);
-                            const r2 = Math.round(6 * intensity);
-                            const g2 = Math.round(95 * intensity);
-                            const b2 = Math.round(70 * intensity);
-                            bgStyle = `background: linear-gradient(135deg, rgb(${r1},${g1},${b1}), rgb(${r2},${g2},${b2}))`;
-                            borderColor = `border: 1px ${isRealized ? 'dashed' : 'solid'} rgba(16,185,129,${0.3 + 0.7 * intensity})`;
-                        } else if (pos.pnl < -0.01) {
-                            // Red gradient - more intense = deeper red
-                            const r1 = Math.round(69 * intensity);
-                            const g1 = Math.round(10 * intensity);
-                            const b1 = Math.round(10 * intensity);
-                            const r2 = Math.round(127 * intensity);
-                            const g2 = Math.round(29 * intensity);
-                            const b2 = Math.round(29 * intensity);
-                            bgStyle = `background: linear-gradient(135deg, rgb(${r1},${g1},${b1}), rgb(${r2},${g2},${b2}))`;
-                            borderColor = `border: 1px ${isRealized ? 'dashed' : 'solid'} rgba(239,68,68,${0.3 + 0.7 * intensity})`;
-                        } else {
-                            bgStyle = 'background: linear-gradient(135deg, #1a1a2e, #2a2a4a)';
-                            borderColor = `border: 1px ${isRealized ? 'dashed' : 'solid'} #374151`;
-                        }
-
-                        // Scale height by relative value
-                        const maxVal = Math.max(...data.positions.map(p => p.value));
-                        const scale = maxVal > 0 ? Math.max(0.6, pos.value / maxVal) : 1;
-                        const height = Math.max(100, Math.round(180 * scale));
-
-                        const statusBadge = isRealized
-                            ? '<span class="status-badge-pos settled">RESOLVED</span>'
-                            : '<span class="status-badge-pos live">LIVE</span>';
-
-                        return `
-                            <div class="treemap-item ${realizedCls}" style="min-height: ${height}px; ${bgStyle}; ${borderColor}; position: relative;"
-                                 ${pos.tx ? `onclick="window.open('https://polygonscan.com/tx/${pos.tx}', '_blank')"` : ''}>
-                                <div>
-                                    <div class="treemap-title">${pos.market}</div>
-                                    <div class="treemap-outcome ${pos.outcome.toLowerCase()}">${pos.outcome}${statusBadge}</div>
-                                </div>
-                                <div class="treemap-bottom">
-                                    <div>
-                                        <div class="treemap-price">${pos.shares} shares @ $${pos.current_price.toFixed(2)}</div>
-                                        ${pos.tx ? `<a class="tx-link" href="https://polygonscan.com/tx/${pos.tx}" target="_blank" onclick="event.stopPropagation()">${pos.tx.substring(0, 10)}...</a>` : ''}
-                                    </div>
-                                    <div class="treemap-pnl ${pnlCls}">${pnlStr}</div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                } else if (data.error) {
-                    container.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">Error: ${data.error}</div>`;
-                } else {
-                    container.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">No active positions.<br><span style="font-size: 0.85rem;">Place trades via the MCP server to see them here.</span></div>`;
-                }
             } catch (error) {
-                document.getElementById('treemap-container').innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">Failed to load: ${error.message}</div>`;
+                document.getElementById('treemap-container').innerHTML =
+                    `<div class="empty-state">Failed to load: ${error.message}</div>`;
             }
         }
 
@@ -581,7 +635,6 @@
             try {
                 const response = await fetch('/api/markets/trending?limit=8');
                 const data = await response.json();
-
                 if (data.markets && data.markets.length > 0) {
                     container.innerHTML = data.markets.map(market => `
                         <div class="market-card">
@@ -601,6 +654,13 @@
 
         // Auto-refresh
         setInterval(loadPortfolio, 30000);
+
+        // Re-render on window resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(renderTreemap, 200);
+        });
     </script>
 </body>
 </html>
