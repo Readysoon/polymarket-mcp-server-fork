@@ -579,9 +579,10 @@
                 const area = r.w * r.h;
                 const sizeClass = area < 3000 ? 'tm-tiny' : area < 8000 ? 'tm-small' : '';
 
+                const tileUrl = pos.market_url || (pos.tx ? `https://polygonscan.com/tx/${pos.tx}` : '');
                 return `<div class="treemap-item ${isRealized ? 'realized' : ''} ${sizeClass}"
                     style="left:${r.x + GAP/2}px; top:${r.y + GAP/2}px; width:${r.w - GAP}px; height:${r.h - GAP}px; background:${bg}; border:${border};"
-                    ${pos.tx ? `onclick="window.open('https://polygonscan.com/tx/${pos.tx}','_blank')"` : ''}>
+                    ${tileUrl ? `onclick="window.open('${tileUrl}','_blank')"` : ''}>
                     <div>
                         <div class="treemap-title">${pos.market}</div>
                         <div class="treemap-outcome ${pos.outcome.toLowerCase()}">${pos.outcome}${badge}</div>

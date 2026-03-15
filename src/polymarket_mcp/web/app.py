@@ -305,6 +305,7 @@ async def get_portfolio():
                 market_name = market_id[:20] + "..."
                 market_resolved = False
                 market_active = True
+                market_url = ""
                 try:
                     r = await http_client.get(
                         "https://gamma-api.polymarket.com/markets",
@@ -316,6 +317,15 @@ async def get_portfolio():
                         market_name = markets[0].get("question", market_name)
                         market_active = markets[0].get("active", True)
                         market_resolved = markets[0].get("closed", False)
+                        # Build Polymarket URL from slug or condition_id
+                        slug = markets[0].get("slug", "")
+                        condition_id = markets[0].get("condition_id", "")
+                        if slug:
+                            market_url = f"https://polymarket.com/event/{slug}"
+                        elif condition_id:
+                            market_url = f"https://polymarket.com/event/{condition_id}"
+                        else:
+                            market_url = ""
                 except Exception:
                     pass
 
@@ -375,6 +385,7 @@ async def get_portfolio():
                         "realized": market_resolved or not market_active,
                         "market_active": market_active,
                         "tx": mkt_trades[0].get("transaction_hash", ""),
+                        "market_url": market_url,
                     })
 
         total_value = usdc_balance + usdce_balance + sum(p["value"] for p in positions)
