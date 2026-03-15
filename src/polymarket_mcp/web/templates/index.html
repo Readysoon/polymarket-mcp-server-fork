@@ -157,18 +157,39 @@
             overflow: hidden;
         }
         .treemap-item:hover { opacity: 0.85; }
-        .treemap-item.profit {
-            background: linear-gradient(135deg, #064e3b, #065f46);
-            border: 1px solid #10b981;
-        }
-        .treemap-item.loss {
-            background: linear-gradient(135deg, #450a0a, #7f1d1d);
-            border: 1px solid #ef4444;
-        }
+        /* P&L gradient intensities set via JS inline styles */
         .treemap-item.neutral {
             background: linear-gradient(135deg, #1a1a2e, #2a2a4a);
             border: 1px solid #374151;
         }
+        /* Realized (resolved) overlay */
+        .treemap-item.realized {
+            border-style: dashed !important;
+            opacity: 0.85;
+        }
+        .treemap-item.realized::after {
+            content: 'RESOLVED';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0,0,0,0.6);
+            color: #fbbf24;
+            font-size: 0.55rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.05em;
+        }
+        .status-badge-pos {
+            font-size: 0.55rem;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-left: 6px;
+        }
+        .status-badge-pos.live { background: rgba(16,185,129,0.2); color: #34d399; }
+        .status-badge-pos.settled { background: rgba(251,191,36,0.2); color: #fbbf24; }
         .treemap-title {
             font-size: 0.8rem;
             font-weight: 600;
@@ -252,6 +273,51 @@
         }
         .tx-link:hover { text-decoration: underline; }
 
+        /* Wallet Balances */
+        .wallet-panel {
+            background: #111118;
+            border: 1px solid #1e1e2e;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+        .wallet-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #6b7280;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .wallet-title .dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; }
+        .wallet-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+        }
+        .wallet-token {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.5rem 0.6rem;
+            background: #0a0a14;
+            border-radius: 8px;
+            border: 1px solid #1e1e2e;
+        }
+        .token-icon {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 700;
+        }
+        .token-icon.usdc { background: #2775ca; color: white; }
+        .token-icon.usdce { background: #2775ca; color: white; border: 2px dashed rgba(255,255,255,0.4); }
+        .token-icon.pol { background: #8247e5; color: white; }
+        .token-name { font-size: 0.7rem; color: #6b7280; }
+        .token-amount { font-size: 0.95rem; font-weight: 600; }
+
         @media (max-width: 768px) {
             .profile-header { flex-direction: column; }
             .pnl-panel { min-width: unset; width: 100%; }
@@ -315,6 +381,34 @@
                     <span class="pnl-title">Profit/Loss</span>
                 </div>
                 <div class="pnl-value" id="pnl-display">--</div>
+            </div>
+        </div>
+
+        <!-- Wallet Balances -->
+        <div class="wallet-panel">
+            <div class="wallet-title"><span class="dot"></span> Wallet Balances</div>
+            <div class="wallet-grid">
+                <div class="wallet-token">
+                    <div class="token-icon usdc">$</div>
+                    <div>
+                        <div class="token-name">USDC</div>
+                        <div class="token-amount" id="bal-usdc">--</div>
+                    </div>
+                </div>
+                <div class="wallet-token">
+                    <div class="token-icon usdce">$</div>
+                    <div>
+                        <div class="token-name">USDC.e</div>
+                        <div class="token-amount" id="bal-usdce">--</div>
+                    </div>
+                </div>
+                <div class="wallet-token">
+                    <div class="token-icon pol">P</div>
+                    <div>
+                        <div class="token-name">POL</div>
+                        <div class="token-amount" id="bal-pol">--</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -382,8 +476,14 @@
                 // Stats
                 const posValue = (data.positions || []).reduce((s, p) => s + p.value, 0);
                 document.getElementById('stat-value').textContent = '$' + posValue.toFixed(2);
-                document.getElementById('stat-cash').textContent = '$' + (data.usdc_balance || 0).toFixed(2);
+                const totalCash = (data.usdc_balance || 0) + (data.usdce_balance || 0);
+                document.getElementById('stat-cash').textContent = '$' + totalCash.toFixed(2);
                 document.getElementById('stat-trades').textContent = data.trade_count || 0;
+
+                // Wallet balances
+                document.getElementById('bal-usdc').textContent = (data.usdc_balance || 0).toFixed(4);
+                document.getElementById('bal-usdce').textContent = (data.usdce_balance || 0).toFixed(4);
+                document.getElementById('bal-pol').textContent = (data.pol_balance || 0).toFixed(4);
 
                 // PnL
                 const pnl = data.total_pnl || 0;
@@ -397,21 +497,58 @@
                     // Sort by absolute PnL for sizing
                     const sorted = [...data.positions].sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl));
 
+                    // Find max absolute PnL for gradient scaling
+                    const maxAbsPnl = Math.max(...data.positions.map(p => Math.abs(p.pnl)), 0.01);
+
                     container.innerHTML = sorted.map(pos => {
-                        const cls = pos.pnl > 0.01 ? 'profit' : pos.pnl < -0.01 ? 'loss' : 'neutral';
                         const pnlCls = pos.pnl >= 0 ? 'positive' : 'negative';
                         const pnlStr = pos.pnl >= 0 ? '+$' + pos.pnl.toFixed(2) : '-$' + Math.abs(pos.pnl).toFixed(2);
+                        const isRealized = pos.realized || false;
+                        const realizedCls = isRealized ? 'realized' : '';
+
+                        // Gradient intensity based on P&L magnitude (0.15 to 1.0)
+                        const intensity = 0.15 + 0.85 * (Math.abs(pos.pnl) / maxAbsPnl);
+                        let bgStyle, borderColor;
+                        if (pos.pnl > 0.01) {
+                            // Green gradient - more intense = deeper green
+                            const r1 = Math.round(6 * intensity);
+                            const g1 = Math.round(78 * intensity);
+                            const b1 = Math.round(59 * intensity);
+                            const r2 = Math.round(6 * intensity);
+                            const g2 = Math.round(95 * intensity);
+                            const b2 = Math.round(70 * intensity);
+                            bgStyle = `background: linear-gradient(135deg, rgb(${r1},${g1},${b1}), rgb(${r2},${g2},${b2}))`;
+                            borderColor = `border: 1px ${isRealized ? 'dashed' : 'solid'} rgba(16,185,129,${0.3 + 0.7 * intensity})`;
+                        } else if (pos.pnl < -0.01) {
+                            // Red gradient - more intense = deeper red
+                            const r1 = Math.round(69 * intensity);
+                            const g1 = Math.round(10 * intensity);
+                            const b1 = Math.round(10 * intensity);
+                            const r2 = Math.round(127 * intensity);
+                            const g2 = Math.round(29 * intensity);
+                            const b2 = Math.round(29 * intensity);
+                            bgStyle = `background: linear-gradient(135deg, rgb(${r1},${g1},${b1}), rgb(${r2},${g2},${b2}))`;
+                            borderColor = `border: 1px ${isRealized ? 'dashed' : 'solid'} rgba(239,68,68,${0.3 + 0.7 * intensity})`;
+                        } else {
+                            bgStyle = 'background: linear-gradient(135deg, #1a1a2e, #2a2a4a)';
+                            borderColor = `border: 1px ${isRealized ? 'dashed' : 'solid'} #374151`;
+                        }
+
                         // Scale height by relative value
                         const maxVal = Math.max(...data.positions.map(p => p.value));
                         const scale = maxVal > 0 ? Math.max(0.6, pos.value / maxVal) : 1;
                         const height = Math.max(100, Math.round(180 * scale));
 
+                        const statusBadge = isRealized
+                            ? '<span class="status-badge-pos settled">RESOLVED</span>'
+                            : '<span class="status-badge-pos live">LIVE</span>';
+
                         return `
-                            <div class="treemap-item ${cls}" style="min-height: ${height}px;"
+                            <div class="treemap-item ${realizedCls}" style="min-height: ${height}px; ${bgStyle}; ${borderColor}; position: relative;"
                                  ${pos.tx ? `onclick="window.open('https://polygonscan.com/tx/${pos.tx}', '_blank')"` : ''}>
                                 <div>
                                     <div class="treemap-title">${pos.market}</div>
-                                    <div class="treemap-outcome ${pos.outcome.toLowerCase()}">${pos.outcome}</div>
+                                    <div class="treemap-outcome ${pos.outcome.toLowerCase()}">${pos.outcome}${statusBadge}</div>
                                 </div>
                                 <div class="treemap-bottom">
                                     <div>

@@ -252,20 +252,42 @@ async def get_portfolio():
         clob = client.get_client()
         trades = clob.get_trades()
 
-        # Get on-chain USDC balance
+        # Get on-chain balances: USDC, USDC.e, POL
         address = config.POLYGON_ADDRESS
         usdc_contract = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
-        data_hex = "0x70a08231" + address[2:].lower().zfill(64)
+        usdce_contract = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+        balance_selector = "0x70a08231" + address[2:].lower().zfill(64)
 
         async with httpx.AsyncClient() as http_client:
-            r = await http_client.post(
-                "https://1rpc.io/matic",
-                json={"jsonrpc": "2.0", "method": "eth_call",
-                      "params": [{"to": usdc_contract, "data": data_hex}, "latest"], "id": 1},
-                timeout=10.0
-            )
-            result = r.json().get("result", "0x0")
-            usdc_balance = int(result, 16) / 10**6 if result and result != "0x" else 0.0
+            # Fetch all balances in parallel
+            rpc_calls = [
+                # USDC (native)
+                http_client.post("https://1rpc.io/matic", json={
+                    "jsonrpc": "2.0", "method": "eth_call",
+                    "params": [{"to": usdc_contract, "data": balance_selector}, "latest"], "id": 1
+                }, timeout=10.0),
+                # USDC.e (bridged)
+                http_client.post("https://1rpc.io/matic", json={
+                    "jsonrpc": "2.0", "method": "eth_call",
+                    "params": [{"to": usdce_contract, "data": balance_selector}, "latest"], "id": 2
+                }, timeout=10.0),
+                # POL (native token balance)
+                http_client.post("https://1rpc.io/matic", json={
+                    "jsonrpc": "2.0", "method": "eth_getBalance",
+                    "params": [address, "latest"], "id": 3
+                }, timeout=10.0),
+            ]
+            results = await asyncio.gather(*rpc_calls, return_exceptions=True)
+
+            def parse_balance(resp, decimals=6):
+                if isinstance(resp, Exception):
+                    return 0.0
+                val = resp.json().get("result", "0x0")
+                return int(val, 16) / 10**decimals if val and val != "0x" else 0.0
+
+            usdc_balance = parse_balance(results[0], 6)
+            usdce_balance = parse_balance(results[1], 6)
+            pol_balance = parse_balance(results[2], 18)
 
         # Group trades by market and resolve market names
         market_trades = {}
@@ -279,8 +301,10 @@ async def get_portfolio():
         positions = []
         async with httpx.AsyncClient() as http_client:
             for market_id, mkt_trades in market_trades.items():
-                # Try to get market name
+                # Try to get market name and resolution status
                 market_name = market_id[:20] + "..."
+                market_resolved = False
+                market_active = True
                 try:
                     r = await http_client.get(
                         "https://gamma-api.polymarket.com/markets",
@@ -290,6 +314,8 @@ async def get_portfolio():
                     markets = r.json()
                     if markets:
                         market_name = markets[0].get("question", market_name)
+                        market_active = markets[0].get("active", True)
+                        market_resolved = markets[0].get("closed", False)
                 except Exception:
                     pass
 
@@ -346,15 +372,18 @@ async def get_portfolio():
                         "value": round(current_value, 2),
                         "pnl": round(pnl, 2),
                         "pnl_pct": round(pnl_pct, 1),
-                        "status": "CONFIRMED",
+                        "realized": market_resolved or not market_active,
+                        "market_active": market_active,
                         "tx": mkt_trades[0].get("transaction_hash", ""),
                     })
 
-        total_value = usdc_balance + sum(p["value"] for p in positions)
+        total_value = usdc_balance + usdce_balance + sum(p["value"] for p in positions)
 
         return JSONResponse({
             "positions": positions,
-            "usdc_balance": round(usdc_balance, 2),
+            "usdc_balance": round(usdc_balance, 6),
+            "usdce_balance": round(usdce_balance, 6),
+            "pol_balance": round(pol_balance, 4),
             "total_value": round(total_value, 2),
             "total_pnl": round(sum(p["pnl"] for p in positions), 2),
             "trade_count": len(trades),
