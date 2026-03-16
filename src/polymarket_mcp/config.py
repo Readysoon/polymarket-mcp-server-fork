@@ -69,7 +69,7 @@ class PolymarketConfig(BaseSettings):
         description="Maximum position size per market in USD"
     )
     MIN_LIQUIDITY_REQUIRED: float = Field(
-        default=10000.0,
+        default=1000.0,
         description="Minimum liquidity required in market before trading (USD)"
     )
     MAX_SPREAD_TOLERANCE: float = Field(

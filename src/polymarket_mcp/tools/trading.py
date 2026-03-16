@@ -133,9 +133,12 @@ class TradingTools:
                 total_volume=float(market.get('volume', 0))
             )
 
-            # Get current positions
-            positions_data = await self.client.get_positions()
-            positions = self._convert_positions(positions_data)
+            # Get current positions (best-effort; ClobClient may not support this)
+            try:
+                positions_data = await self.client.get_positions()
+                positions = self._convert_positions(positions_data)
+            except Exception:
+                positions = []
 
             # Convert size from USD to shares
             size_in_shares = size / price
@@ -255,18 +258,26 @@ class TradingTools:
             orderbook = await self.client.get_orderbook(token_id)
 
             side_upper = side.upper()
-            if side_upper == 'BUY':
-                # Buy at best ask
-                asks = orderbook.get('asks', [])
-                if not asks:
-                    raise ValueError("No asks available in orderbook")
-                best_price = float(asks[0]['price'])
+            # Support both dict and object (OrderBookSummary) responses
+            if isinstance(orderbook, dict):
+                ob_asks = orderbook.get('asks', [])
+                ob_bids = orderbook.get('bids', [])
             else:
-                # Sell at best bid
-                bids = orderbook.get('bids', [])
-                if not bids:
+                ob_asks = getattr(orderbook, 'asks', []) or []
+                ob_bids = getattr(orderbook, 'bids', []) or []
+            # Normalize entries to dicts
+            def _price(entry):
+                if isinstance(entry, dict):
+                    return float(entry.get('price', entry.get('p', 0)))
+                return float(getattr(entry, 'price', getattr(entry, 'p', 0)))
+            if side_upper == 'BUY':
+                if not ob_asks:
+                    raise ValueError("No asks available in orderbook")
+                best_price = _price(ob_asks[0])
+            else:
+                if not ob_bids:
                     raise ValueError("No bids available in orderbook")
-                best_price = float(bids[0]['price'])
+                best_price = _price(ob_bids[0])
 
             logger.info(
                 f"Executing market order: {side} ${size} @ market price {best_price}"
@@ -408,15 +419,24 @@ class TradingTools:
             token_id = tokens[0]['token_id']
             orderbook = await self.client.get_orderbook(token_id)
 
-            # Parse orderbook
-            bids = orderbook.get('bids', [])
-            asks = orderbook.get('asks', [])
+            # Parse orderbook (support both dict and object responses)
+            if isinstance(orderbook, dict):
+                bids = orderbook.get('bids', [])
+                asks = orderbook.get('asks', [])
+            else:
+                bids = list(getattr(orderbook, 'bids', []) or [])
+                asks = list(getattr(orderbook, 'asks', []) or [])
+
+            def _p(entry):
+                if isinstance(entry, dict):
+                    return float(entry.get('price', entry.get('p', 0)))
+                return float(getattr(entry, 'price', getattr(entry, 'p', 0)))
 
             if not bids or not asks:
                 raise ValueError("Insufficient orderbook depth")
 
-            best_bid = float(bids[0]['price'])
-            best_ask = float(asks[0]['price'])
+            best_bid = _p(bids[0])
+            best_ask = _p(asks[0])
             mid_price = (best_bid + best_ask) / 2
             spread = best_ask - best_bid
 
@@ -953,8 +973,11 @@ class TradingTools:
         try:
             logger.info(f"Rebalancing position in market {market_id} to target ${target_size}")
 
-            # Get current position
-            positions_data = await self.client.get_positions()
+            # Get current position (best-effort)
+            try:
+                positions_data = await self.client.get_positions()
+            except Exception:
+                positions_data = []
 
             current_size = 0.0
             current_position = None

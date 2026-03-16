@@ -401,6 +401,8 @@ async def main() -> None:
 
 def run():
     """Synchronous entry point for CLI"""
+    from dotenv import load_dotenv
+    load_dotenv()
     asyncio.run(main())
 
 

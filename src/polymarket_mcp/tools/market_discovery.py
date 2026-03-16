@@ -297,39 +297,61 @@ async def get_closing_soon_markets(
         Markets closing soon
     """
     try:
-        # Calculate cutoff time
-        cutoff_time = datetime.utcnow() + timedelta(hours=hours)
-        cutoff_timestamp = int(cutoff_time.timestamp())
+        import aiohttp
 
-        # Fetch active open markets
-        markets = await _fetch_gamma_markets("/markets", {"active": "true", "closed": "false"}, limit=200)
+        now = datetime.utcnow()
+        cutoff_time = now + timedelta(hours=hours)
 
-        # Filter markets closing within timeframe
-        closing_soon = []
-        for market in markets:
-            end_date = market.get("endDate") or market.get("end_date_iso")
-            if end_date:
-                # Parse ISO date or timestamp
-                try:
-                    if isinstance(end_date, str):
-                        end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+        # Binary search using offset to find the starting point in the date-sorted list
+        # The API supports order=endDate&ascending=true&offset=N
+        base_params = "active=true&closed=false&order=endDate&ascending=true"
+        base_url = f"{GAMMA_API_URL}/markets"
+
+        # Binary search for the offset where endDate >= now
+        lo, hi = 0, 30000
+        start_offset = 0
+        async with aiohttp.ClientSession() as session:
+            while lo <= hi:
+                mid = (lo + hi) // 2
+                url = f"{base_url}?{base_params}&limit=1&offset={mid}"
+                async with session.get(url) as resp:
+                    data = await resp.json()
+                    if not data:
+                        hi = mid - 1
+                        continue
+                    m = data[0]
+                    end_date = m.get("endDate", "")
+                    try:
+                        end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00")).replace(tzinfo=None)
+                    except Exception:
+                        hi = mid - 1
+                        continue
+                    if end_dt < now:
+                        lo = mid + 1
                     else:
-                        end_dt = datetime.fromtimestamp(int(end_date))
+                        start_offset = mid
+                        hi = mid - 1
 
-                    # Check if closing within timeframe
-                    if end_dt <= cutoff_time:
-                        closing_soon.append(market)
+            # Fetch a window of markets starting at our found offset
+            fetch_limit = max(limit * 10, 200)
+            url = f"{base_url}?{base_params}&limit={fetch_limit}&offset={max(0, start_offset - 50)}"
+            async with session.get(url) as resp:
+                all_markets = await resp.json()
 
-                except Exception as parse_error:
-                    logger.warning(f"Failed to parse end_date: {end_date}, error: {parse_error}")
-                    continue
+        # Filter to the actual time window
+        closing_soon = []
+        for market in all_markets:
+            end_date = market.get("endDate", "")
+            try:
+                end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00")).replace(tzinfo=None)
+                if now <= end_dt <= cutoff_time:
+                    closing_soon.append(market)
+            except Exception:
+                continue
 
-        # Sort by end date (soonest first)
-        closing_soon.sort(key=lambda m: m.get("endDate", m.get("end_date_iso", "")))
-
+        closing_soon.sort(key=lambda m: m.get("endDate", ""))
         result = closing_soon[:limit]
         logger.info(f"Found {len(result)} markets closing within {hours} hours")
-
         return result
 
     except Exception as e:

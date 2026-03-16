@@ -1,156 +1,143 @@
-# Polymarket MCP Server - Makefile
-# Convenient commands for Docker operations
+# Polymarket MCP Server + OpenClaw - Makefile
+# Quick commands for dashboard, bot, and trading
 
-.PHONY: help build up down restart logs shell test clean
+.PHONY: help dashboard bot bot-stop bot-status bot-logs portfolio markets status push security
 
-# Default target
 .DEFAULT_GOAL := help
 
-# Variables
-DOCKER_COMPOSE := docker compose
-SERVICE_NAME := polymarket-mcp
-IMAGE_NAME := polymarket-mcp
-VERSION := 0.1.0
+# Paths
+VENV := /Users/philipp/polymarket-mcp-server/venv/bin
+NODE22 := /opt/homebrew/opt/node@22/bin
+PROJECT := /Users/philipp/polymarket-mcp-server
 
 ## help: Show this help message
 help:
-	@echo "Polymarket MCP Server - Docker Commands"
+	@echo "Polymarket MCP + OpenClaw Commands"
 	@echo ""
 	@echo "Usage: make [target]"
 	@echo ""
 	@echo "Targets:"
-	@awk '/^##/ {desc = substr($$0, 4); getline; printf "  \033[36m%-15s\033[0m %s\n", $$1, desc}' $(MAKEFILE_LIST)
+	@awk '/^##/ {desc = substr($$0, 4); getline; printf "  \033[36m%-18s\033[0m %s\n", $$1, desc}' $(MAKEFILE_LIST)
 
-## build: Build Docker image
-build:
-	@echo "Building Docker image..."
-	$(DOCKER_COMPOSE) build
+# ── Dashboard ──
 
-## up: Start services
-up:
-	@echo "Starting services..."
-	$(DOCKER_COMPOSE) up -d
+## dashboard: Start the web dashboard (localhost:8080)
+dashboard:
+	@echo "Starting dashboard at http://localhost:8080 ..."
+	@cd $(PROJECT) && $(VENV)/polymarket-web
 
-## down: Stop services
-down:
-	@echo "Stopping services..."
-	$(DOCKER_COMPOSE) down
+## dashboard-bg: Start dashboard in background
+dashboard-bg:
+	@echo "Starting dashboard in background..."
+	@cd $(PROJECT) && $(VENV)/polymarket-web &
+	@echo "Dashboard running at http://localhost:8080"
 
-## restart: Restart services
-restart:
-	@echo "Restarting services..."
-	$(DOCKER_COMPOSE) restart
+## dashboard-stop: Stop the web dashboard
+dashboard-stop:
+	@pkill -f "polymarket-web" 2>/dev/null && echo "Dashboard stopped" || echo "Dashboard not running"
 
-## logs: View logs (follow mode)
-logs:
-	$(DOCKER_COMPOSE) logs -f
+# ── OpenClaw Telegram Bot ──
 
-## logs-tail: View last 50 lines of logs
-logs-tail:
-	$(DOCKER_COMPOSE) logs --tail=50
+## bot: Start the OpenClaw gateway (foreground)
+bot:
+	@echo "Starting OpenClaw gateway..."
+	@PATH=$(NODE22):$$PATH openclaw gateway --force
 
-## shell: Open shell in container
-shell:
-	$(DOCKER_COMPOSE) exec $(SERVICE_NAME) /bin/bash
+## bot-bg: Start the OpenClaw gateway in background
+bot-bg:
+	@PATH=$(NODE22):$$PATH openclaw gateway --force &
+	@echo "Bot running in background"
 
-## ps: Show running containers
-ps:
-	$(DOCKER_COMPOSE) ps
+## bot-stop: Stop the OpenClaw gateway
+bot-stop:
+	@pkill -f "openclaw" 2>/dev/null && echo "Bot stopped" || echo "Bot not running"
 
-## stats: Show resource usage
-stats:
-	docker stats $(SERVICE_NAME) --no-stream
+## bot-status: Check bot and channel status
+bot-status:
+	@PATH=$(NODE22):$$PATH openclaw status
 
-## test: Run Docker infrastructure tests
-test:
-	./test-docker.sh
+## bot-logs: Tail bot logs
+bot-logs:
+	@PATH=$(NODE22):$$PATH openclaw logs
 
-## clean: Remove containers and volumes
-clean:
-	@echo "Cleaning up..."
-	$(DOCKER_COMPOSE) down -v
-	docker rmi $(IMAGE_NAME):latest || true
+## bot-configure: Open interactive config wizard
+bot-configure:
+	@PATH=$(NODE22):$$PATH openclaw configure
 
-## clean-all: Remove everything including images
-clean-all: clean
-	docker system prune -af
+# ── Polymarket Trading ──
 
-## start: Quick start with environment check
-start:
-	./docker-start.sh
+## portfolio: Check your portfolio positions
+portfolio:
+	@PATH=$(NODE22):$$PATH mcporter call polymarket.get_all_positions
 
-## build-multi: Build multi-architecture image
-build-multi:
-	docker buildx build --platform linux/amd64,linux/arm64 \
-		-t $(IMAGE_NAME):$(VERSION) \
-		-t $(IMAGE_NAME):latest .
+## markets: Show trending markets
+markets:
+	@PATH=$(NODE22):$$PATH mcporter call polymarket.get_trending_markets
 
-## push: Push image to registry (set REGISTRY variable)
+## search: Search markets (usage: make search q="trump")
+search:
+	@PATH=$(NODE22):$$PATH mcporter call polymarket.search_markets query="$(q)"
+
+## orders: Check open orders
+orders:
+	@PATH=$(NODE22):$$PATH mcporter call polymarket.get_open_orders
+
+## history: Show trade history
+history:
+	@PATH=$(NODE22):$$PATH mcporter call polymarket.get_trade_history
+
+# ── Combined ──
+
+## start: Start dashboard + bot together
+start: dashboard-bg bot-bg
+	@echo ""
+	@echo "✅ Dashboard: http://localhost:8080"
+	@echo "✅ Bot: @PolyClawTrader_Bot on Telegram"
+
+## stop: Stop everything
+stop: dashboard-stop bot-stop
+	@echo "All services stopped"
+
+## status: Show all service status
+status:
+	@echo "── Dashboard ──"
+	@curl -s -o /dev/null -w "  HTTP %{http_code}\n" http://localhost:8080/ 2>/dev/null || echo "  Not running"
+	@echo ""
+	@echo "── OpenClaw Bot ──"
+	@PATH=$(NODE22):$$PATH openclaw channels status --probe 2>/dev/null || echo "  Not running"
+
+# ── Git ──
+
+## push: Commit and push changes to GitHub
 push:
-	@if [ -z "$(REGISTRY)" ]; then \
-		echo "Error: REGISTRY not set. Use: make push REGISTRY=your-registry/polymarket-mcp"; \
-		exit 1; \
-	fi
-	docker tag $(IMAGE_NAME):latest $(REGISTRY):latest
-	docker tag $(IMAGE_NAME):latest $(REGISTRY):$(VERSION)
-	docker push $(REGISTRY):latest
-	docker push $(REGISTRY):$(VERSION)
+	@cd $(PROJECT) && git add -A && git status --short
+	@echo ""
+	@read -p "Commit message: " msg; \
+	cd $(PROJECT) && git commit -m "$$msg" && git push origin main
 
-## deploy-k8s: Deploy to Kubernetes
-deploy-k8s:
-	@echo "Deploying to Kubernetes..."
-	kubectl apply -f k8s/configmap.yaml
-	kubectl apply -f k8s/deployment.yaml
-	kubectl apply -f k8s/service.yaml
+# ── Security ──
 
-## undeploy-k8s: Remove from Kubernetes
-undeploy-k8s:
-	kubectl delete -f k8s/
+## security: Run security checks
+security:
+	@echo "── Git secrets check ──"
+	@cd $(PROJECT) && git log --all --diff-filter=A -- .env && echo "  ✅ .env never committed" || true
+	@echo ""
+	@echo "── .gitignore check ──"
+	@grep -q "\.env" $(PROJECT)/.gitignore && echo "  ✅ .env in .gitignore" || echo "  ❌ .env NOT in .gitignore!"
+	@echo ""
+	@echo "── OpenClaw security ──"
+	@PATH=$(NODE22):$$PATH openclaw security audit 2>/dev/null || echo "  Run manually: openclaw security audit"
 
-## validate: Validate configuration files
-validate:
-	@echo "Validating docker-compose.yml..."
-	$(DOCKER_COMPOSE) config > /dev/null
-	@echo "✓ docker-compose.yml is valid"
-	@if command -v kubectl > /dev/null; then \
-		echo "Validating Kubernetes manifests..."; \
-		kubectl apply --dry-run=client -f k8s/ > /dev/null; \
-		echo "✓ Kubernetes manifests are valid"; \
-	fi
+# ── Docker (legacy) ──
 
-## env: Create .env from template
-env:
-	@if [ -f .env ]; then \
-		echo ".env already exists"; \
-	else \
-		cp .env.example .env; \
-		echo "Created .env from template. Please edit with your credentials."; \
-	fi
+## docker-up: Start Docker services
+docker-up:
+	@docker compose up -d
 
-## health: Check container health
-health:
-	@docker inspect --format='{{.State.Health.Status}}' $(SERVICE_NAME) 2>/dev/null || echo "Container not running"
+## docker-down: Stop Docker services
+docker-down:
+	@docker compose down
 
-## update: Pull latest code and rebuild
-update:
-	@echo "Updating..."
-	git pull
-	$(DOCKER_COMPOSE) build
-	$(DOCKER_COMPOSE) up -d
-
-## backup: Backup volumes
-backup:
-	@echo "Backing up volumes..."
-	docker run --rm -v polymarket-mcp_polymarket-data:/data -v $(PWD)/backups:/backup alpine tar czf /backup/data-backup-$$(date +%Y%m%d-%H%M%S).tar.gz -C /data .
-	@echo "Backup complete"
-
-## restore: Restore volumes from latest backup
-restore:
-	@if [ ! -d backups ] || [ -z "$$(ls -A backups)" ]; then \
-		echo "No backups found"; \
-		exit 1; \
-	fi
-	@LATEST=$$(ls -t backups/*.tar.gz | head -1); \
-	echo "Restoring from $$LATEST..."; \
-	docker run --rm -v polymarket-mcp_polymarket-data:/data -v $(PWD)/backups:/backup alpine tar xzf /backup/$$(basename $$LATEST) -C /data
-	@echo "Restore complete"
+## docker-logs: View Docker logs
+docker-logs:
+	@docker compose logs -f

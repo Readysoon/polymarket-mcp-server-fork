@@ -110,36 +110,36 @@ async def get_all_positions(
         # Filter positions
         filtered_positions = []
         for pos in positions_data:
-            # Parse position data
+            # Parse position data — data API uses camelCase field names
             size = float(pos.get('size', 0))
-            avg_price = float(pos.get('average_price', 0))
+            avg_price = float(pos.get('avgPrice', 0) or pos.get('average_price', 0))
 
             # Skip zero or very small positions
             if size <= 0:
                 continue
 
-            # Get current market price
-            token_id = pos.get('asset_id')
-            market = pos.get('market')
+            # Get current market price and token info
+            token_id = pos.get('asset', '') or pos.get('asset_id', '')
+            market = pos.get('conditionId', '') or pos.get('market', '')
+            current_price = float(pos.get('curPrice', 0))
 
-            # Fetch current price from orderbook
-            try:
-                await rate_limiter.acquire(EndpointCategory.MARKET_DATA)
-                orderbook = await polymarket_client.get_orderbook(token_id)
-
-                # Calculate mid price
-                best_bid = float(orderbook.get('bids', [{}])[0].get('price', 0)) if orderbook.get('bids') else 0
-                best_ask = float(orderbook.get('asks', [{}])[0].get('price', 0)) if orderbook.get('asks') else 0
-                current_price = (best_bid + best_ask) / 2 if (best_bid and best_ask) else avg_price
-            except Exception as e:
-                logger.warning(f"Failed to fetch current price for {token_id}: {e}")
-                current_price = avg_price
+            # If no current price from data API, try orderbook
+            if current_price <= 0 and token_id:
+                try:
+                    await rate_limiter.acquire(EndpointCategory.MARKET_DATA)
+                    orderbook = await polymarket_client.get_orderbook(token_id)
+                    best_bid = float(orderbook.get('bids', [{}])[0].get('price', 0)) if orderbook.get('bids') else 0
+                    best_ask = float(orderbook.get('asks', [{}])[0].get('price', 0)) if orderbook.get('asks') else 0
+                    current_price = (best_bid + best_ask) / 2 if (best_bid and best_ask) else avg_price
+                except Exception as e:
+                    logger.warning(f"Failed to fetch current price for {token_id}: {e}")
+                    current_price = avg_price
 
             # Calculate values
-            current_value = size * current_price
-            cost_basis = size * avg_price
-            unrealized_pnl = current_value - cost_basis
-            pnl_pct = (unrealized_pnl / cost_basis * 100) if cost_basis > 0 else 0
+            current_value = float(pos.get('currentValue', 0)) or (size * current_price)
+            cost_basis = float(pos.get('initialValue', 0)) or (size * avg_price)
+            unrealized_pnl = float(pos.get('cashPnl', 0)) or (current_value - cost_basis)
+            pnl_pct = float(pos.get('percentPnl', 0)) or ((unrealized_pnl / cost_basis * 100) if cost_basis > 0 else 0)
 
             # Apply filters
             if not include_closed and size <= 0:
@@ -149,7 +149,7 @@ async def get_all_positions(
 
             filtered_positions.append({
                 'market_id': market,
-                'market_question': pos.get('market_question', 'Unknown'),
+                'market_question': pos.get('title', '') or pos.get('market_question', 'Unknown'),
                 'token_id': token_id,
                 'outcome': pos.get('outcome', 'Unknown'),
                 'size': size,
