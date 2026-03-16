@@ -102,8 +102,8 @@ async def search_markets(
         List of markets matching the query
     """
     try:
-        # Fetch markets with search
-        params = {"query": query}
+        # Fetch markets with search — default to active, non-closed markets
+        params = {"query": query, "active": "true", "closed": "false"}
 
         if filters:
             params.update(filters)
@@ -133,8 +133,27 @@ async def get_trending_markets(
         Top markets by volume in the specified timeframe
     """
     try:
-        # Fetch all active markets
-        markets = await _fetch_gamma_markets("/markets", {"active": "true"}, limit=100)
+        # Fetch all active, non-closed markets
+        markets = await _fetch_gamma_markets(
+            "/markets", {"active": "true", "closed": "false"}, limit=100
+        )
+
+        # Filter out markets with end_date_iso in the past
+        now = datetime.utcnow()
+        current_markets = []
+        for m in markets:
+            end_date = m.get("end_date_iso") or m.get("endDate")
+            if end_date:
+                try:
+                    if isinstance(end_date, str):
+                        end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00")).replace(tzinfo=None)
+                    else:
+                        end_dt = datetime.fromtimestamp(int(end_date))
+                    if end_dt <= now:
+                        continue
+                except Exception:
+                    pass
+            current_markets.append(m)
 
         # Sort by volume based on timeframe
         volume_key_map = {
@@ -147,7 +166,7 @@ async def get_trending_markets(
 
         # Sort by volume (descending)
         sorted_markets = sorted(
-            markets,
+            current_markets,
             key=lambda m: float(m.get(volume_key, 0) or 0),
             reverse=True
         )
@@ -179,7 +198,7 @@ async def filter_markets_by_category(
         Markets in the specified category
     """
     try:
-        params = {"tag": category}
+        params = {"tag": category, "closed": "false"}
 
         if active_only:
             params["active"] = "true"
@@ -246,8 +265,26 @@ async def get_featured_markets(limit: int = 10) -> List[Dict[str, Any]]:
     """
     try:
         # Fetch markets with featured flag
-        params = {"featured": "true", "active": "true"}
+        params = {"featured": "true", "active": "true", "closed": "false"}
         markets = await _fetch_gamma_markets("/markets", params, limit)
+
+        # Filter out markets with end_date_iso in the past
+        now = datetime.utcnow()
+        current_markets = []
+        for m in markets:
+            end_date = m.get("end_date_iso") or m.get("endDate")
+            if end_date:
+                try:
+                    if isinstance(end_date, str):
+                        end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00")).replace(tzinfo=None)
+                    else:
+                        end_dt = datetime.fromtimestamp(int(end_date))
+                    if end_dt <= now:
+                        continue
+                except Exception:
+                    pass
+            current_markets.append(m)
+        markets = current_markets
 
         # If no featured flag exists, return highest volume markets
         if not markets:
@@ -281,8 +318,8 @@ async def get_closing_soon_markets(
         cutoff_time = datetime.utcnow() + timedelta(hours=hours)
         cutoff_timestamp = int(cutoff_time.timestamp())
 
-        # Fetch active markets
-        markets = await _fetch_gamma_markets("/markets", {"active": "true"}, limit=100)
+        # Fetch active, non-closed markets
+        markets = await _fetch_gamma_markets("/markets", {"active": "true", "closed": "false"}, limit=100)
 
         # Filter markets closing within timeframe
         closing_soon = []
@@ -332,7 +369,7 @@ async def get_sports_markets(
         Sports markets
     """
     try:
-        params = {"tag": "Sports", "active": "true"}
+        params = {"tag": "Sports", "active": "true", "closed": "false"}
 
         markets = await _fetch_gamma_markets("/markets", params, limit=100)
 
@@ -371,7 +408,7 @@ async def get_crypto_markets(
         Crypto-related markets
     """
     try:
-        params = {"tag": "Crypto", "active": "true"}
+        params = {"tag": "Crypto", "active": "true", "closed": "false"}
 
         markets = await _fetch_gamma_markets("/markets", params, limit=100)
 
