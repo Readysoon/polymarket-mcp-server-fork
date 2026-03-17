@@ -63,7 +63,25 @@ Polydupe-style treemap showing all positions at a glance:
 - **Green/red gradient** intensity shows profit/loss magnitude
 - **Active/Closed** tabs with resolved positions shown as dashed borders
 - **Wallet balances**: USDC, USDC.e, POL across MetaMask and Polymarket
+- **Balance history chart** with live tracking
 - **Monitoring tab**: MCP status, rate limits, system health
+
+<details>
+<summary>📸 Dashboard Screenshots (click to expand)</summary>
+
+### Portfolio Overview
+![Dashboard Header](docs/screenshots/dashboard-header.png)
+*Profile stats, wallet balances (USDC, USDC.e, POL), P&L display, and live account balance chart.*
+
+### Treemap Positions
+![Dashboard Treemap](docs/screenshots/dashboard-treemap.png)
+*Squarified treemap — tile size reflects bet size, green = profit, red = loss. Active/Closed filter, Size by P&L or Value.*
+
+### Treemap Detail
+![Dashboard Detail](docs/screenshots/dashboard-detail.png)
+*50 positions showing gradient intensity scaling — deeper color = larger P&L. Each tile links to Polymarket, TX links to Polygonscan.*
+
+</details>
 
 ## Quick Start
 
