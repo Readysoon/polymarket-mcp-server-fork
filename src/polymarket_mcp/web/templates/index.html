@@ -238,13 +238,21 @@
         }
         .tx-link:hover { text-decoration: underline; }
 
-        /* Wallet Balances */
+        /* Wallet + Chart Row */
+        .wallet-chart-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
         .wallet-panel {
             background: #111118;
             border: 1px solid #1e1e2e;
             border-radius: 12px;
-            padding: 1rem 1.25rem;
-            margin-bottom: 1.5rem;
+            padding: 0.75rem 1rem;
+            min-width: 190px;
+            flex-shrink: 0;
+            height: 210px;
+            overflow: hidden;
         }
         .wallet-title {
             font-size: 0.75rem; text-transform: uppercase;
@@ -253,14 +261,14 @@
             display: flex; align-items: center; gap: 0.5rem;
         }
         .wallet-title .dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; }
-        .wallet-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 0.75rem;
+        .wallet-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
         }
         .wallet-token {
-            display: flex; align-items: center; gap: 0.6rem;
-            padding: 0.5rem 0.6rem;
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.4rem 0.5rem;
             background: #0a0a14; border-radius: 8px; border: 1px solid #1e1e2e;
         }
         .token-icon {
@@ -272,7 +280,48 @@
         .token-icon.usdce { background: #2775ca; color: white; border: 2px dashed rgba(255,255,255,0.4); }
         .token-icon.pol { background: #8247e5; color: white; }
         .token-name { font-size: 0.7rem; color: #6b7280; }
-        .token-amount { font-size: 0.95rem; font-weight: 600; }
+        .token-amount { font-size: 0.85rem; font-weight: 600; }
+
+        /* Balance Chart */
+        .chart-panel {
+            background: #111118;
+            border: 1px solid #1e1e2e;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            flex: 1;
+            height: 210px;
+            position: relative;
+        }
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .chart-title {
+            font-size: 0.75rem; text-transform: uppercase;
+            letter-spacing: 0.1em; color: #6b7280;
+        }
+        .chart-total {
+            font-size: 1.1rem; font-weight: 700;
+        }
+        .chart-canvas-wrap {
+            position: relative;
+            width: 100%;
+            height: calc(100% - 40px);
+        }
+        .chart-canvas-wrap canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .chart-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: calc(100% - 40px);
+            color: #4b5563;
+            font-size: 0.8rem;
+        }
 
         @media (max-width: 1024px) {
             .dash-container { padding: 1rem; }
@@ -283,6 +332,8 @@
             .profile-header { flex-direction: column; gap: 1rem; }
             .pnl-panel { min-width: unset; width: 100%; }
             .stats-row { gap: 1.5rem; flex-wrap: wrap; }
+            .wallet-chart-row { flex-direction: column; }
+            .wallet-panel { min-width: unset; }
             .controls { flex-direction: column; gap: 0.75rem; align-items: flex-start; }
         }
     </style>
@@ -345,30 +396,41 @@
             </div>
         </div>
 
-        <!-- Wallet Balances -->
-        <div class="wallet-panel">
-            <div class="wallet-title"><span class="dot"></span> Wallet Balances</div>
-            <div class="wallet-grid">
-                <div class="wallet-token">
-                    <div class="token-icon usdc">$</div>
-                    <div>
-                        <div class="token-name">USDC</div>
-                        <div class="token-amount" id="bal-usdc">--</div>
+        <!-- Wallet + Chart Row -->
+        <div class="wallet-chart-row">
+            <div class="wallet-panel">
+                <div class="wallet-title"><span class="dot"></span> Wallet</div>
+                <div class="wallet-stack">
+                    <div class="wallet-token">
+                        <div class="token-icon usdc">$</div>
+                        <div>
+                            <div class="token-name">USDC</div>
+                            <div class="token-amount" id="bal-usdc">--</div>
+                        </div>
+                    </div>
+                    <div class="wallet-token">
+                        <div class="token-icon usdce">$</div>
+                        <div>
+                            <div class="token-name">USDC.e</div>
+                            <div class="token-amount" id="bal-usdce">--</div>
+                        </div>
+                    </div>
+                    <div class="wallet-token">
+                        <div class="token-icon pol">P</div>
+                        <div>
+                            <div class="token-name">POL</div>
+                            <div class="token-amount" id="bal-pol">--</div>
+                        </div>
                     </div>
                 </div>
-                <div class="wallet-token">
-                    <div class="token-icon usdce">$</div>
-                    <div>
-                        <div class="token-name">USDC.e</div>
-                        <div class="token-amount" id="bal-usdce">--</div>
-                    </div>
+            </div>
+            <div class="chart-panel">
+                <div class="chart-header">
+                    <span class="chart-title">Account Balance</span>
+                    <span class="chart-total" id="chart-total">--</span>
                 </div>
-                <div class="wallet-token">
-                    <div class="token-icon pol">P</div>
-                    <div>
-                        <div class="token-name">POL</div>
-                        <div class="token-amount" id="bal-pol">--</div>
-                    </div>
+                <div class="chart-canvas-wrap" id="chart-wrap">
+                    <canvas id="balance-chart"></canvas>
                 </div>
             </div>
         </div>
@@ -421,6 +483,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadPortfolio();
             loadTrendingMarkets();
+            loadBalanceHistory();
         });
 
         function showTab(tab) {
@@ -653,14 +716,154 @@
             }
         }
 
+        // ── Balance History Chart ──
+        let balanceHistory = [];
+
+        async function loadBalanceHistory() {
+            try {
+                const res = await fetch('/api/balance-history');
+                const data = await res.json();
+                balanceHistory = data.history || [];
+                drawChart();
+            } catch (e) {
+                console.error('Failed to load balance history:', e);
+            }
+        }
+
+        function drawChart() {
+            const canvas = document.getElementById('balance-chart');
+            const wrap = document.getElementById('chart-wrap');
+            if (!canvas || !wrap) return;
+
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = wrap.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            const W = rect.width;
+            const H = rect.height;
+
+            ctx.clearRect(0, 0, W, H);
+
+            if (balanceHistory.length < 2) {
+                ctx.fillStyle = '#4b5563';
+                ctx.font = '13px -apple-system, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Collecting data... chart appears after 2+ snapshots', W / 2, H / 2);
+                return;
+            }
+
+            const values = balanceHistory.map(h => h.total);
+            const times = balanceHistory.map(h => new Date(h.t));
+            const minVal = Math.min(...values) * 0.95;
+            const maxVal = Math.max(...values) * 1.05;
+            const range = maxVal - minVal || 1;
+
+            const padL = 8, padR = 8, padT = 8, padB = 24;
+            const chartW = W - padL - padR;
+            const chartH = H - padT - padB;
+
+            // Draw grid lines
+            ctx.strokeStyle = '#1e1e2e';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = padT + (chartH / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(padL, y);
+                ctx.lineTo(W - padR, y);
+                ctx.stroke();
+            }
+
+            // Y-axis labels
+            ctx.fillStyle = '#4b5563';
+            ctx.font = '10px -apple-system, sans-serif';
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 4; i++) {
+                const val = maxVal - (range / 4) * i;
+                const y = padT + (chartH / 4) * i;
+                ctx.fillText('$' + val.toFixed(2), padL + chartW + padR - 2, y + 3);
+            }
+
+            // X-axis time labels
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#4b5563';
+            const labelCount = Math.min(5, balanceHistory.length);
+            for (let i = 0; i < labelCount; i++) {
+                const idx = Math.floor(i * (balanceHistory.length - 1) / (labelCount - 1));
+                const x = padL + (idx / (balanceHistory.length - 1)) * chartW;
+                const t = times[idx];
+                const label = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                ctx.fillText(label, x, H - 4);
+            }
+
+            // Plot to points
+            function toPoint(i) {
+                const x = padL + (i / (values.length - 1)) * chartW;
+                const y = padT + chartH - ((values[i] - minVal) / range) * chartH;
+                return { x, y };
+            }
+
+            // Gradient fill
+            const firstPt = toPoint(0);
+            const lastPt = toPoint(values.length - 1);
+            const isUp = values[values.length - 1] >= values[0];
+            const color = isUp ? '#10b981' : '#ef4444';
+            const colorFade = isUp ? 'rgba(16,185,129,' : 'rgba(239,68,68,';
+
+            const grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
+            grad.addColorStop(0, colorFade + '0.3)');
+            grad.addColorStop(1, colorFade + '0.02)');
+
+            // Fill area
+            ctx.beginPath();
+            ctx.moveTo(toPoint(0).x, padT + chartH);
+            for (let i = 0; i < values.length; i++) {
+                const p = toPoint(i);
+                ctx.lineTo(p.x, p.y);
+            }
+            ctx.lineTo(toPoint(values.length - 1).x, padT + chartH);
+            ctx.closePath();
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Draw line
+            ctx.beginPath();
+            for (let i = 0; i < values.length; i++) {
+                const p = toPoint(i);
+                if (i === 0) ctx.moveTo(p.x, p.y);
+                else ctx.lineTo(p.x, p.y);
+            }
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            // Current value dot
+            const last = toPoint(values.length - 1);
+            ctx.beginPath();
+            ctx.arc(last.x, last.y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = '#0a0a0f';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Update total display
+            const totalEl = document.getElementById('chart-total');
+            const latestTotal = values[values.length - 1];
+            totalEl.textContent = '$' + latestTotal.toFixed(2);
+            totalEl.style.color = isUp ? '#10b981' : '#ef4444';
+        }
+
         // Auto-refresh
-        setInterval(loadPortfolio, 30000);
+        setInterval(() => { loadPortfolio(); loadBalanceHistory(); }, 30000);
 
         // Re-render on window resize
         let resizeTimeout;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(renderTreemap, 200);
+            resizeTimeout = setTimeout(() => { renderTreemap(); drawChart(); }, 200);
         });
     </script>
 </body>

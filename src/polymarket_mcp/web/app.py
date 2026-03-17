@@ -13,7 +13,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 import os
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Form, HTTPException
@@ -393,6 +393,16 @@ async def get_portfolio():
 
         total_value = usdc_balance + usdce_balance + sum(p["value"] for p in positions)
 
+        # Save balance snapshot for history chart
+        _save_balance_snapshot(
+            total_value=round(total_value, 2),
+            usdc=round(usdc_balance, 6),
+            usdce=round(usdce_balance, 6),
+            pol=round(pol_balance, 4),
+            positions_value=round(sum(p["value"] for p in positions), 2),
+            pnl=round(sum(p["pnl"] for p in positions), 2),
+        )
+
         return JSONResponse({
             "positions": positions,
             "usdc_balance": round(usdc_balance, 6),
@@ -407,6 +417,60 @@ async def get_portfolio():
         logger.error(f"Portfolio fetch failed: {e}")
         stats["errors"] += 1
         return JSONResponse({"positions": [], "balance": 0, "error": str(e)})
+
+
+# ============================================================================
+# Balance History
+# ============================================================================
+
+HISTORY_FILE = Path(__file__).parent / "balance_history.json"
+_SNAPSHOT_INTERVAL = 300  # minimum seconds between snapshots (5 min)
+_last_snapshot_time = 0.0
+
+
+def _load_balance_history() -> List[Dict]:
+    """Load balance history from JSON file."""
+    if HISTORY_FILE.exists():
+        try:
+            return json.loads(HISTORY_FILE.read_text())
+        except Exception:
+            return []
+    return []
+
+
+def _save_balance_snapshot(total_value, usdc, usdce, pol, positions_value, pnl):
+    """Save a balance snapshot if enough time has passed since the last one."""
+    import time
+    global _last_snapshot_time
+    now = time.time()
+    if now - _last_snapshot_time < _SNAPSHOT_INTERVAL:
+        return
+    _last_snapshot_time = now
+
+    history = _load_balance_history()
+    history.append({
+        "t": datetime.utcnow().isoformat() + "Z",
+        "total": total_value,
+        "usdc": usdc,
+        "usdce": usdce,
+        "pol": pol,
+        "positions": positions_value,
+        "pnl": pnl,
+    })
+    # Keep max 2000 entries (~7 days at 5-min intervals)
+    if len(history) > 2000:
+        history = history[-2000:]
+    try:
+        HISTORY_FILE.write_text(json.dumps(history))
+    except Exception as e:
+        logger.error(f"Failed to save balance history: {e}")
+
+
+@app.get("/api/balance-history")
+async def get_balance_history():
+    """Get balance history for charting."""
+    history = _load_balance_history()
+    return JSONResponse({"history": history})
 
 
 @app.get("/api/status")
