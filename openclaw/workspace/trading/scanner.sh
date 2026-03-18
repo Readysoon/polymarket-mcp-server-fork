@@ -132,11 +132,11 @@ for c in candidates:
         "schedule": {"kind": "at", "at": fire_iso},
         "payload": {
             "kind": "agentTurn",
-            "message": f"Run market watcher:\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{c['condition_id']}' '{yes_token}' '{c['end_datetime']}' '{c['question'][:60].replace(chr(39), '')}'\n\nIf output contains TRADED: -> notify Philipp on Telegram with what was bet\nIf output contains ALERT: -> notify Philipp on Telegram\nEverything else -> stay silent.",
+            "message": f"Run market watcher:\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{c['condition_id']}' '{yes_token}' '{c['end_datetime']}' '{c['question'][:60].replace(chr(39), '')}'\n\nOnly notify Philipp on Telegram if a trade was EXECUTED or FINALLY REJECTED (no retry). Stay completely silent otherwise.",
             "timeoutSeconds": 120
         },
         "sessionTarget": "isolated",
-        "delivery": {"mode": "announce"}
+        "delivery": {"mode": "none"}
     }
 
     # Write to cron queue for agent to pick up (openclaw CLI hangs without TTY)

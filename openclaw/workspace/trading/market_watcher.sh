@@ -89,11 +89,11 @@ if 'error' in ob or not ob.get('bids') or not ob.get('asks'):
             "schedule": {"kind": "at", "at": fire_at},
             "payload": {
                 "kind": "agentTurn",
-                "message": f"Run market watcher for: {QUESTION[:60]}\n\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{CONDITION_ID}' '{YES_TOKEN}' '{END_DATETIME}' '{QUESTION[:60]}'\n\nFor each line starting with TRADED: or ALERT: -> notify Philipp on Telegram\nFor everything else -> stay silent. Always send a full summary at the end.",
+                "message": f"Run market watcher for: {QUESTION[:60]}\n\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{CONDITION_ID}' '{YES_TOKEN}' '{END_DATETIME}' '{QUESTION[:60]}'\n\nOnly notify Philipp on Telegram if a trade was EXECUTED or FINALLY REJECTED (no retry). Stay completely silent otherwise.",
                 "timeoutSeconds": 120
             },
             "sessionTarget": "isolated",
-            "delivery": {"mode": "announce"}
+            "delivery": {"mode": "none"}
         }
         cron_queue_path = f"{TRADING_DIR}/cron_queue.json"
         try:
@@ -147,11 +147,11 @@ if spread > MAX_SPREAD:
             "schedule": {"kind": "at", "at": fire_at},
             "payload": {
                 "kind": "agentTurn",
-                "message": f"Run market watcher for: {QUESTION[:60]}\n\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{CONDITION_ID}' '{YES_TOKEN}' '{END_DATETIME}' '{QUESTION[:60]}'\n\nFor each line starting with TRADED: or ALERT: -> notify Philipp on Telegram\nFor everything else -> stay silent. Always send a full summary at the end.",
+                "message": f"Run market watcher for: {QUESTION[:60]}\n\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{CONDITION_ID}' '{YES_TOKEN}' '{END_DATETIME}' '{QUESTION[:60]}'\n\nOnly notify Philipp on Telegram if a trade was EXECUTED or FINALLY REJECTED (no retry). Stay completely silent otherwise.",
                 "timeoutSeconds": 120
             },
             "sessionTarget": "isolated",
-            "delivery": {"mode": "announce"}
+            "delivery": {"mode": "none"}
         }
         cron_queue_path = f"{TRADING_DIR}/cron_queue.json"
         try:
