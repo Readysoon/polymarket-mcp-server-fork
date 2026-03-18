@@ -88,4 +88,10 @@ benchmark*.json
 # Runtime data & private files
 src/polymarket_mcp/web/balance_history.json
 .claude/
-openclaw/
+
+# OpenClaw - ignore credentials and generated files
+openclaw/credentials/
+openclaw/workspace/trading/log.json
+openclaw/workspace/trading/journal.json
+openclaw/workspace/trading/watchlist.json
+openclaw/workspace/memory/
