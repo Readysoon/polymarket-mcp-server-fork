@@ -114,7 +114,7 @@ except:
     except:
         pop = {'bots': []}
 
-max_window = max([b.get('window_hours', 6) for b in pop.get('bots', [])] + [6])
+max_window = max([b.get('window_hours', 2) for b in pop.get('bots', [])] + [2])
 
 for c in candidates:
     end_dt = datetime.fromisoformat(c['end_datetime'].replace('Z', '+00:00'))
