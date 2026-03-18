@@ -255,16 +255,25 @@
         .trade-row:last-child { border-bottom: none; }
         .trade-row:hover { background: #1a1a2e; }
         .trade-time { color: #6b7280; font-family: 'SF Mono', monospace; font-size: 0.75rem; min-width: 60px; }
-        .trade-side {
-            font-size: 0.65rem; font-weight: 700; padding: 2px 8px;
-            border-radius: 4px; min-width: 36px; text-align: center;
-            text-transform: uppercase;
-        }
-        .trade-side.buy { background: rgba(16,185,129,0.15); color: #34d399; }
-        .trade-side.sell { background: rgba(239,68,68,0.15); color: #f87171; }
         .trade-market { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .trade-details { display: flex; gap: 1rem; align-items: center; color: #9ca3af; font-size: 0.75rem; }
-        .trade-total { font-weight: 600; color: #e5e7eb; min-width: 50px; text-align: right; }
+        .wl-price { font-size: 0.8rem; font-weight: 600; color: #a855f7; min-width: 45px; text-align: center; }
+        .wl-meta { color: #6b7280; font-size: 0.7rem; white-space: nowrap; }
+        .wl-liq { font-size: 0.7rem; color: #6b7280; min-width: 70px; text-align: right; }
+        .scan-counts { display: flex; gap: 0.75rem; }
+        .scan-count-badge {
+            font-size: 0.7rem; padding: 2px 8px; border-radius: 4px;
+            background: #1a1a2e; color: #9ca3af;
+        }
+        /* Timeline result labels */
+        .tl-label {
+            font-size: 0.65rem; font-weight: 700; padding: 1px 6px;
+            border-radius: 3px; display: inline-block; margin-right: 0.3rem;
+        }
+        .tl-label.executed { background: rgba(16,185,129,0.2); color: #34d399; }
+        .tl-label.pending { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .tl-label.skipped { background: rgba(107,114,128,0.2); color: #9ca3af; }
+        .tl-label.expired { background: rgba(239,68,68,0.15); color: #f87171; }
+        .tl-label.failed { background: rgba(239,68,68,0.25); color: #ef4444; }
 
         /* Activity Timeline */
         .timeline-section { margin-top: 2rem; }
@@ -554,15 +563,15 @@
             </div>
         </div>
 
-        <!-- Today's Trades (scrollable) -->
+        <!-- Market Watchlist (scrollable) -->
         <div class="trades-section">
             <div class="section-header">
                 <div>
-                    <div class="section-title">Today's Trades</div>
-                    <div class="section-subtitle" id="trades-count">Loading...</div>
+                    <div class="section-title">Market Watchlist</div>
+                    <div class="section-subtitle" id="wl-count">Loading...</div>
                 </div>
             </div>
-            <div class="trades-scroll" id="trades-list">
+            <div class="trades-scroll" id="wl-list">
                 <div class="loading-skeleton" style="height: 40px; margin: 8px;"></div>
                 <div class="loading-skeleton" style="height: 40px; margin: 8px;"></div>
                 <div class="loading-skeleton" style="height: 40px; margin: 8px;"></div>
@@ -963,82 +972,114 @@
             totalEl.style.color = isUp ? '#10b981' : '#ef4444';
         }
 
-        // ── Trades & Timeline ──
-        let allTrades = [];
+        // ── Watchlist & Timeline ──
+        let watchlistMarkets = [];
+        let allScans = [];
 
-        async function loadTrades() {
+        function formatNum(n) {
+            if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
+            if (n >= 1000) return '$' + (n/1000).toFixed(0) + 'K';
+            return '$' + n.toFixed(0);
+        }
+
+        async function loadWatchlist() {
             try {
-                const res = await fetch('/api/trades');
+                const res = await fetch('/api/watchlist');
                 const data = await res.json();
-                allTrades = data.trades || [];
-                renderTrades();
-                renderTimeline();
-                document.getElementById('trades-count').textContent =
-                    `${data.count || 0} trade${(data.count || 0) !== 1 ? 's' : ''} on ${data.date || 'today'}`;
+                watchlistMarkets = data.markets || [];
+                renderWatchlist();
+                document.getElementById('wl-count').textContent =
+                    `${data.count || 0} pending market${(data.count || 0) !== 1 ? 's' : ''} (${data.total_scanned || 0} total scanned)`;
             } catch (e) {
-                document.getElementById('trades-list').innerHTML =
-                    '<div class="empty-state" style="padding:1.5rem">Failed to load trades</div>';
+                document.getElementById('wl-list').innerHTML =
+                    '<div class="empty-state" style="padding:1.5rem">Failed to load watchlist</div>';
             }
         }
 
-        function renderTrades() {
-            const container = document.getElementById('trades-list');
-            if (allTrades.length === 0) {
-                container.innerHTML = '<div class="empty-state" style="padding:1.5rem;font-size:0.85rem">No trades today</div>';
+        function renderWatchlist() {
+            const container = document.getElementById('wl-list');
+            if (watchlistMarkets.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding:1.5rem;font-size:0.85rem">No pending markets</div>';
                 return;
             }
-            container.innerHTML = allTrades.map(t => `
-                <div class="trade-row">
-                    <span class="trade-time">${t.time}</span>
-                    <span class="trade-side ${t.side.toLowerCase()}">${t.side}</span>
-                    <span class="trade-market" title="${t.market}">${t.market}</span>
-                    <div class="trade-details">
-                        <span>${t.shares} @ $${t.price.toFixed(2)}</span>
-                    </div>
-                    <span class="trade-total">$${t.total.toFixed(2)}</span>
-                </div>
-            `).join('');
+            container.innerHTML = watchlistMarkets.map(m => {
+                const endTime = m.end_datetime ? new Date(m.end_datetime).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+                return `<div class="trade-row">
+                    <span class="wl-price">${m.yes_price != null ? (m.yes_price * 100).toFixed(0) + '¢' : '--'}</span>
+                    <span class="trade-market" title="${m.question}">${m.question}</span>
+                    <span class="wl-meta">${endTime ? 'closes ' + endTime : ''}</span>
+                    <span class="wl-liq">${m.liquidity ? formatNum(m.liquidity) : '--'}</span>
+                </div>`;
+            }).join('');
+        }
+
+        async function loadScans() {
+            try {
+                const res = await fetch('/api/scan-results');
+                const data = await res.json();
+                allScans = data.results || [];
+                renderTimeline();
+            } catch (e) {
+                document.getElementById('activity-timeline').innerHTML =
+                    '<div class="empty-state" style="padding:1rem">Failed to load activity</div>';
+            }
+        }
+
+        // Map raw result codes to professional labels
+        function resultLabel(raw) {
+            const map = {
+                'TRADED': { text: 'Executed', cls: 'executed' },
+                'NOT_READY': { text: 'Declined', cls: 'skipped' },
+                'NO_TRADE': { text: 'Skipped', cls: 'skipped' },
+                'EXPIRED': { text: 'Expired', cls: 'expired' },
+                'TIMEOUT': { text: 'Timed Out', cls: 'expired' },
+                'ERROR': { text: 'Failed', cls: 'failed' },
+            };
+            return map[raw] || { text: raw, cls: 'skipped' };
         }
 
         function renderTimeline() {
             const container = document.getElementById('activity-timeline');
+            if (allScans.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding:1rem;font-size:0.85rem">No activity today</div>';
+                return;
+            }
+
             const now = new Date();
             const currentHour = now.getUTCHours();
 
-            // Group trades by hour
-            const tradesByHour = {};
-            allTrades.forEach(t => {
-                const hour = parseInt(t.time.split(':')[0]);
-                if (!tradesByHour[hour]) tradesByHour[hour] = [];
-                tradesByHour[hour].push(t);
+            // Convert timestamps to local time and group by local hour
+            const scansByHour = {};
+            allScans.forEach(s => {
+                const local = new Date(s.timestamp);
+                const hour = local.getHours();
+                s._localTime = local.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+                if (!scansByHour[hour]) scansByHour[hour] = [];
+                scansByHour[hour].push(s);
             });
 
-            // Build timeline from hour 0 to current hour
+            const activeHours = Object.keys(scansByHour).map(Number).sort((a, b) => b - a);
             let html = '';
-            for (let h = currentHour; h >= 0; h--) {
-                const trades = tradesByHour[h] || [];
+            for (const h of activeHours) {
+                const scans = scansByHour[h];
                 const hourStr = String(h).padStart(2, '0') + ':00';
-                const hasTrade = trades.length > 0;
 
-                html += `<div class="timeline-entry ${hasTrade ? 'has-trade' : 'no-trade'}">
+                html += `<div class="timeline-entry has-trade">
                     <div class="timeline-time">${hourStr} UTC</div>`;
 
-                if (hasTrade) {
-                    trades.forEach(t => {
-                        const sideColor = t.side === 'BUY' ? '#34d399' : '#f87171';
-                        html += `<div class="timeline-content">
-                            <span style="color:${sideColor};font-weight:600">${t.side}</span>
-                            ${t.market}
-                        </div>
-                        <div class="timeline-trade-detail">${t.shares} shares @ $${t.price.toFixed(2)} = $${t.total.toFixed(2)}</div>`;
-                    });
-                } else {
-                    html += `<div class="timeline-content inactive">No activity</div>`;
-                }
+                scans.forEach(s => {
+                    const lbl = resultLabel(s.result);
+                    html += `<div class="timeline-content">
+                        <span class="tl-label ${lbl.cls}">${lbl.text}</span>
+                        ${s.question}
+                    </div>
+                    <div class="timeline-trade-detail">${s.action || ''}</div>`;
+                });
+
                 html += '</div>';
             }
 
-            container.innerHTML = html || '<div class="empty-state" style="padding:1rem">No timeline data</div>';
+            container.innerHTML = html;
         }
 
         // ── Date selector for closed positions ──
@@ -1068,11 +1109,11 @@
             renderTreemap();
         }
 
-        // Load trades on page load
-        document.addEventListener('DOMContentLoaded', () => { loadTrades(); });
+        // Load watchlist + scans on page load
+        document.addEventListener('DOMContentLoaded', () => { loadWatchlist(); loadScans(); });
 
         // Auto-refresh
-        setInterval(() => { loadPortfolio(); loadBalanceHistory(); loadTrades(); }, 30000);
+        setInterval(() => { loadPortfolio(); loadBalanceHistory(); loadWatchlist(); loadScans(); }, 30000);
 
         // Re-render on window resize
         let resizeTimeout;
