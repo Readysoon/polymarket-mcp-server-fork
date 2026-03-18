@@ -316,12 +316,12 @@ async def initialize_server() -> None:
                 await polymarket_client.create_api_credentials()
                 logger.info(
                     "API credentials created successfully! "
-                    "Save these to your .env file for future use:"
+                    "Save these to your .env file for future use."
                 )
-                logger.info(f"POLYMARKET_API_KEY={polymarket_client.api_creds.api_key}")
-                logger.info(
-                    f"POLYMARKET_PASSPHRASE={polymarket_client.api_creds.api_passphrase}"
-                )
+                api_key = polymarket_client.api_creds.api_key
+                passphrase = polymarket_client.api_creds.api_passphrase
+                logger.debug(f"POLYMARKET_API_KEY={api_key[:8]}...")
+                logger.debug(f"POLYMARKET_PASSPHRASE={passphrase[:8]}...")
             except Exception as e:
                 logger.warning(f"Could not create API credentials: {e}")
                 logger.info("Continuing in READ-ONLY mode")
