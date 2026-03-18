@@ -94,7 +94,9 @@ market_watcher.sh (fires per event)
 
 ```json
 {
-  "bet_pct_of_balance": 0.12,
+  "bet_pct_small": 0.50,
+  "bet_pct_normal": 0.20,
+  "balance_threshold": 50,
   "min_bet_usd": 0.50,
   "max_bet_usd": 25,
   "min_yes_price": 0.55,
@@ -103,6 +105,8 @@ market_watcher.sh (fires per event)
   "max_spread": 0.03
 }
 ```
+
+**Tiered bet sizing:** Below $50 balance, bets 50% per trade for aggressive growth. Above $50, switches to 20% per trade — allowing 4 concurrent positions with 20% always held in reserve.
 
 The bot only wakes up when there's an opportunity — no wasted API calls, no constant polling.
 
