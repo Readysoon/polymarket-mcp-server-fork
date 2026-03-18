@@ -188,7 +188,9 @@ with open(f'{TRADING_DIR}/config.json') as f:
 min_p = prod_config.get('min_yes_price', 0.55)
 max_p = prod_config.get('max_yes_price', 0.80)
 max_s = prod_config.get('max_spread', 0.03)
-bet_pct = prod_config.get('bet_pct_of_balance', 0.12)
+balance_threshold = prod_config.get('balance_threshold', 50)
+bet_pct_small = prod_config.get('bet_pct_small', 0.50)
+bet_pct_normal = prod_config.get('bet_pct_normal', 0.20)
 min_bet = prod_config.get('min_bet_usd', 0.50)
 max_bet = prod_config.get('max_bet_usd', 25)
 
@@ -274,6 +276,7 @@ if total_balance < 1.0:
     print(f"ALERT: Bankroll too low (${total_balance:.2f}) — deposit more to trade!")
     sys.exit(0)
 
+bet_pct = bet_pct_small if total_balance < balance_threshold else bet_pct_normal
 bet_size = round(min(max(total_balance * bet_pct, min_bet), max_bet), 2)
 
 # Already traded this market?

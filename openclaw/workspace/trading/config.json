@@ -1,5 +1,7 @@
 {
-  "bet_pct_of_balance": 0.12,
+  "bet_pct_small": 0.50,
+  "bet_pct_normal": 0.20,
+  "balance_threshold": 50,
   "min_bet_usd": 0.50,
   "max_bet_usd": 25,
   "min_yes_price": 0.55,
@@ -8,5 +10,5 @@
   "max_spread": 0.03,
   "stop_drawdown_24h_pct": 0.30,
   "excluded_categories": [],
-  "notes": "Event Sniper — dynamic bet sizing (12% of TOTAL portfolio incl. positions) + 30% 24h drawdown stop"
+  "notes": "Tiered sizing: <$50 balance → 50% per trade (aggressive growth), >=$50 → 20% per trade (4 slots + 20% reserve)"
 }
