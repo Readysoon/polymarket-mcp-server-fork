@@ -1,0 +1,12 @@
+{
+  "bet_pct_of_balance": 0.12,
+  "min_bet_usd": 0.50,
+  "max_bet_usd": 25,
+  "min_yes_price": 0.55,
+  "max_yes_price": 0.80,
+  "min_liquidity_usd": 10000,
+  "max_spread": 0.03,
+  "stop_drawdown_24h_pct": 0.30,
+  "excluded_categories": [],
+  "notes": "Event Sniper — dynamic bet sizing (12% of TOTAL portfolio incl. positions) + 30% 24h drawdown stop"
+}

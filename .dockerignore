@@ -57,30 +57,20 @@ coverage.xml
 .github/
 .gitlab-ci.yml
 
-# Environment
+# Environment (secrets)
 .env
 .env.local
 .env.production
-*.env
 
 # Logs
 *.log
 logs/
 
-# Documentation (except README)
-docs/
-*.md
-!README.md
-
-# Docker
-.dockerignore
-Dockerfile*
+# Docker compose (not needed on Fly)
 docker-compose*.yml
 
 # Kubernetes
 k8s/
-*.yaml
-!pyproject.toml
 
 # Misc
 tmp/

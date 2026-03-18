@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "jobs": [
+    {
+      "id": "9441b8aa-365f-4604-ae65-d6cfe8ab2689",
+      "agentId": "main",
+      "sessionKey": "agent:main:telegram:direct:866661912",
+      "name": "daily-market-scanner",
+      "enabled": true,
+      "createdAtMs": 1773830352385,
+      "updatedAtMs": 1773833424382,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 8 * * *",
+        "tz": "Europe/Berlin"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run the daily Polymarket scanner to find trading candidates for the next 7 days.\n\n1. Execute: bash /home/node/.openclaw/workspace/trading/scanner.sh\n2. Read the updated /home/node/.openclaw/workspace/trading/watchlist.json\n3. For each candidate, schedule a market_watcher cron job via the cron tool (add action) with:\n   - name: 'watch:' + first 16 chars of condition_id\n   - schedule: {kind: 'at', at: <end_datetime minus 6 hours>}\n   - payload: agentTurn to run: bash /home/node/.openclaw/workspace/trading/market_watcher.sh '<condition_id>' '<yes_token>' '<end_datetime>' '<question>'\n     If output contains TRADED: -> notify Philipp on Telegram with details\n     If output contains ALERT: -> notify Philipp on Telegram\n     Everything else -> stay silent.\n   - sessionTarget: isolated\n   - delivery: {mode: announce}\n   - Only schedule jobs where fire time (end_datetime minus 6h) is in the future\n   - Skip duplicates: don't add a job if a job with the same name already exists\n   - Max 15 jobs per day (top 15 by liquidity)\n4. Send a summary to Philipp on Telegram listing: total markets found, how many jobs scheduled, and top 10 by liquidity with end time and yes_price.",
+        "timeoutSeconds": 600
+      },
+      "delivery": {
+        "mode": "announce",
+        "channel": "telegram",
+        "to": "866661912"
+      },
+      "state": {
+        "nextRunAtMs": 1773903600000
+      }
+    },
+    {
+      "id": "4f1a6453-4a7d-40bd-8ada-1a3dff0c7165",
+      "agentId": "main",
+      "sessionKey": "agent:main:telegram:direct:866661912",
+      "name": "watch:0x0a82ae64dee08cca",
+      "enabled": true,
+      "deleteAfterRun": true,
+      "createdAtMs": 1773833322570,
+      "updatedAtMs": 1773843429759,
+      "schedule": {
+        "kind": "at",
+        "at": "2026-03-18T18:30:00.000Z"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run: bash /home/node/.openclaw/workspace/trading/market_watcher.sh '0x0a82ae64dee08cca9738def327f7020d6e67daa6d42c196c33c11a477f02d35f' '47361326610987973060187007275983606017196071858666774035039394577096962610210' '2026-03-19T00:30:00Z' 'Hawks vs Mavericks'\n\nSend the full JSON output line to Philipp on Telegram as a summary. If result=TRADED highlight it.",
+        "timeoutSeconds": 120
+      },
+      "delivery": {
+        "mode": "announce",
+        "to": "866661912",
+        "channel": "telegram"
+      },
+      "state": {
+        "nextRunAtMs": 1773858600000
+      }
+    },
+    {
+      "id": "59b307b9-c999-4a9f-b323-f42825d5e768",
+      "agentId": "main",
+      "sessionKey": "agent:main:telegram:direct:866661912",
+      "name": "watch:0x2c969fd929ea89dd",
+      "enabled": true,
+      "deleteAfterRun": true,
+      "createdAtMs": 1773833322591,
+      "updatedAtMs": 1773843429680,
+      "schedule": {
+        "kind": "at",
+        "at": "2026-03-18T18:00:00.000Z"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run: bash /home/node/.openclaw/workspace/trading/market_watcher.sh '0x2c969fd929ea89dd35f84893ee964e0e1264c298f8194ab1e683bcf0dde8d348' '36961540922856473670872890994305065836143786629172347392664942684473699861012' '2026-03-19T00:00:00Z' 'Raptors vs Bulls'\n\nSend the full JSON output line to Philipp on Telegram as a summary. If result=TRADED highlight it.",
+        "timeoutSeconds": 120
+      },
+      "delivery": {
+        "mode": "announce",
+        "to": "866661912",
+        "channel": "telegram"
+      },
+      "state": {
+        "nextRunAtMs": 1773856800000
+      }
+    },
+    {
+      "id": "d26427cf-ab6e-40bb-be4c-95f3140cbbd0",
+      "agentId": "main",
+      "sessionKey": "agent:main:telegram:direct:866661912",
+      "name": "watch:0xd7ccd587b65c38e2",
+      "enabled": true,
+      "deleteAfterRun": true,
+      "createdAtMs": 1773833322669,
+      "updatedAtMs": 1773843428623,
+      "schedule": {
+        "kind": "at",
+        "at": "2026-03-18T17:00:00.000Z"
+      },
+      "sessionTarget": "isolated",
+      "wakeMode": "now",
+      "payload": {
+        "kind": "agentTurn",
+        "message": "Run: bash /home/node/.openclaw/workspace/trading/market_watcher.sh '0xd7ccd587b65c38e2555565c851b907b3bc9aa11584befe755986c15a998f4938' '31611140417434439740607512614752487850403431951963502038190550917182753666760' '2026-03-18T23:00:00Z' 'Warriors vs Celtics O/U 214.5'\n\nSend the full JSON output line to Philipp on Telegram as a summary. If result=TRADED highlight it.",
+        "timeoutSeconds": 120
+      },
+      "delivery": {
+        "mode": "announce",
+        "to": "866661912",
+        "channel": "telegram"
+      },
+      "state": {
+        "nextRunAtMs": 1773853200000
+      }
+    }
+  ]
+}

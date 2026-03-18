@@ -1,0 +1,965 @@
+{
+  "markets": [
+    {
+      "question": "Will Jeonbuk Hyundai Motors FC win on 2026-03-18?",
+      "condition_id": "0x4d82557c3f68da2af283fd60b57dbeed729fc6703ee025ef189ba2f2985758bd",
+      "slug": "kor-jeo-any-2026-03-18-jeo",
+      "yes_price": 0.625,
+      "liquidity": 12219.9332,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T10:30:00Z",
+      "clob_token_ids": [
+        "21373790197326188462698313570076014312143943426166249864291801550388692639647",
+        "33566564366616002625684517540477633524138280920155963618707251526022383196599"
+      ],
+      "volume_24h": 10366.541748,
+      "status": "watching"
+    },
+    {
+      "question": "Counter-Strike: K27 vs Eternal Fire - Map 2 Winner",
+      "condition_id": "0xb21848f56793d609e5d3d969a210a5bc2c4bb384d3fac93ad1ea3cec78c1f0ca",
+      "slug": "cs2-k271-ef1-2026-03-18-game2",
+      "yes_price": 0.77,
+      "liquidity": 13243.4282,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T13:00:00Z",
+      "clob_token_ids": [
+        "26906487672180978950257975368135360090871972765834414581076675761867968866864",
+        "68680854767222035090143643681839340373034510704158316246882022797614237225574"
+      ],
+      "volume_24h": 1089.493444,
+      "status": "watching"
+    },
+    {
+      "question": "Alanyaspor vs. Kocaelispor: O/U 1.5",
+      "condition_id": "0x33c696225d14773af02ee5292a39f5adb6e6b434a7442349beb09325347ca25c",
+      "slug": "tur-ala-koc-2026-03-18-total-1pt5",
+      "yes_price": 0.68,
+      "liquidity": 120171.2867,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T13:00:00Z",
+      "clob_token_ids": [
+        "59221631030989981316276282401655950400351504154723642520039822529885324035573",
+        "70568048504998616837265631004667266132970589486184787532743832413369827077714"
+      ],
+      "volume_24h": 728.0694319999999,
+      "status": "watching"
+    },
+    {
+      "question": "SC Braga vs. Ferencv\u00e1rosi TC: O/U 2.5",
+      "condition_id": "0x889b5561cb9cca00af89f5d9693eff0fde67cddbed982d770b6346bab5a03635",
+      "slug": "uel-scb-ftc-2026-03-18-total-2pt5",
+      "yes_price": 0.55,
+      "liquidity": 144796.0999,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T15:30:00Z",
+      "clob_token_ids": [
+        "55413548371736632474534556695217770909505695837301115343424688757794054615682",
+        "19813006281548841494478157541170086416451981435490567728208554372807984926624"
+      ],
+      "volume_24h": 7612.658730000002,
+      "status": "watching"
+    },
+    {
+      "question": "SC Braga vs. Ferencv\u00e1rosi TC: O/U 1.5",
+      "condition_id": "0xc323b32fc93f3bedfd616d79adbeba1714e388123a6322ea6fc310f33985e6ab",
+      "slug": "uel-scb-ftc-2026-03-18-total-1pt5",
+      "yes_price": 0.785,
+      "liquidity": 53821.5461,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T15:30:00Z",
+      "clob_token_ids": [
+        "14565939268216831506619911528592773415093589369937734917850564969402391737454",
+        "95451476944633912514874662283357955832964615181200749056315267078918692263107"
+      ],
+      "volume_24h": 3769.888773,
+      "status": "watching"
+    },
+    {
+      "question": "Will SC Braga win on 2026-03-18?",
+      "condition_id": "0x68b5ff4e05e14d3ef514ba81ffe5008017839003f8afff2899c727782cf92019",
+      "slug": "uel-scb-ftc-2026-03-18-scb",
+      "yes_price": 0.655,
+      "liquidity": 371608.3412,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T15:30:00Z",
+      "clob_token_ids": [
+        "39702381409408353908861837430423076975783146876234338133101520974386705068967",
+        "41669957865569206592552111597438938434272959348206002732745003262326044335153"
+      ],
+      "volume_24h": 168517.20235600008,
+      "status": "watching"
+    },
+    {
+      "question": "Map Handicap: FAL (-1.5) vs NRG (+1.5)",
+      "condition_id": "0xc8f3f366777706237e75edf74a60f7772d332d23013e08adca710ce689901a0f",
+      "slug": "cs2-fal2-nrg-2026-03-18-map-handicap-away-1pt5",
+      "yes_price": 0.75,
+      "liquidity": 19110.5258,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T16:00:00Z",
+      "clob_token_ids": [
+        "26440843550168641788054537269275844967290764488232712615497334860688070409378",
+        "82340757148621494901506589920533813396463383332540302061472601053550396300647"
+      ],
+      "volume_24h": 159400.11166400003,
+      "status": "watching"
+    },
+    {
+      "question": "Will the price of Bitcoin be above $74,000 on March 18?",
+      "condition_id": "0xcb8c150fa942ce3e3e458b024026034a9ead3e896120825d549174f4402cf721",
+      "slug": "bitcoin-above-74k-on-march-18",
+      "yes_price": 0.585,
+      "liquidity": 35134.8367,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T16:00:00Z",
+      "clob_token_ids": [
+        "77624216005754802697466108496733703054700820498918240617816191016215725082478",
+        "88891564809098781224199059832190372718397279604241910109673021426643439573423"
+      ],
+      "volume_24h": 115892.79585799995,
+      "status": "watching"
+    },
+    {
+      "question": "Counter-Strike: Team Falcons vs NRG - Map 2 Winner",
+      "condition_id": "0xeed5fb20ad05e5bd0ab30e6407d50ef4cabe14d28e7410419c8e2d1baed0500b",
+      "slug": "cs2-fal2-nrg-2026-03-18-game2",
+      "yes_price": 0.765,
+      "liquidity": 27286.2237,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T16:00:00Z",
+      "clob_token_ids": [
+        "97965866381752231065461132597871445641272525277912125428631605630803925114533",
+        "67494489552249420254669028490405019945508840998058837396404883836160006103995"
+      ],
+      "volume_24h": 13598.802507000002,
+      "status": "watching"
+    },
+    {
+      "question": "Will the price of XRP be above $1.50 on March 18?",
+      "condition_id": "0x221df02c7fab42fa87cc42081293c0ed02417ebe18fbe0c7a7e437bbf04bcc16",
+      "slug": "xrp-above-1pt5-on-march-18",
+      "yes_price": 0.695,
+      "liquidity": 10760.6569,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T16:00:00Z",
+      "clob_token_ids": [
+        "108654734730015687511221968502504732112373041296204394492344982229902809182234",
+        "112308431411654007693754603149758066844265231155488348197068499805853004488818"
+      ],
+      "volume_24h": 1407.4062800000002,
+      "status": "watching"
+    },
+    {
+      "question": "Will the price of Ethereum be between $2,300 and $2,400 on March 18?",
+      "condition_id": "0x414abecf78fb2c4c608cbc9e63eeac703927cffe02df3342e2897b66ca506fb3",
+      "slug": "will-the-price-of-ethereum-be-between-2300-2400-on-march-18",
+      "yes_price": 0.718,
+      "liquidity": 10011.68689,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T16:00:00Z",
+      "clob_token_ids": [
+        "42758810935477145417945374994691123850678451889351639913515924288648247596640",
+        "90757957588263543698591238030643605449459449248358915533956240189484029357186"
+      ],
+      "volume_24h": 9035.718469,
+      "status": "watching"
+    },
+    {
+      "question": "Will the price of Ethereum be above $2,300 on March 18?",
+      "condition_id": "0x8b8eaf6b389efdec210b3f01ff93d9c2154c5900e12e55e4cb38fd13f04b1cc4",
+      "slug": "ethereum-above-2300-on-march-18",
+      "yes_price": 0.76,
+      "liquidity": 27086.9982,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T16:00:00Z",
+      "clob_token_ids": [
+        "73221343323251854138362448295360987040875941160005609172305477900865514414929",
+        "44056957907181737444881754639439557694051617232520802622299403318844326569900"
+      ],
+      "volume_24h": 36379.655020999984,
+      "status": "watching"
+    },
+    {
+      "question": "Ey\u00fcpspor vs. Trabzonspor: O/U 1.5",
+      "condition_id": "0x49021bb462fe7133b0cd605eb0b1eddf78f4f9f92e1f046146ea70c5afd5dfec",
+      "slug": "tur-eyu-tra-2026-03-18-total-1pt5",
+      "yes_price": 0.775,
+      "liquidity": 112310.4332,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T17:00:00Z",
+      "clob_token_ids": [
+        "43310006009983276822466568167826152171565894508095752974150379959817069192598",
+        "5419824579344087963018895959565070448704963929629599205979318214053599874628"
+      ],
+      "volume_24h": 25.284013,
+      "status": "watching"
+    },
+    {
+      "question": "LoL: Bilibili Gaming vs G2 Esports - Game 1 Winner",
+      "condition_id": "0x550b5fcc2ac374311c131ea279c5757408f3d0528bc072d05869137426a8aebb",
+      "slug": "lol-blg-g2-2026-03-18-game1",
+      "yes_price": 0.695,
+      "liquidity": 57459.8592,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T17:00:00Z",
+      "clob_token_ids": [
+        "4289907448121549239311008146291275174942597062047463640826165727710215344761",
+        "5752200728657917313558746138640646307875495299454031841467439576837208408999"
+      ],
+      "volume_24h": 31815.563748,
+      "status": "watching"
+    },
+    {
+      "question": "LoL: Bilibili Gaming vs G2 Esports - Game 2 Winner",
+      "condition_id": "0x5fe23a5fdb3e6e4aa00f87b61587352066723805c152a3c79be7710b89401edf",
+      "slug": "lol-blg-g2-2026-03-18-game2",
+      "yes_price": 0.665,
+      "liquidity": 42158.246,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T17:00:00Z",
+      "clob_token_ids": [
+        "91989967414116298179449925721253760971303709622490971373215216400022737031401",
+        "98325595496068219846492044040544099280243458705671567510853406627751849377184"
+      ],
+      "volume_24h": 12587.688344000004,
+      "status": "watching"
+    },
+    {
+      "question": "Rams Ba\u015fak\u015fehir FK vs. Antalyaspor: O/U 2.5",
+      "condition_id": "0x08c5732909152151bf9d5cfdc7bdd32acb4826563c82281c91b1b57d6ff8130e",
+      "slug": "tur-iba-ant-2026-03-18-total-2pt5",
+      "yes_price": 0.555,
+      "liquidity": 162658.5853,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T17:00:00Z",
+      "clob_token_ids": [
+        "87811862338590024060236661338540029539466545572943027774378775060649016951422",
+        "51818151343354377879066791634390274503479236224199277750000733219684567240259"
+      ],
+      "volume_24h": 95.608697,
+      "status": "watching"
+    },
+    {
+      "question": "Will Trabzonspor win on 2026-03-18?",
+      "condition_id": "0x4fc58bae35c933a07d4cba7909210a164147ee575b87ab800e44659bd79157ae",
+      "slug": "tur-eyu-tra-2026-03-18-tra",
+      "yes_price": 0.605,
+      "liquidity": 116455.2574,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T17:00:00Z",
+      "clob_token_ids": [
+        "6549230516649423911357569698283003263967074425882721432447959518455010031165",
+        "94312956428378678925676628874190170169475463155322736918960225209966938817237"
+      ],
+      "volume_24h": 83723.68761999998,
+      "status": "watching"
+    },
+    {
+      "question": "Will Rams Ba\u015fak\u015fehir FK win on 2026-03-18?",
+      "condition_id": "0xebd0d5652a1497087d0dbd1987e59f83fd47b50fad1b9910f137f84f57f24fb4",
+      "slug": "tur-iba-ant-2026-03-18-iba",
+      "yes_price": 0.645,
+      "liquidity": 86670.7369,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T17:00:00Z",
+      "clob_token_ids": [
+        "96100883990909113867212045295329783429390047799553215068526096060110086442789",
+        "22660077489711689724392996775353003737733872921125945027557840915208859504634"
+      ],
+      "volume_24h": 4696.856773,
+      "status": "watching"
+    },
+    {
+      "question": "Rams Ba\u015fak\u015fehir FK vs. Antalyaspor: O/U 1.5",
+      "condition_id": "0x0b0542b4a73174835483c8f69020c8fff06d624b4e054778697cd89efa1d3a86",
+      "slug": "tur-iba-ant-2026-03-18-total-1pt5",
+      "yes_price": 0.79,
+      "liquidity": 175367.8563,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T17:00:00Z",
+      "clob_token_ids": [
+        "72290752805046298874549473594008873716082499325697599684550942501986927134470",
+        "35130494560246920699003491902125921356375058792258518019518967558618028860089"
+      ],
+      "volume_24h": 818.49362,
+      "status": "watching"
+    },
+    {
+      "question": "FC Barcelona vs. Newcastle United FC: Both Teams to Score",
+      "condition_id": "0xdc99a857eb528e00f55020b9cf6869d3c3b938e5d6953b3246d5d5d0776f1a24",
+      "slug": "ucl-fcb1-new-2026-03-18-btts",
+      "yes_price": 0.665,
+      "liquidity": 54241.6692,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T17:45:00Z",
+      "clob_token_ids": [
+        "34408233670321036685951892188911183487583606448280619533036031025012904588956",
+        "63843319953775310723231001513552742750325540838245263670497844237688746279698"
+      ],
+      "volume_24h": 7425.159947999997,
+      "status": "watching"
+    },
+    {
+      "question": "FC Barcelona vs. Newcastle United FC: O/U 2.5",
+      "condition_id": "0x71d6a82d95d585adf288cb822c6b94eb9e6497044c3382ceaea3ce49c8e466e2",
+      "slug": "ucl-fcb1-new-2026-03-18-total-2pt5",
+      "yes_price": 0.71,
+      "liquidity": 265414.921,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T17:45:00Z",
+      "clob_token_ids": [
+        "11921311617740931947317816419398874032433202567057743259874862751795104862142",
+        "52602635690298390357752782511828106263889166604570589257201346385999770558320"
+      ],
+      "volume_24h": 5848.8287629999995,
+      "status": "watching"
+    },
+    {
+      "question": "Will FC Barcelona win on 2026-03-18?",
+      "condition_id": "0x75f980e82c6233c7335782d96795af32adf66f06755d9facf39cb1fe4573234d",
+      "slug": "ucl-fcb1-new-2026-03-18-fcb1",
+      "yes_price": 0.615,
+      "liquidity": 669383.2064,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T17:45:00Z",
+      "clob_token_ids": [
+        "25845698069276681239322469386443883416410519536634919674407031744557375519521",
+        "69055387269888828411001457624243989024790693969544659042246354718590314893370"
+      ],
+      "volume_24h": 808654.3118700022,
+      "status": "watching"
+    },
+    {
+      "question": "Will Frosinone Calcio win on 2026-03-18?",
+      "condition_id": "0x5344b3d92a098762145e4970f9a90011dfec2e0d8a65caa527cb49b9b069644c",
+      "slug": "itsb-fro-bar-2026-03-18-fro",
+      "yes_price": 0.675,
+      "liquidity": 220191.3482,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T18:00:00Z",
+      "clob_token_ids": [
+        "62618445002370891231902414718962161299662292789184767129617882435672692817173",
+        "55959749969868397223798485867504955236809643789433617638684733901935358625062"
+      ],
+      "volume_24h": 2529.5881399999994,
+      "status": "watching"
+    },
+    {
+      "question": "LoL: Bilibili Gaming vs G2 Esports - Game 3 Winner",
+      "condition_id": "0x19024ca064d06027af5158c2a87a0bc81e8650a689a463791e0346f9fb722d85",
+      "slug": "lol-blg-g2-2026-03-18-game3",
+      "yes_price": 0.67,
+      "liquidity": 45168.1607,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T18:00:00Z",
+      "clob_token_ids": [
+        "35640708304944640205792151154599701414868536539893065126405449655234895925253",
+        "17284321490870555969760762379788429932105762484575208601145515371713766202223"
+      ],
+      "volume_24h": 13533.26126,
+      "status": "watching"
+    },
+    {
+      "question": "Frosinone Calcio vs. SSC Bari: O/U 2.5",
+      "condition_id": "0x4795c5e149c57dc3bca7f849e91d8cc0c9928fbcd76e78a337396d714030bd9d",
+      "slug": "itsb-fro-bar-2026-03-18-total-2pt5",
+      "yes_price": 0.61,
+      "liquidity": 136089.2102,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T18:00:00Z",
+      "clob_token_ids": [
+        "30539657060405551152813987242317478661538201917618562272365746839070457980432",
+        "65480879391177977342340373025942679117596752514690159063169877387218907808198"
+      ],
+      "volume_24h": 97.48024699999999,
+      "status": "watching"
+    },
+    {
+      "question": "Counter-Strike: Natus Vincere vs B8 (BO3) - BLAST Open Rotterdam Group A",
+      "condition_id": "0xb837590d0368813c50fbadc2c969adce803564b34120f9713b7a7d3ba6bdbbbb",
+      "slug": "cs2-navi-b8-2026-03-18",
+      "yes_price": 0.765,
+      "liquidity": 152722.2725,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T18:30:00Z",
+      "clob_token_ids": [
+        "113172389520459161197945586743799247851244534566419036705594142973162667675023",
+        "108505646914820231031746240664643786957889226880628487763191295516382023965434"
+      ],
+      "volume_24h": 84723.45099399998,
+      "status": "watching"
+    },
+    {
+      "question": "Counter-Strike: Natus Vincere vs B8 - Map 2 Winner",
+      "condition_id": "0xb585ff160794d4031704faf1dd11ae6cc7ddd9b0a0c88cc4fe8fe016b1f2b12c",
+      "slug": "cs2-navi-b8-2026-03-18-game2",
+      "yes_price": 0.735,
+      "liquidity": 22095.8308,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T18:30:00Z",
+      "clob_token_ids": [
+        "113063295307480485617449781974575781581186794004194837075950070156852188079148",
+        "68809677098096352682973868198117618591497785910114001877794494432133951215385"
+      ],
+      "volume_24h": 120.871378,
+      "status": "watching"
+    },
+    {
+      "question": "Game Handicap: BLG (-1.5) vs G2 Esports (+1.5)",
+      "condition_id": "0x8590aee7760e03ccad679a3b551a8cebf76042a15fbb367ecf32f6e89a2e2be3",
+      "slug": "lol-blg-g2-2026-03-18-game-handicap-away-1pt5",
+      "yes_price": 0.615,
+      "liquidity": 70655.1549,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T19:00:00Z",
+      "clob_token_ids": [
+        "87722609224881756764136825377545591265640159025222260109885548473365034163017",
+        "38278408601002386019878261755405858661467170127989067032125553991596952118645"
+      ],
+      "volume_24h": 125199.90811199995,
+      "status": "watching"
+    },
+    {
+      "question": "Delfino Pescara 1936 vs. Virtus Entella: O/U 1.5",
+      "condition_id": "0x28e41defd682fe3f922ec753bc4b441a6dbe78a552e6d73c16eaf3b564e3afa2",
+      "slug": "itsb-pes-ent-2026-03-18-total-1pt5",
+      "yes_price": 0.755,
+      "liquidity": 95689.7102,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T19:00:00Z",
+      "clob_token_ids": [
+        "100182461160806513056129440630712122256596163799189773849726980407031588735121",
+        "21813356623370447589233843518402269277442000352625840045657850124028395519602"
+      ],
+      "volume_24h": 253.20052,
+      "status": "watching"
+    },
+    {
+      "question": "Games Total: O/U 3.5",
+      "condition_id": "0xb8748715c1f42211206ad835e3ad4794be809ad46c2fd863c5b7b0a9ec3ba40c",
+      "slug": "lol-blg-g2-2026-03-18-total-games-3pt5",
+      "yes_price": 0.665,
+      "liquidity": 49088.8354,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T19:00:00Z",
+      "clob_token_ids": [
+        "65716826488481420833776981058604906623012310429921048056724694941967594150356",
+        "16375606353023982956246337243869963961288118937710892689901395615842267915959"
+      ],
+      "volume_24h": 14852.240512999997,
+      "status": "watching"
+    },
+    {
+      "question": "LoL: Bilibili Gaming vs G2 Esports - Game 4 Winner",
+      "condition_id": "0x8e323171d9067c269a831e7557810aa0d97dcd766abe8138ab86ecab4990a12f",
+      "slug": "lol-blg-g2-2026-03-18-game4",
+      "yes_price": 0.605,
+      "liquidity": 16193.5368,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T19:00:00Z",
+      "clob_token_ids": [
+        "12342666353720827835553576465092819013578748452438577557930552515602369573945",
+        "89363457940917682945086921768739286658138552871817874412906848323608265569234"
+      ],
+      "volume_24h": 5296.96417,
+      "status": "watching"
+    },
+    {
+      "question": "Spread: Liverpool FC (-1.5)",
+      "condition_id": "0xee06636fde09a8d56472204a01d99a3eb0fb0d4eb94f2ee5f06547deb0269b1c",
+      "slug": "ucl-liv1-gal-2026-03-18-spread-home-1pt5",
+      "yes_price": 0.585,
+      "liquidity": 81291.5133,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T20:00:00Z",
+      "clob_token_ids": [
+        "74751735283213275708840161651088989438303681760966367359747782273102393534266",
+        "112767301962293690621132429318434065245058987202243972806580889844685950380636"
+      ],
+      "volume_24h": 88940.00346099994,
+      "status": "watching"
+    },
+    {
+      "question": "Will Liverpool FC win on 2026-03-18?",
+      "condition_id": "0x445bb75546efcbb18b15425b96d8f32c343998d8fae92f8964d8000534cd9947",
+      "slug": "ucl-liv1-gal-2026-03-18-liv1",
+      "yes_price": 0.775,
+      "liquidity": 508854.4353,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T20:00:00Z",
+      "clob_token_ids": [
+        "73990697051716678138469696740410233978310192099211924752574468585654450181240",
+        "87076643449674421025867563979305674986904094660200631728049568674877746093358"
+      ],
+      "volume_24h": 288748.51764500013,
+      "status": "watching"
+    },
+    {
+      "question": "Tottenham Hotspur FC vs. Club Atl\u00e9tico de Madrid: Both Teams to Score",
+      "condition_id": "0xb6ff48f0ca2a93f26302e242d3fa111766e6789324663b26e796000881c721e3",
+      "slug": "ucl-tot-atm1-2026-03-18-btts",
+      "yes_price": 0.615,
+      "liquidity": 55483.0099,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T20:00:00Z",
+      "clob_token_ids": [
+        "87483650162812319379523882636389679213191332814665782975215396321834770345419",
+        "56558433955922048923114425995886295915422804042175291781990395976180023167801"
+      ],
+      "volume_24h": 2303.997761,
+      "status": "watching"
+    },
+    {
+      "question": "Will FC Bayern M\u00fcnchen win on 2026-03-18?",
+      "condition_id": "0x22c811b733d800f4af032fdf968af52da30e06d268ff3c430aa90a9eda2a038a",
+      "slug": "ucl-bay1-ata1-2026-03-18-bay1",
+      "yes_price": 0.705,
+      "liquidity": 521940.6555,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T20:00:00Z",
+      "clob_token_ids": [
+        "107516046517968598071439454053508975465684785061463619804634759054220340150033",
+        "77169813073953788689476321172155811875904851410299530318938173771386729658438"
+      ],
+      "volume_24h": 174576.53437900014,
+      "status": "watching"
+    },
+    {
+      "question": "Liverpool FC vs. Galatasaray SK: Both Teams to Score",
+      "condition_id": "0x927c3095cdd325a167db713c86fd77a9048c843d359f17643d0ac4ba9eaf802b",
+      "slug": "ucl-liv1-gal-2026-03-18-btts",
+      "yes_price": 0.555,
+      "liquidity": 51706.311,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T20:00:00Z",
+      "clob_token_ids": [
+        "75644886120739572235449307124329380954555513126307037363538712079794919382089",
+        "49319411588858678826316618013730255322608306885791583991681973187820525074574"
+      ],
+      "volume_24h": 3734.8650720000005,
+      "status": "watching"
+    },
+    {
+      "question": "FC Bayern M\u00fcnchen vs. Atalanta BC: O/U 2.5",
+      "condition_id": "0xd3c6f3a57ba40bb0e27fdcddfceb8490dd4d6c07771112c357657bf843f25227",
+      "slug": "ucl-bay1-ata1-2026-03-18-total-2pt5",
+      "yes_price": 0.731,
+      "liquidity": 233240.22935,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T20:00:00Z",
+      "clob_token_ids": [
+        "1615093627155717523663920494279530533475671742425194158141381034356937696613",
+        "69936366314415993984980153472535345608725205985823133507704975157821140774862"
+      ],
+      "volume_24h": 4345.002965000001,
+      "status": "watching"
+    },
+    {
+      "question": "Tottenham Hotspur FC vs. Club Atl\u00e9tico de Madrid: O/U 2.5",
+      "condition_id": "0x213b0b9837d2af8d9bbeae33b0ef6830a3c3d622e3a3c2fb67c175c1a9473ea1",
+      "slug": "ucl-tot-atm1-2026-03-18-total-2pt5",
+      "yes_price": 0.585,
+      "liquidity": 180336.5744,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T20:00:00Z",
+      "clob_token_ids": [
+        "63888614459404563768218800438199406137130300827947397271629215083036631904767",
+        "53502858976016114238153400745290378849942317538211291544111898372040466433089"
+      ],
+      "volume_24h": 8213.570202,
+      "status": "watching"
+    },
+    {
+      "question": "FC Bayern M\u00fcnchen vs. Atalanta BC: Both Teams to Score",
+      "condition_id": "0x883ebe02c4cdb384baa0b369a9b3454f3f9463570d04a9afb7d06e008b4d45ea",
+      "slug": "ucl-bay1-ata1-2026-03-18-btts",
+      "yes_price": 0.625,
+      "liquidity": 41398.3551,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T20:00:00Z",
+      "clob_token_ids": [
+        "620992504356609880781222476553045142417779639775843422260081998985577724732",
+        "38376774286923089157516673989543729128931410607544933323572776965578943472926"
+      ],
+      "volume_24h": 4518.644445000001,
+      "status": "watching"
+    },
+    {
+      "question": "Liverpool FC vs. Galatasaray SK: O/U 2.5",
+      "condition_id": "0xbeafc8895731c43ce31c1caf3cf52156b4231af3cac90e57e30de9d5ef9e395a",
+      "slug": "ucl-liv1-gal-2026-03-18-total-2pt5",
+      "yes_price": 0.725,
+      "liquidity": 147124.5478,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T20:00:00Z",
+      "clob_token_ids": [
+        "81092110730630576101276455107403208156906044936019402171953895786866576840668",
+        "5074895698292982189740515064326639884268579372781570968808863921195772748503"
+      ],
+      "volume_24h": 3578.47527,
+      "status": "watching"
+    },
+    {
+      "question": "SE Palmeiras vs. Botafogo FR: O/U 1.5",
+      "condition_id": "0xc6b35e969ebfaa773a7e180006c77ab473f66c8fcf892c09d5ca766c7e4da6af",
+      "slug": "bra-pal-bot-2026-03-18-total-1pt5",
+      "yes_price": 0.77,
+      "liquidity": 68642.3103,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T22:00:00Z",
+      "clob_token_ids": [
+        "29667583243269213924556588870915542055186713486897815982970580540700339281737",
+        "76341978649967298750712958440616512857795474717478079993534295042583128760127"
+      ],
+      "volume_24h": 13.883113,
+      "status": "watching"
+    },
+    {
+      "question": "Will SE Palmeiras win on 2026-03-18?",
+      "condition_id": "0x152a9a2924eb9ee724d1cf916e17fe0b3dd73401efb4613c02bc6ffd91095963",
+      "slug": "bra-pal-bot-2026-03-18-pal",
+      "yes_price": 0.625,
+      "liquidity": 139488.7966,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T22:00:00Z",
+      "clob_token_ids": [
+        "36108519024502447424056492311689862615627129755422509453746007382639548207985",
+        "90101158752985273583748131515741421780736797694263154949627318494471726851038"
+      ],
+      "volume_24h": 5717.6284590000005,
+      "status": "watching"
+    },
+    {
+      "question": "EC Bahia vs. Red Bull Bragantino: O/U 1.5",
+      "condition_id": "0x7fd31d85570a33565e9a27a559045293c9fdca9e2f31a4114be3f5b1c1112684",
+      "slug": "bra-bah-bra-2026-03-18-total-1pt5",
+      "yes_price": 0.76,
+      "liquidity": 80379.2027,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T22:00:00Z",
+      "clob_token_ids": [
+        "104096765241836011689909954571477442102974571778020959433957344996432428768138",
+        "32972608139804929965520846609299884184408571825397912417221669064029464011221"
+      ],
+      "volume_24h": 359.287398,
+      "status": "watching"
+    },
+    {
+      "question": "CA Paranaense vs. Cruzeiro EC: O/U 1.5",
+      "condition_id": "0x0e07b68631fa90a25626817de438910b0451e7c680996def5fbbed2db5c6f84a",
+      "slug": "bra-cap-cru-2026-03-18-total-1pt5",
+      "yes_price": 0.71,
+      "liquidity": 79847.0317,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T22:30:00Z",
+      "clob_token_ids": [
+        "8572513048641374176468194571323983319005125551437526911976408472325861119264",
+        "87203929652611547662528383190286663770550194739908085285006674953093844839452"
+      ],
+      "volume_24h": 10.369862,
+      "status": "watching"
+    },
+    {
+      "question": "Warriors vs. Celtics: O/U 214.5",
+      "condition_id": "0xd7ccd587b65c38e2555565c851b907b3bc9aa11584befe755986c15a998f4938",
+      "slug": "nba-gsw-bos-2026-03-18-total-214pt5",
+      "yes_price": 0.555,
+      "liquidity": 30579.4252,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T23:00:00Z",
+      "clob_token_ids": [
+        "31611140417434439740607512614752487850403431951963502038190550917182753666760",
+        "66067586388640512934335870846698220480786830004877435297300695813927775583392"
+      ],
+      "volume_24h": 7029.465256,
+      "status": "watching"
+    },
+    {
+      "question": "CA Mineiro vs. S\u00e3o Paulo FC: O/U 1.5",
+      "condition_id": "0x592ce4bf8ed1b774a39fd178daa3994515c322dcc09893e9f4c97871b730b3f3",
+      "slug": "bra-cam-sao-2026-03-18-total-1pt5",
+      "yes_price": 0.69,
+      "liquidity": 79693.139,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T23:00:00Z",
+      "clob_token_ids": [
+        "30995684930209981916769337924557109583876685878563560900132228129070608536920",
+        "63450457528208681607334137499990276993430377125822619547636866291513777422677"
+      ],
+      "volume_24h": 3.125,
+      "status": "watching"
+    },
+    {
+      "question": "Mirassol FC vs. Coritiba FBC: O/U 1.5",
+      "condition_id": "0xa9715147a9fb565a39ed6a3e586103e401410edd7f2bd0e59d048a53ff587a7b",
+      "slug": "bra-mir-cor-2026-03-18-total-1pt5",
+      "yes_price": 0.725,
+      "liquidity": 80449.7362,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T23:00:00Z",
+      "clob_token_ids": [
+        "62546671301406579990527424643595033154299638790678146932106680628461783844019",
+        "105104145255831939132766132432157143537225911077985923736814803795901454765264"
+      ],
+      "volume_24h": 147.438488,
+      "status": "watching"
+    },
+    {
+      "question": "Devils vs. Rangers: O/U 5.5",
+      "condition_id": "0x34b3ce3bff99f48763a33b1cad80c5e98db66f98c1a66212effca99c753ded6b",
+      "slug": "nhl-nj-nyr-2026-03-18-total-5pt5",
+      "yes_price": 0.565,
+      "liquidity": 22925.9346,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T23:00:00Z",
+      "clob_token_ids": [
+        "84264765031441154462290640724507745595257493105938828134055155868952505319930",
+        "41331893171550556388796620633214202442574576398505906281894229438515749506653"
+      ],
+      "volume_24h": 2045.8668839999998,
+      "status": "watching"
+    },
+    {
+      "question": "Will Mirassol FC win on 2026-03-18?",
+      "condition_id": "0xb46c698f92fe40e4f88987d68d904c3748b6ab1027e9c226030099c4fe95938d",
+      "slug": "bra-mir-cor-2026-03-18-mir",
+      "yes_price": 0.585,
+      "liquidity": 142405.3555,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T23:00:00Z",
+      "clob_token_ids": [
+        "86713384230330023889178240430430932472056198159806224269261266470703962912098",
+        "45569941640412952419501549083936417922592760226506245195942090595530515058486"
+      ],
+      "volume_24h": 650.5721560000001,
+      "status": "watching"
+    },
+    {
+      "question": "Penguins vs. Hurricanes: O/U 5.5",
+      "condition_id": "0x0f259c1bfec392b6222ca9d297cb2aa2c7153c55001d73b139b3a2c4496f2f4d",
+      "slug": "nhl-pit-car-2026-03-18-total-5pt5",
+      "yes_price": 0.585,
+      "liquidity": 10215.7114,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T23:00:00Z",
+      "clob_token_ids": [
+        "85172067759262601319609623048694527424124386135938869361039350194833799539604",
+        "74024990487886016618283951955812324089286111617065073030829365114053329595174"
+      ],
+      "volume_24h": 267.65052599999996,
+      "status": "watching"
+    },
+    {
+      "question": "Counter-Strike: FURIA vs TYLOO - Map 2 Winner",
+      "condition_id": "0xe6e71a5512a48bcbf3d149f3c7826e55a5abaf87c382fbb3a5bf0711797b31e4",
+      "slug": "cs2-furia-tyloo-2026-03-18-game2",
+      "yes_price": 0.78,
+      "liquidity": 10274.4349,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T23:30:00Z",
+      "clob_token_ids": [
+        "44848359931257081266996797773970367178504586058474423393282759300110203394025",
+        "72891236654096396197841792906231023010274855863808488775171475166542629141354"
+      ],
+      "volume_24h": 46.27,
+      "status": "watching"
+    },
+    {
+      "question": "Senators vs. Capitals: O/U 5.5",
+      "condition_id": "0x91b2681ab6f665bf06bc53690d5162001c761d0b9e4cd936b642f40e4b476ec7",
+      "slug": "nhl-ott-wsh-2026-03-18-total-5pt5",
+      "yes_price": 0.565,
+      "liquidity": 11147.135,
+      "end_date": "2026-03-18",
+      "end_datetime": "2026-03-18T23:30:00Z",
+      "clob_token_ids": [
+        "3010092974444199081780207058581165308981904598804859566968937528525049302658",
+        "2969985743188241870557916603888707953449383131476412395449046198302057590804"
+      ],
+      "volume_24h": 479.19072499999993,
+      "status": "watching"
+    },
+    {
+      "question": "Counter-Strike: ENCE Academy vs MASONIC (BO3) - ESL Challenger League Europe Cup #2 Playoffs",
+      "condition_id": "0x88d2ce30ff8f8b21260b74c6b894388531546dbd333c050817d85493ad9ab5a2",
+      "slug": "cs2-encea1-msc-2026-03-18",
+      "yes_price": 0.565,
+      "liquidity": 13718.6884,
+      "end_date": "2026-03-19",
+      "end_datetime": "2026-03-19T00:00:00Z",
+      "clob_token_ids": [
+        "109654480468689063454981938382145516446683820227691245765376634016561800641524",
+        "6260183283691996651832194014659553556189664480857564650793837231913000220186"
+      ],
+      "volume_24h": 2187.9610380000004,
+      "status": "watching"
+    },
+    {
+      "question": "Spread: Timberwolves (-11.5)",
+      "condition_id": "0x51ff78c5cb3dc7bb18238be129c7304ce6fc0127893e656afbac782843a4de72",
+      "slug": "nba-uta-min-2026-03-18-spread-home-11pt5",
+      "yes_price": 0.56,
+      "liquidity": 25890.1493,
+      "end_date": "2026-03-19",
+      "end_datetime": "2026-03-19T00:00:00Z",
+      "clob_token_ids": [
+        "108439033609774053247590266917692480377641350969669206538771448080886292094886",
+        "9761268670493409613912566078561790979589146474072184833765678043978169911880"
+      ],
+      "volume_24h": 501.010386,
+      "status": "watching"
+    },
+    {
+      "question": "LoL: BNK FEARX vs Team Secret Whales - Game 4 Winner",
+      "condition_id": "0x4134ccfad667c34be2f82877f1e0075417f17976425dea3e323b76f29aadf5ad",
+      "slug": "lol-fox1-tsw-2026-03-18-game4",
+      "yes_price": 0.635,
+      "liquidity": 21325.659,
+      "end_date": "2026-03-19",
+      "end_datetime": "2026-03-19T00:00:00Z",
+      "clob_token_ids": [
+        "105682253558901599550543324536633944240865836504970466344739929153371636665938",
+        "84013273089727766015873116431388836325588687782403233238897045194462558647536"
+      ],
+      "volume_24h": 12043.372727000002,
+      "status": "watching"
+    },
+    {
+      "question": "Game Handicap: BFX (-2.5) vs Team Secret Whales (+2.5)",
+      "condition_id": "0xb61749177a16835639065702521e13159d5e3aa789cf6d600796010d947bd660",
+      "slug": "lol-fox1-tsw-2026-03-18-game-handicap-away-2pt5",
+      "yes_price": 0.58,
+      "liquidity": 37395.9348,
+      "end_date": "2026-03-19",
+      "end_datetime": "2026-03-19T00:00:00Z",
+      "clob_token_ids": [
+        "28520207134360103061708021283294324422917314702221344750270889525538692201440",
+        "19119480264575842255634188088909949885915294773161188231450795511916566565736"
+      ],
+      "volume_24h": 24165.769896,
+      "status": "watching"
+    },
+    {
+      "question": "Raptors vs. Bulls",
+      "condition_id": "0x2c969fd929ea89dd35f84893ee964e0e1264c298f8194ab1e683bcf0dde8d348",
+      "slug": "nba-tor-chi-2026-03-18",
+      "yes_price": 0.735,
+      "liquidity": 143510.6006,
+      "end_date": "2026-03-19",
+      "end_datetime": "2026-03-19T00:00:00Z",
+      "clob_token_ids": [
+        "36961540922856473670872890994305065836143786629172347392664942684473699861012",
+        "87293892871152496980018744400390036878395240804629667243777281065936490688069"
+      ],
+      "volume_24h": 172707.26127300048,
+      "status": "watching"
+    },
+    {
+      "question": "Hawks vs. Mavericks",
+      "condition_id": "0x0a82ae64dee08cca9738def327f7020d6e67daa6d42c196c33c11a477f02d35f",
+      "slug": "nba-atl-dal-2026-03-18",
+      "yes_price": 0.755,
+      "liquidity": 223215.8575,
+      "end_date": "2026-03-19",
+      "end_datetime": "2026-03-19T00:30:00Z",
+      "clob_token_ids": [
+        "47361326610987973060187007275983606017196071858666774035039394577096962610210",
+        "11168971596254213873577871458728399143373873600118442060586802083018344252051"
+      ],
+      "volume_24h": 143697.9770250001,
+      "status": "watching"
+    },
+    {
+      "question": "Santos FC vs. SC Internacional: O/U 1.5",
+      "condition_id": "0x9ca12bb540b9db9b1e0392bf3d434659c06b2098d4afbb8e26f386e4c648a1f9",
+      "slug": "bra-san-int-2026-03-18-total-1pt5",
+      "yes_price": 0.765,
+      "liquidity": 67975.1095,
+      "end_date": "2026-03-19",
+      "end_datetime": "2026-03-19T00:30:00Z",
+      "clob_token_ids": [
+        "1101748427026195698066763205184809190797917721761512174835181303607210288166",
+        "112398250955472248675529615345155357091610856425087604418596369379964215735025"
+      ],
+      "volume_24h": 7.962023,
+      "status": "watching"
+    },
+    {
+      "question": "CR Vasco da Gama vs. Fluminense FC: O/U 1.5",
+      "condition_id": "0x39bbba514a1dc83b3ab711034fa362de5dbe9c38cdf683615b6a4cda034a8f81",
+      "slug": "bra-vas-flu-2026-03-18-total-1pt5",
+      "yes_price": 0.69,
+      "liquidity": 68713.1345,
+      "end_date": "2026-03-19",
+      "end_datetime": "2026-03-19T00:30:00Z",
+      "clob_token_ids": [
+        "9666859505868554587220482997243236556165000758554723385275624486689332448546",
+        "64636497567873372719515256353457791567487097455898522719940578287293229917375"
+      ],
+      "volume_24h": 365.71647199999995,
+      "status": "watching"
+    },
+    {
+      "question": "Stars vs. Avalanche: O/U 5.5",
+      "condition_id": "0xafc4d2061ebd9e0891f1ddac80273fb5b717094cb05037a00e1f602d7fe618e4",
+      "slug": "nhl-dal-col-2026-03-18-total-5pt5",
+      "yes_price": 0.57,
+      "liquidity": 17495.2326,
+      "end_date": "2026-03-19",
+      "end_datetime": "2026-03-19T01:30:00Z",
+      "clob_token_ids": [
+        "78388029075450068662455373237294894340891595991197161070970376784276363858061",
+        "93751258708304175305104224198726564891049081781715684847433164432307796931058"
+      ],
+      "volume_24h": 333.70842,
+      "status": "watching"
+    },
+    {
+      "question": "Flyers vs. Ducks: O/U 5.5",
+      "condition_id": "0x7d6aa01cbf523df10e7a32c3c88ae2fdd037c21e3d551d54d00cafa0b9e13698",
+      "slug": "nhl-phi-ana-2026-03-18-total-5pt5",
+      "yes_price": 0.595,
+      "liquidity": 10360.6627,
+      "end_date": "2026-03-19",
+      "end_datetime": "2026-03-19T02:00:00Z",
+      "clob_token_ids": [
+        "94105937162559012825037049761544225290209337468438926370654742503953039906186",
+        "90000074517681499898530746109507062243928977708580690812097746294766106211528"
+      ],
+      "volume_24h": 114.23144400000001,
+      "status": "watching"
+    },
+    {
+      "question": "Will CD Guadalajara win on 2026-03-18?",
+      "condition_id": "0x33374ea36d6518c7f4e029f0b15527d6dd2a152ebfb0ab0d2ea14969421136e1",
+      "slug": "mex-gua-leo-2026-03-18-gua",
+      "yes_price": 0.705,
+      "liquidity": 80902.3126,
+      "end_date": "2026-03-19",
+      "end_datetime": "2026-03-19T02:07:00Z",
+      "clob_token_ids": [
+        "52166096554255282437341552430296503453022050339066732703116396558442967312346",
+        "715308717312907932259368890395355734727111319699519583598390180456940584003"
+      ],
+      "volume_24h": 4374.354138,
+      "status": "watching"
+    },
+    {
+      "question": "Will Bitcoin reach $75,000 on March 18?",
+      "condition_id": "0x25d6898deb56e73c4087649d95416f6d53717fb598033182ecae468a4db01a10",
+      "slug": "will-bitcoin-reach-75k-on-march-18",
+      "yes_price": 0.625,
+      "liquidity": 11522.1182,
+      "end_date": "2026-03-19",
+      "end_datetime": "2026-03-19T04:00:00Z",
+      "clob_token_ids": [
+        "91823842688337123375026528779490308295240858449441947520569927529750771698012",
+        "73451242125133796888972681010937505639663633284572009067215582233010591905894"
+      ],
+      "volume_24h": 929.242501,
+      "status": "watching"
+    }
+  ],
+  "last_scanned": "2026-03-18T10:24:50.552151+00:00"
+}
