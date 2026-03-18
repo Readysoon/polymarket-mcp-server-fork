@@ -1089,7 +1089,7 @@
                         ? nextCheck.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
                         : null;
 
-                    // Estimate total checks: first check at (close - 6h), then every 30min until <2h left, then every 15min
+                    // Estimate total checks: first check at (close - 2h), then every 15min
                     let scheduleStr = '';
                     if (m.end_datetime) {
                         const end = new Date(m.end_datetime).getTime();
@@ -1102,21 +1102,25 @@
                             t += hoursLeft > 2 ? 30 * 60000 : 15 * 60000;
                         }
                         const totalChecks = checkTimes.length;
-                        const checksDone = m.check_count || 0;
-                        const nextIdx = checksDone; // next check is checksDone+1 (1-indexed display)
-                        const nextCheckFromSchedule = nextCheck
-                            ? nextCheck.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-                            : (checkTimes[nextIdx] ? new Date(checkTimes[nextIdx]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : null);
-                        const followIdx = nextIdx + 1;
-                        const followTime = checkTimes[followIdx]
-                            ? new Date(checkTimes[followIdx]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-                            : null;
+                        const now = Date.now();
 
-                        const currentCheckNum = checksDone + 1;
-                        scheduleStr = `${currentCheckNum}/${totalChecks}`;
-                        if (nextCheckFromSchedule) {
-                            scheduleStr += ` @ ${nextCheckFromSchedule}`;
-                            if (followTime) scheduleStr += ` → ${followIdx + 1}/${totalChecks} @ ${followTime}`;
+                        // Find next FUTURE check (skip past ones)
+                        const nextFutureIdx = checkTimes.findIndex(ct => ct > now);
+                        const checksDone = m.check_count || 0;
+
+                        if (nextFutureIdx === -1) {
+                            scheduleStr = `${checksDone}/${totalChecks} done`;
+                        } else {
+                            const nextTime = nextCheck
+                                ? nextCheck.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                                : new Date(checkTimes[nextFutureIdx]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                            const followIdx = nextFutureIdx + 1;
+                            const followTime = checkTimes[followIdx]
+                                ? new Date(checkTimes[followIdx]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                                : null;
+                            const nextNum = nextFutureIdx + 1;
+                            scheduleStr = `${nextNum}/${totalChecks} @ ${nextTime}`;
+                            if (followTime) scheduleStr += ` → ${nextNum + 1}/${totalChecks} @ ${followTime}`;
                         }
                     }
 
