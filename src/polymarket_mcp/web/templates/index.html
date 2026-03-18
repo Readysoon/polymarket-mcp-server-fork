@@ -1126,7 +1126,7 @@
                         <span class="tl-label ${lbl.cls}">${lbl.text}</span>
                         ${s.question}
                     </div>
-                    <div class="timeline-trade-detail">${s.action || ''}</div>`;
+                    <div class="timeline-trade-detail">${s.reason ? s.reason.split('\n')[0].slice(0, 80) : ''}</div>`;
                 });
 
                 html += '</div>';
