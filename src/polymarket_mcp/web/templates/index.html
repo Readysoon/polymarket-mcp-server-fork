@@ -1083,7 +1083,42 @@
                         : null;
                     const checkNum = m.check_count > 0 ? `check #${m.check_count}` : 'first check pending';
                     const countdownId = `pending-countdown-${idx}`;
-                    const nextCheck = m.next_check ? new Date(m.next_check).getTime() : null;
+                    const nextCheck = m.next_check ? new Date(m.next_check) : null;
+                    const nextCheckTarget = nextCheck ? nextCheck.getTime() : null;
+                    const nextCheckTime = nextCheck
+                        ? nextCheck.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                        : null;
+
+                    // Estimate total checks: first check at (close - 6h), then every 30min until <2h left, then every 15min
+                    let scheduleStr = '';
+                    if (m.end_datetime) {
+                        const end = new Date(m.end_datetime).getTime();
+                        const firstCheck = end - 6 * 3600000;
+                        const checkTimes = [];
+                        let t = firstCheck;
+                        while (t < end) {
+                            checkTimes.push(t);
+                            const hoursLeft = (end - t) / 3600000;
+                            t += hoursLeft > 2 ? 30 * 60000 : 15 * 60000;
+                        }
+                        const totalChecks = checkTimes.length;
+                        const checksDone = m.check_count || 0;
+                        const nextIdx = checksDone; // next check is checksDone+1 (1-indexed display)
+                        const nextCheckFromSchedule = nextCheck
+                            ? nextCheck.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                            : (checkTimes[nextIdx] ? new Date(checkTimes[nextIdx]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : null);
+                        const followIdx = nextIdx + 1;
+                        const followTime = checkTimes[followIdx]
+                            ? new Date(checkTimes[followIdx]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                            : null;
+
+                        const currentCheckNum = checksDone + 1;
+                        scheduleStr = `${currentCheckNum}/${totalChecks}`;
+                        if (nextCheckFromSchedule) {
+                            scheduleStr += ` @ ${nextCheckFromSchedule}`;
+                            if (followTime) scheduleStr += ` → ${followIdx + 1}/${totalChecks} @ ${followTime}`;
+                        }
+                    }
 
                     html += `<div class="timeline-content">
                         <span class="tl-label pending">Pending</span>
@@ -1091,9 +1126,8 @@
                     </div>
                     <div class="timeline-trade-detail">
                         YES ${price}${closes ? ' · closes ' + closes : ''}
-                        ${lastCheck ? ' · last check ' + lastCheck : ''}
-                        · ${checkNum}
-                        ${nextCheck ? ` · next in <span id="${countdownId}" data-target="${nextCheck}">…</span>` : ''}
+                        ${scheduleStr ? ` · check ${scheduleStr}` : ''}
+                        ${nextCheckTarget ? ` · <span id="${countdownId}" data-target="${nextCheckTarget}">…</span>` : ''}
                     </div>`;
                 });
                 html += '</div>';
