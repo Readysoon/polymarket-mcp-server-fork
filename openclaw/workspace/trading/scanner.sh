@@ -15,52 +15,31 @@ with open(f'{WORKSPACE}/trading/config.json') as f:
 
 min_price = config['min_yes_price']
 max_price = config['max_yes_price']
-min_liq = config['min_liquidity_usd']
+min_vol = 50000  # min 24h volume — real activity signal
 
 now = datetime.now(timezone.utc)
 cutoff = datetime.fromtimestamp(now.timestamp() + 7*86400, tz=timezone.utc)
 
 BASE = "https://gamma-api.polymarket.com/markets"
-PARAMS = "active=true&closed=false&order=endDate&ascending=true"
 
-# Binary search for start offset
-lo, hi = 0, 30000
-start_offset = 0
+candidates = []
 with httpx.Client(timeout=15) as client:
-    while lo <= hi:
-        mid = (lo + hi) // 2
-        r = client.get(f"{BASE}?{PARAMS}&limit=1&offset={mid}")
-        data = r.json()
-        if not data:
-            hi = mid - 1
-            continue
-        try:
-            ed = datetime.fromisoformat(data[0]['endDate'].replace('Z', '+00:00'))
-            if ed < now:
-                lo = mid + 1
-            else:
-                start_offset = mid
-                hi = mid - 1
-        except:
-            hi = mid - 1
-
-    candidates = []
-    offset = max(0, start_offset - 20)
-    while offset < start_offset + 5000:
-        r = client.get(f"{BASE}?{PARAMS}&limit=200&offset={offset}")
+    # Fetch top markets by 24h volume — these have real CLOB activity
+    offset = 0
+    while offset < 2000:
+        r = client.get(f"{BASE}?active=true&closed=false&order=volume24hr&ascending=false&limit=200&offset={offset}")
         batch = r.json()
         if not batch:
             break
-        done = False
         for m in batch:
+            vol = float(m.get('volume24hr') or 0)
+            if vol < min_vol:
+                break  # sorted descending, can stop early
             try:
                 ed = datetime.fromisoformat(m['endDate'].replace('Z', '+00:00'))
             except:
                 continue
-            if ed > cutoff:
-                done = True
-                break
-            if ed < now:
+            if ed < now or ed > cutoff:
                 continue
             q = m.get('question', '')
             slug = m.get('slug', '')
@@ -75,10 +54,8 @@ with httpx.Client(timeout=15) as client:
                 continue
             if not (min_price <= yes <= max_price):
                 continue
-            liq = float(m.get('liquidityClob') or m.get('liquidityNum') or m.get('liquidity') or 0)
-            if liq < min_liq:
-                continue
             token_ids = json.loads(m['clobTokenIds']) if isinstance(m.get('clobTokenIds'), str) else m.get('clobTokenIds', [])
+            liq = float(m.get('liquidityClob') or m.get('liquidityNum') or m.get('liquidity') or 0)
             candidates.append({
                 'question': q,
                 'condition_id': m['conditionId'],
@@ -88,12 +65,10 @@ with httpx.Client(timeout=15) as client:
                 'end_date': m['endDate'][:10],
                 'end_datetime': m['endDate'],
                 'clob_token_ids': token_ids,
-                'volume_24h': m.get('volume24hr', 0),
+                'volume_24h': vol,
                 'status': 'watching'
             })
         offset += 200
-        if done:
-            break
 
 # ── Orderbook pre-filter ─────────────────────────────────────────────────────
 # Check real orderbook for each candidate — drop markets with only placeholder orders
