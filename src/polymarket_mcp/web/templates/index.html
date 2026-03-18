@@ -1032,7 +1032,7 @@
         }
 
         // Map raw result codes to professional labels
-        function resultLabel(raw, action, hoursLeft, endDatetime) {
+        function resultLabel(raw, action, hoursLeft, endDatetime, reason) {
             if (raw === 'NOT_READY') {
                 // Check if market has since expired (use end_datetime if available, else hours_left)
                 const nowExpired = endDatetime
@@ -1041,11 +1041,14 @@
                 if (nowExpired) {
                     return { text: 'Expired', cls: 'expired' };
                 }
-                // Rescheduled = still being watched
-                if (action && action.toLowerCase().includes('reschedul')) {
-                    return { text: 'Watching', cls: 'pending' };
+                // Pick label based on reason
+                if (reason) {
+                    const r = reason.toLowerCase();
+                    if (r.includes('spread')) return { text: 'Spread Wide', cls: 'skipped' };
+                    if (r.includes('orderbook') || r.includes('no bids') || r.includes('no book')) return { text: 'No Book', cls: 'skipped' };
+                    if (r.includes('liquidity')) return { text: 'Low Liquidity', cls: 'skipped' };
                 }
-                return { text: 'Declined', cls: 'skipped' };
+                return { text: 'Not Ready', cls: 'skipped' };
             }
             const map = {
                 'TRADED': { text: 'Executed', cls: 'executed' },
@@ -1118,7 +1121,7 @@
                     <div class="timeline-time">${hourStr} UTC</div>`;
 
                 scans.forEach(s => {
-                    const lbl = resultLabel(s.result, s.action, s.hours_left, s.end_datetime);
+                    const lbl = resultLabel(s.result, s.action, s.hours_left, s.end_datetime, s.reason);
                     html += `<div class="timeline-content">
                         <span class="tl-label ${lbl.cls}">${lbl.text}</span>
                         ${s.question}
