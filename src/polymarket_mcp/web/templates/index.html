@@ -232,6 +232,83 @@
 
         .empty-state { text-align: center; padding: 3rem; color: #4b5563; }
 
+        /* Trades Panel (scrollable) */
+        .trades-section { margin-top: 2rem; }
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .section-title { font-size: 1rem; font-weight: 700; }
+        .section-subtitle { font-size: 0.75rem; color: #6b7280; }
+        .trades-scroll {
+            background: #111118; border: 1px solid #1e1e2e;
+            border-radius: 12px; max-height: 260px; overflow-y: auto;
+        }
+        .trades-scroll::-webkit-scrollbar { width: 6px; }
+        .trades-scroll::-webkit-scrollbar-track { background: transparent; }
+        .trades-scroll::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 3px; }
+        .trade-row {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.6rem 1rem; border-bottom: 1px solid #1a1a2a;
+            font-size: 0.8rem; transition: background 0.15s;
+        }
+        .trade-row:last-child { border-bottom: none; }
+        .trade-row:hover { background: #1a1a2e; }
+        .trade-time { color: #6b7280; font-family: 'SF Mono', monospace; font-size: 0.75rem; min-width: 60px; }
+        .trade-side {
+            font-size: 0.65rem; font-weight: 700; padding: 2px 8px;
+            border-radius: 4px; min-width: 36px; text-align: center;
+            text-transform: uppercase;
+        }
+        .trade-side.buy { background: rgba(16,185,129,0.15); color: #34d399; }
+        .trade-side.sell { background: rgba(239,68,68,0.15); color: #f87171; }
+        .trade-market { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .trade-details { display: flex; gap: 1rem; align-items: center; color: #9ca3af; font-size: 0.75rem; }
+        .trade-total { font-weight: 600; color: #e5e7eb; min-width: 50px; text-align: right; }
+
+        /* Activity Timeline */
+        .timeline-section { margin-top: 2rem; }
+        .timeline {
+            position: relative; padding-left: 1.5rem;
+        }
+        .timeline::before {
+            content: ''; position: absolute; left: 5px; top: 8px; bottom: 8px;
+            width: 2px; background: #1e1e2e;
+        }
+        .timeline-entry {
+            position: relative; padding: 0.5rem 0 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+        .timeline-entry::before {
+            content: ''; position: absolute;
+            left: -1.5rem; top: 0.85rem;
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #2a2a4a; border: 2px solid #1e1e2e;
+        }
+        .timeline-entry.has-trade::before { background: #a855f7; border-color: #7c3aed; }
+        .timeline-entry.no-trade::before { background: #1e1e2e; border-color: #1a1a2a; }
+        .timeline-time {
+            font-family: 'SF Mono', monospace; font-size: 0.7rem;
+            color: #6b7280; margin-bottom: 0.15rem;
+        }
+        .timeline-content { color: #e5e7eb; }
+        .timeline-content.inactive { color: #4b5563; font-style: italic; }
+        .timeline-trade-detail { font-size: 0.7rem; color: #9ca3af; margin-top: 0.1rem; }
+
+        /* Date Selector for closed positions */
+        .date-selector {
+            display: flex; align-items: center; gap: 0.5rem; margin-left: auto;
+        }
+        .date-selector label { font-size: 0.75rem; color: #6b7280; }
+        .date-selector input[type="date"] {
+            background: #1a1a2e; border: 1px solid #2a2a4a; color: #e5e7eb;
+            border-radius: 6px; padding: 0.3rem 0.5rem; font-size: 0.75rem;
+            font-family: inherit;
+        }
+        .date-selector input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.7);
+        }
+
         .tx-link {
             font-size: 0.6rem; color: #6366f1;
             text-decoration: none; font-family: monospace;
@@ -454,6 +531,11 @@
                     <button class="toggle-btn" onclick="setSizeBy('value')">Value</button>
                 </div>
             </div>
+            <div class="date-selector" id="closed-date-selector" style="display:none;">
+                <label for="closed-date">Date:</label>
+                <input type="date" id="closed-date" onchange="filterClosedByDate()">
+                <button class="toggle-btn" onclick="clearClosedDate()" style="font-size:0.7rem;padding:0.3rem 0.5rem;">All</button>
+            </div>
         </div>
 
         <!-- Positions Treemap -->
@@ -469,6 +551,34 @@
                 <div class="loading-skeleton" style="height: 60px; margin-bottom: 8px;"></div>
                 <div class="loading-skeleton" style="height: 60px; margin-bottom: 8px;"></div>
                 <div class="loading-skeleton" style="height: 60px;"></div>
+            </div>
+        </div>
+
+        <!-- Today's Trades (scrollable) -->
+        <div class="trades-section">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Today's Trades</div>
+                    <div class="section-subtitle" id="trades-count">Loading...</div>
+                </div>
+            </div>
+            <div class="trades-scroll" id="trades-list">
+                <div class="loading-skeleton" style="height: 40px; margin: 8px;"></div>
+                <div class="loading-skeleton" style="height: 40px; margin: 8px;"></div>
+                <div class="loading-skeleton" style="height: 40px; margin: 8px;"></div>
+            </div>
+        </div>
+
+        <!-- Activity Timeline -->
+        <div class="timeline-section">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Activity Timeline</div>
+                    <div class="section-subtitle">Hourly breakdown of trading activity</div>
+                </div>
+            </div>
+            <div class="timeline" id="activity-timeline">
+                <div class="loading-skeleton" style="height: 200px;"></div>
             </div>
         </div>
     </div>
@@ -492,13 +602,6 @@
             document.getElementById('positions-tab').style.display = tab === 'positions' ? '' : 'none';
             document.getElementById('trending-tab').style.display = tab === 'trending' ? '' : 'none';
             document.getElementById('positions-controls').style.display = tab === 'positions' ? '' : 'none';
-        }
-
-        function setFilter(filter) {
-            currentFilter = filter;
-            document.querySelectorAll('#status-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-            renderTreemap();
         }
 
         function setSizeBy(mode) {
@@ -598,9 +701,13 @@
 
         function renderTreemap() {
             const container = document.getElementById('treemap-container');
-            const filtered = allPositions.filter(p =>
+            let filtered = allPositions.filter(p =>
                 currentFilter === 'active' ? !p.realized : p.realized
             );
+            // Apply date filter for closed positions
+            if (currentFilter === 'closed' && closedDateFilter) {
+                filtered = filtered.filter(p => p.last_trade_date === closedDateFilter);
+            }
 
             if (filtered.length === 0) {
                 const msg = currentFilter === 'active'
@@ -856,8 +963,116 @@
             totalEl.style.color = isUp ? '#10b981' : '#ef4444';
         }
 
+        // ── Trades & Timeline ──
+        let allTrades = [];
+
+        async function loadTrades() {
+            try {
+                const res = await fetch('/api/trades');
+                const data = await res.json();
+                allTrades = data.trades || [];
+                renderTrades();
+                renderTimeline();
+                document.getElementById('trades-count').textContent =
+                    `${data.count || 0} trade${(data.count || 0) !== 1 ? 's' : ''} on ${data.date || 'today'}`;
+            } catch (e) {
+                document.getElementById('trades-list').innerHTML =
+                    '<div class="empty-state" style="padding:1.5rem">Failed to load trades</div>';
+            }
+        }
+
+        function renderTrades() {
+            const container = document.getElementById('trades-list');
+            if (allTrades.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding:1.5rem;font-size:0.85rem">No trades today</div>';
+                return;
+            }
+            container.innerHTML = allTrades.map(t => `
+                <div class="trade-row">
+                    <span class="trade-time">${t.time}</span>
+                    <span class="trade-side ${t.side.toLowerCase()}">${t.side}</span>
+                    <span class="trade-market" title="${t.market}">${t.market}</span>
+                    <div class="trade-details">
+                        <span>${t.shares} @ $${t.price.toFixed(2)}</span>
+                    </div>
+                    <span class="trade-total">$${t.total.toFixed(2)}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('activity-timeline');
+            const now = new Date();
+            const currentHour = now.getUTCHours();
+
+            // Group trades by hour
+            const tradesByHour = {};
+            allTrades.forEach(t => {
+                const hour = parseInt(t.time.split(':')[0]);
+                if (!tradesByHour[hour]) tradesByHour[hour] = [];
+                tradesByHour[hour].push(t);
+            });
+
+            // Build timeline from hour 0 to current hour
+            let html = '';
+            for (let h = currentHour; h >= 0; h--) {
+                const trades = tradesByHour[h] || [];
+                const hourStr = String(h).padStart(2, '0') + ':00';
+                const hasTrade = trades.length > 0;
+
+                html += `<div class="timeline-entry ${hasTrade ? 'has-trade' : 'no-trade'}">
+                    <div class="timeline-time">${hourStr} UTC</div>`;
+
+                if (hasTrade) {
+                    trades.forEach(t => {
+                        const sideColor = t.side === 'BUY' ? '#34d399' : '#f87171';
+                        html += `<div class="timeline-content">
+                            <span style="color:${sideColor};font-weight:600">${t.side}</span>
+                            ${t.market}
+                        </div>
+                        <div class="timeline-trade-detail">${t.shares} shares @ $${t.price.toFixed(2)} = $${t.total.toFixed(2)}</div>`;
+                    });
+                } else {
+                    html += `<div class="timeline-content inactive">No activity</div>`;
+                }
+                html += '</div>';
+            }
+
+            container.innerHTML = html || '<div class="empty-state" style="padding:1rem">No timeline data</div>';
+        }
+
+        // ── Date selector for closed positions ──
+        let closedDateFilter = null;
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('#status-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Show/hide date selector
+            const dateSel = document.getElementById('closed-date-selector');
+            dateSel.style.display = filter === 'closed' ? 'flex' : 'none';
+
+            renderTreemap();
+        }
+
+        function filterClosedByDate() {
+            const val = document.getElementById('closed-date').value;
+            closedDateFilter = val || null;
+            renderTreemap();
+        }
+
+        function clearClosedDate() {
+            document.getElementById('closed-date').value = '';
+            closedDateFilter = null;
+            renderTreemap();
+        }
+
+        // Load trades on page load
+        document.addEventListener('DOMContentLoaded', () => { loadTrades(); });
+
         // Auto-refresh
-        setInterval(() => { loadPortfolio(); loadBalanceHistory(); }, 30000);
+        setInterval(() => { loadPortfolio(); loadBalanceHistory(); loadTrades(); }, 30000);
 
         // Re-render on window resize
         let resizeTimeout;
