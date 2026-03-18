@@ -102,25 +102,16 @@ async def search_markets(
         List of markets matching the query
     """
     try:
-        params = {"active": "true", "closed": "false"}
+        # Fetch markets with search — default to active, non-closed markets
+        params = {"query": query, "active": "true", "closed": "false"}
 
         if filters:
             params.update(filters)
 
-        # Fetch a larger batch and filter client-side (Gamma API has no text search)
-        markets = await _fetch_gamma_markets("/markets", params, limit=200)
+        markets = await _fetch_gamma_markets("/markets", params, limit)
 
-        query_lower = query.lower()
-        markets = [
-            m for m in markets
-            if query_lower in m.get("question", "").lower()
-            or query_lower in m.get("description", "").lower()
-            or query_lower in m.get("slug", "").lower()
-        ]
-
-        result = markets[:limit]
-        logger.info(f"Found {len(result)} markets for query: {query}")
-        return result
+        logger.info(f"Found {len(markets)} markets for query: {query}")
+        return markets
 
     except Exception as e:
         logger.error(f"Failed to search markets: {e}")
@@ -143,7 +134,26 @@ async def get_trending_markets(
     """
     try:
         # Fetch all active, non-closed markets
-        markets = await _fetch_gamma_markets("/markets", {"active": "true", "closed": "false"}, limit=100)
+        markets = await _fetch_gamma_markets(
+            "/markets", {"active": "true", "closed": "false"}, limit=100
+        )
+
+        # Filter out markets with end_date_iso in the past
+        now = datetime.utcnow()
+        current_markets = []
+        for m in markets:
+            end_date = m.get("end_date_iso") or m.get("endDate")
+            if end_date:
+                try:
+                    if isinstance(end_date, str):
+                        end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00")).replace(tzinfo=None)
+                    else:
+                        end_dt = datetime.fromtimestamp(int(end_date))
+                    if end_dt <= now:
+                        continue
+                except Exception:
+                    pass
+            current_markets.append(m)
 
         # Sort by volume based on timeframe
         volume_key_map = {
@@ -156,7 +166,7 @@ async def get_trending_markets(
 
         # Sort by volume (descending)
         sorted_markets = sorted(
-            markets,
+            current_markets,
             key=lambda m: float(m.get(volume_key, 0) or 0),
             reverse=True
         )
@@ -188,26 +198,15 @@ async def filter_markets_by_category(
         Markets in the specified category
     """
     try:
-        params = {"closed": "false"}
+        params = {"tag": category, "closed": "false"}
 
         if active_only:
             params["active"] = "true"
 
-        # Fetch a larger batch and filter client-side (tag param is not supported)
-        markets = await _fetch_gamma_markets("/markets", params, limit=200)
+        markets = await _fetch_gamma_markets("/markets", params, limit)
 
-        category_lower = category.lower()
-        markets = [
-            m for m in markets
-            if category_lower in m.get("question", "").lower()
-            or category_lower in m.get("description", "").lower()
-            or category_lower in (m.get("category") or "").lower()
-            or any(category_lower in str(t).lower() for t in (m.get("tags") or []))
-        ]
-
-        result = markets[:limit]
-        logger.info(f"Found {len(result)} markets in category: {category}")
-        return result
+        logger.info(f"Found {len(markets)} markets in category: {category}")
+        return markets
 
     except Exception as e:
         logger.error(f"Failed to filter markets by category: {e}")
@@ -269,6 +268,24 @@ async def get_featured_markets(limit: int = 10) -> List[Dict[str, Any]]:
         params = {"featured": "true", "active": "true", "closed": "false"}
         markets = await _fetch_gamma_markets("/markets", params, limit)
 
+        # Filter out markets with end_date_iso in the past
+        now = datetime.utcnow()
+        current_markets = []
+        for m in markets:
+            end_date = m.get("end_date_iso") or m.get("endDate")
+            if end_date:
+                try:
+                    if isinstance(end_date, str):
+                        end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00")).replace(tzinfo=None)
+                    else:
+                        end_dt = datetime.fromtimestamp(int(end_date))
+                    if end_dt <= now:
+                        continue
+                except Exception:
+                    pass
+            current_markets.append(m)
+        markets = current_markets
+
         # If no featured flag exists, return highest volume markets
         if not markets:
             logger.info("No featured markets found, returning highest volume markets")
@@ -297,61 +314,39 @@ async def get_closing_soon_markets(
         Markets closing soon
     """
     try:
-        import aiohttp
+        # Calculate cutoff time
+        cutoff_time = datetime.utcnow() + timedelta(hours=hours)
+        cutoff_timestamp = int(cutoff_time.timestamp())
 
-        now = datetime.utcnow()
-        cutoff_time = now + timedelta(hours=hours)
+        # Fetch active, non-closed markets
+        markets = await _fetch_gamma_markets("/markets", {"active": "true", "closed": "false"}, limit=100)
 
-        # Binary search using offset to find the starting point in the date-sorted list
-        # The API supports order=endDate&ascending=true&offset=N
-        base_params = "active=true&closed=false&order=endDate&ascending=true"
-        base_url = f"{GAMMA_API_URL}/markets"
-
-        # Binary search for the offset where endDate >= now
-        lo, hi = 0, 30000
-        start_offset = 0
-        async with aiohttp.ClientSession() as session:
-            while lo <= hi:
-                mid = (lo + hi) // 2
-                url = f"{base_url}?{base_params}&limit=1&offset={mid}"
-                async with session.get(url) as resp:
-                    data = await resp.json()
-                    if not data:
-                        hi = mid - 1
-                        continue
-                    m = data[0]
-                    end_date = m.get("endDate", "")
-                    try:
-                        end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00")).replace(tzinfo=None)
-                    except Exception:
-                        hi = mid - 1
-                        continue
-                    if end_dt < now:
-                        lo = mid + 1
-                    else:
-                        start_offset = mid
-                        hi = mid - 1
-
-            # Fetch a window of markets starting at our found offset
-            fetch_limit = max(limit * 10, 200)
-            url = f"{base_url}?{base_params}&limit={fetch_limit}&offset={max(0, start_offset - 50)}"
-            async with session.get(url) as resp:
-                all_markets = await resp.json()
-
-        # Filter to the actual time window
+        # Filter markets closing within timeframe
         closing_soon = []
-        for market in all_markets:
-            end_date = market.get("endDate", "")
-            try:
-                end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00")).replace(tzinfo=None)
-                if now <= end_dt <= cutoff_time:
-                    closing_soon.append(market)
-            except Exception:
-                continue
+        for market in markets:
+            end_date = market.get("endDate") or market.get("end_date_iso")
+            if end_date:
+                # Parse ISO date or timestamp
+                try:
+                    if isinstance(end_date, str):
+                        end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+                    else:
+                        end_dt = datetime.fromtimestamp(int(end_date))
 
-        closing_soon.sort(key=lambda m: m.get("endDate", ""))
+                    # Check if closing within timeframe
+                    if end_dt <= cutoff_time:
+                        closing_soon.append(market)
+
+                except Exception as parse_error:
+                    logger.warning(f"Failed to parse end_date: {end_date}, error: {parse_error}")
+                    continue
+
+        # Sort by end date (soonest first)
+        closing_soon.sort(key=lambda m: m.get("endDate", m.get("end_date_iso", "")))
+
         result = closing_soon[:limit]
         logger.info(f"Found {len(result)} markets closing within {hours} hours")
+
         return result
 
     except Exception as e:
@@ -374,31 +369,18 @@ async def get_sports_markets(
         Sports markets
     """
     try:
-        params = {"active": "true", "closed": "false"}
+        params = {"tag": "Sports", "active": "true", "closed": "false"}
 
-        markets = await _fetch_gamma_markets("/markets", params, limit=200)
-
-        # Filter by sports keywords client-side
-        sports_keywords = {
-            "nfl", "nba", "mlb", "nhl", "mls", "ufc", "mma", "tennis", "golf",
-            "soccer", "football", "basketball", "baseball", "hockey", "rugby",
-            "cricket", "boxing", "champion", "championship", "world cup", "olympics",
-            "league", "playoff", "tournament", "match", "win", "score", "fifa",
-            "super bowl", "nascar", "f1", "formula"
-        }
-        markets = [
-            m for m in markets
-            if any(kw in m.get("question", "").lower() for kw in sports_keywords)
-            or any(kw in (m.get("category") or "").lower() for kw in {"sports", "sport"})
-        ]
+        markets = await _fetch_gamma_markets("/markets", params, limit=100)
 
         # Further filter by sport type if specified
         if sport_type:
             sport_type_lower = sport_type.lower()
             markets = [
                 m for m in markets
-                if sport_type_lower in m.get("question", "").lower()
-                or any(sport_type_lower in str(t).lower() for t in (m.get("tags") or []))
+                if sport_type_lower in m.get("question", "").lower() or
+                   sport_type_lower in m.get("title", "").lower() or
+                   any(sport_type_lower in tag.lower() for tag in m.get("tags", []))
             ]
 
         result = markets[:limit]
@@ -426,37 +408,18 @@ async def get_crypto_markets(
         Crypto-related markets
     """
     try:
-        # Try with tag filter first
-        params = {"active": "true", "closed": "false", "tag": "crypto"}
-        markets = await _fetch_gamma_markets("/markets", params, limit=200)
+        params = {"tag": "Crypto", "active": "true", "closed": "false"}
 
-        # Fallback: fetch more markets and filter client-side
-        if not markets:
-            params_fallback = {"active": "true", "closed": "false"}
-            markets = await _fetch_gamma_markets("/markets", params_fallback, limit=500)
-
-        # Filter by crypto keywords client-side
-        crypto_keywords = {
-            "bitcoin", "btc", "ethereum", "eth", "crypto", "cryptocurrency",
-            "solana", "sol", "xrp", "ripple", "bnb", "doge", "dogecoin",
-            "polygon", "matic", "chainlink", "link", "avalanche", "avax",
-            "cardano", "ada", "polkadot", "dot", "uniswap", "defi", "nft",
-            "token", "coin", "blockchain", "web3", "altcoin", "stablecoin",
-            "usdc", "usdt", "tether", "coinbase", "binance"
-        }
-        markets = [
-            m for m in markets
-            if any(kw in m.get("question", "").lower() for kw in crypto_keywords)
-            or any(kw in (m.get("category") or "").lower() for kw in {"crypto", "cryptocurrency"})
-        ]
+        markets = await _fetch_gamma_markets("/markets", params, limit=100)
 
         # Further filter by symbol if specified
         if symbol:
             symbol_upper = symbol.upper()
             markets = [
                 m for m in markets
-                if symbol_upper in m.get("question", "").upper()
-                or any(symbol_upper in str(t).upper() for t in (m.get("tags") or []))
+                if symbol_upper in m.get("question", "").upper() or
+                   symbol_upper in m.get("title", "").upper() or
+                   any(symbol_upper in tag.upper() for tag in m.get("tags", []))
             ]
 
         result = markets[:limit]
