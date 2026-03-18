@@ -77,11 +77,11 @@ if hours_left < 0.1:
     print(f"EXPIRED: {QUESTION[:50]}")
     sys.exit(0)
 
-# ── Check orderbook ──────────────────────────────────────────────────────────
-ob = mcporter('get_orderbook', token_id=YES_TOKEN, depth=3)
+# ── Check AMM price ──────────────────────────────────────────────────────────
+price_data = mcporter('get_current_price', token_id=YES_TOKEN, side='BOTH')
 
-if 'error' in ob or not ob.get('bids') or not ob.get('asks'):
-    error_detail = ob.get('error', 'no bids/asks in orderbook')
+if 'error' in price_data or price_data.get('bid') is None or price_data.get('ask') is None:
+    error_detail = price_data.get('error', 'no price available')
     if hours_left > 1:
         fire_at = (now + timedelta(minutes=30)).strftime('%Y-%m-%dT%H:%M:%SZ')
         job = {
@@ -111,7 +111,7 @@ if 'error' in ob or not ob.get('bids') or not ob.get('asks'):
             "end_datetime": END_DATETIME,
             "hours_left": round(hours_left, 2),
             "result": "NOT_READY",
-            "reason": f"No orderbook available: {error_detail}",
+            "reason": f"No AMM price available: {error_detail}",
             "action": "Rescheduled retry in 30min"
         }
     else:
@@ -122,22 +122,22 @@ if 'error' in ob or not ob.get('bids') or not ob.get('asks'):
             "end_datetime": END_DATETIME,
             "hours_left": round(hours_left, 2),
             "result": "TIMEOUT",
-            "reason": f"No orderbook and <1h left: {error_detail}",
+            "reason": f"No AMM price and <1h left: {error_detail}",
             "action": "Abandoned"
         }
     write_log(entry)
     print(json.dumps(entry))
     sys.exit(0)
 
-def price(e):
-    return float(e['price']) if isinstance(e, dict) else float(getattr(e,'price',0))
-
-best_bid = price(ob['bids'][0])
-best_ask = price(ob['asks'][0])
+best_bid = float(price_data['bid'])
+best_ask = float(price_data['ask'])
+# AMM can return bid > ask — normalize
+if best_bid > best_ask:
+    best_bid, best_ask = best_ask, best_bid
 spread = best_ask - best_bid
 mid = (best_bid + best_ask) / 2
 
-MAX_SPREAD = 0.05
+MAX_SPREAD = 0.10  # AMM spreads are naturally wider than CLOB
 if spread > MAX_SPREAD:
     if hours_left > 0.5:
         retry_mins = 30 if hours_left > 2 else 15
@@ -203,7 +203,7 @@ with open(f'{TRADING_DIR}/config.json') as f:
 
 min_p = prod_config.get('min_yes_price', 0.55)
 max_p = prod_config.get('max_yes_price', 0.80)
-max_s = prod_config.get('max_spread', 0.03)
+max_s = prod_config.get('max_spread', 0.10)  # AMM: wider spread acceptable
 balance_threshold = prod_config.get('balance_threshold', 50)
 bet_pct_small = prod_config.get('bet_pct_small', 0.50)
 bet_pct_normal = prod_config.get('bet_pct_normal', 0.20)
@@ -316,11 +316,10 @@ if already:
     print(json.dumps(entry))
     sys.exit(0)
 
-# Place order
-result = mcporter('create_limit_order',
+# Place order via AMM (market order — executes at current AMM price)
+result = mcporter('create_market_order',
     market_id=CONDITION_ID,
     side='BUY',
-    price=round(best_ask, 2),
     size=bet_size
 )
 

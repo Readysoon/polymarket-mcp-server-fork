@@ -95,23 +95,25 @@ for c in candidates:
         print(f"SKIP (no token): {c['question'][:55]}")
         continue
 
-    ob = mcporter('get_orderbook', token_id=yes_token, depth=5)
-    if 'error' in ob:
-        print(f"SKIP (ob error): {c['question'][:55]}")
+    # Use AMM price (get_current_price) — more reliable than CLOB orderbook for sports markets
+    price_data = mcporter('get_current_price', token_id=yes_token, side='BOTH')
+    if 'error' in price_data:
+        print(f"SKIP (price error): {c['question'][:55]}")
         continue
 
-    # Filter out placeholder orders
-    real_bids = [b for b in ob.get('bids', []) if float(b['price'] if isinstance(b,dict) else b.price) >= MIN_REAL_BID]
-    real_asks = [a for a in ob.get('asks', []) if float(a['price'] if isinstance(a,dict) else a.price) <= MAX_REAL_ASK]
-
-    if not real_bids or not real_asks:
-        print(f"SKIP (no real orders): {c['question'][:55]}")
+    bid = price_data.get('bid')
+    ask = price_data.get('ask')
+    if bid is None or ask is None:
+        print(f"SKIP (no price): {c['question'][:55]}")
         continue
 
-    best_bid = float(real_bids[0]['price'] if isinstance(real_bids[0],dict) else real_bids[0].price)
-    best_ask = float(real_asks[0]['price'] if isinstance(real_asks[0],dict) else real_asks[0].price)
-    spread = best_ask - best_bid
-    mid = (best_bid + best_ask) / 2
+    bid = float(bid)
+    ask = float(ask)
+    # AMM can return bid > ask — normalize
+    if bid > ask:
+        bid, ask = ask, bid
+    spread = ask - bid
+    mid = (bid + ask) / 2
 
     if spread > MAX_SPREAD:
         print(f"SKIP (spread {spread:.2f}): {c['question'][:55]}")
@@ -121,10 +123,10 @@ for c in candidates:
         print(f"SKIP (mid {mid:.2f} out of range): {c['question'][:55]}")
         continue
 
-    c['ob_bid'] = best_bid
-    c['ob_ask'] = best_ask
-    c['ob_spread'] = round(spread, 4)
-    c['ob_mid'] = round(mid, 4)
+    c['amm_bid'] = round(bid, 4)
+    c['amm_ask'] = round(ask, 4)
+    c['amm_spread'] = round(spread, 4)
+    c['amm_mid'] = round(mid, 4)
     real_candidates.append(c)
     print(f"CANDIDATE: {c['question'][:55]} | mid={mid:.2f} spread={spread:.3f}")
 
