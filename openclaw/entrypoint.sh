@@ -65,4 +65,4 @@ export OPENCLAW_NODE_OPTIONS_READY=1
 export OPENCLAW_LOG_LEVEL=trace
 export DEBUG="openclaw:*"
 export MCPORTER_CONFIG=/home/node/.config/mcporter/mcporter.json
-exec node --trace-warnings openclaw.mjs gateway --allow-unconfigured --port 18789 --bind lan --verbose 2>&1
+node --trace-warnings openclaw.mjs gateway --allow-unconfigured --port 18789 --bind lan --verbose 2>&1 | tee /tmp/openclaw-gateway.log

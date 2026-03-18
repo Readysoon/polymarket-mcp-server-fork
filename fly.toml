@@ -20,6 +20,6 @@ primary_region = "ams"
   min_machines_running = 1
 
 [[vm]]
-  memory = "2gb"
-  cpu_kind = "shared"
+  memory = "4gb"
+  cpu_kind = "performance"
   cpus = 1
