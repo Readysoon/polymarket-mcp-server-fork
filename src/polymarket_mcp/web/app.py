@@ -484,20 +484,100 @@ def _save_balance_snapshot(total_value, usdc, usdce, pol, positions_value, pnl):
         logger.error(f"Failed to save balance history: {e}")
 
 
-@app.get("/api/trades")
-async def get_trades(date: Optional[str] = None):
-    """Get individual trades, optionally filtered by date (YYYY-MM-DD). Defaults to today."""
+@app.get("/api/watchlist")
+async def get_watchlist():
+    """Get current market watchlist - candidates found by the scanner."""
     stats["api_calls"] += 1
 
-    if not client or not client.has_api_credentials():
-        return JSONResponse({"trades": [], "error": "Not authenticated"})
+    try:
+        wl_paths = [
+            Path(os.environ.get("OPENCLAW_STATE_DIR", "/home/node/.openclaw")) / "workspace" / "trading" / "watchlist.json",
+            Path(__file__).parent.parent.parent.parent / "openclaw" / "workspace" / "trading" / "watchlist.json",
+        ]
+
+        data = {"markets": [], "last_scanned": None}
+        for wp in wl_paths:
+            if wp.exists():
+                try:
+                    data = json.loads(wp.read_text())
+                    break
+                except Exception:
+                    continue
+
+        # Also read log.json to find which condition_ids have been traded/processed
+        log_paths = [
+            Path(os.environ.get("OPENCLAW_STATE_DIR", "/home/node/.openclaw")) / "workspace" / "trading" / "log.json",
+            Path(__file__).parent.parent.parent.parent / "openclaw" / "workspace" / "trading" / "log.json",
+        ]
+        processed_ids = set()
+        for lp in log_paths:
+            if lp.exists():
+                try:
+                    for entry in json.loads(lp.read_text()):
+                        if entry.get("result") in ("TRADED", "EXPIRED", "TIMEOUT"):
+                            processed_ids.add(entry.get("condition_id", ""))
+                except Exception:
+                    pass
+                break
+
+        # Filter: only markets not yet processed, and not already expired
+        now = datetime.utcnow()
+        pending = []
+        for m in data.get("markets", []):
+            cid = m.get("condition_id", "")
+            if cid in processed_ids:
+                continue
+            # Check if end_datetime is still in the future
+            try:
+                end = datetime.fromisoformat(m.get("end_datetime", "").replace("Z", "+00:00").replace("+00:00", ""))
+                if end < now:
+                    continue
+            except Exception:
+                pass
+            pending.append({
+                "question": m.get("question", "Unknown"),
+                "yes_price": m.get("yes_price"),
+                "liquidity": m.get("liquidity"),
+                "end_date": m.get("end_date"),
+                "end_datetime": m.get("end_datetime"),
+                "volume_24h": m.get("volume_24h"),
+                "condition_id": cid,
+                "slug": m.get("slug", ""),
+            })
+
+        return JSONResponse({
+            "markets": pending,
+            "count": len(pending),
+            "total_scanned": len(data.get("markets", [])),
+            "last_scanned": data.get("last_scanned"),
+        })
+
+    except Exception as e:
+        logger.error(f"Watchlist fetch failed: {e}")
+        stats["errors"] += 1
+        return JSONResponse({"markets": [], "error": str(e)})
+
+
+@app.get("/api/scan-results")
+async def get_scan_results(date: Optional[str] = None):
+    """Get market scanner results from log.json, filtered by date. Defaults to today."""
+    stats["api_calls"] += 1
 
     try:
-        import httpx
-        from datetime import date as date_type
+        # Read log.json from the workspace on the filesystem
+        log_paths = [
+            Path(os.environ.get("OPENCLAW_STATE_DIR", "/home/node/.openclaw")) / "workspace" / "trading" / "log.json",
+            Path(__file__).parent.parent.parent.parent / "openclaw" / "workspace" / "trading" / "log.json",
+        ]
 
-        clob = client.get_client()
-        trades = clob.get_trades()
+        entries = []
+        for lp in log_paths:
+            if lp.exists():
+                try:
+                    entries = json.loads(lp.read_text())
+                    break
+                except Exception:
+                    continue
 
         # Parse filter date (default: today)
         if date:
@@ -508,74 +588,60 @@ async def get_trades(date: Optional[str] = None):
         else:
             filter_date = datetime.utcnow().date()
 
-        # Resolve market names (cache within request)
-        market_name_cache = {}
-
-        async def resolve_market_name(asset_id):
-            if asset_id in market_name_cache:
-                return market_name_cache[asset_id]
+        # Filter and format entries
+        results = []
+        for entry in entries:
+            ts_str = entry.get("timestamp", "")
             try:
-                async with httpx.AsyncClient() as http_client:
-                    r = await http_client.get(
-                        "https://gamma-api.polymarket.com/markets",
-                        params={"clob_token_ids": asset_id},
-                        timeout=5.0
-                    )
-                    markets = r.json()
-                    name = markets[0].get("question", asset_id[:20] + "...") if markets else asset_id[:20] + "..."
-            except Exception:
-                name = asset_id[:20] + "..."
-            market_name_cache[asset_id] = name
-            return name
-
-        result_trades = []
-        for t in trades:
-            # Parse trade timestamp
-            ts_str = t.get("match_time") or t.get("created_at") or t.get("timestamp", "")
-            try:
-                if isinstance(ts_str, (int, float)):
-                    ts = datetime.utcfromtimestamp(ts_str)
-                elif ts_str:
-                    ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00").replace("+00:00", ""))
-                else:
+                ts = datetime.fromisoformat(ts_str)
+                if ts.date() != filter_date:
                     continue
             except Exception:
                 continue
 
-            # Filter by date
-            if ts.date() != filter_date:
-                continue
+            # Truncate long error reasons
+            reason = entry.get("reason", "")
+            if "\n" in reason:
+                reason = reason.split("\n")[0]
+            if len(reason) > 120:
+                reason = reason[:117] + "..."
 
-            asset_id = t.get("asset_id", "")
-            market_name = await resolve_market_name(asset_id)
-            size = float(t.get("size", 0))
-            price = float(t.get("price", 0))
-
-            result_trades.append({
+            results.append({
                 "time": ts.strftime("%H:%M:%S"),
                 "timestamp": ts.isoformat(),
-                "market": market_name,
-                "side": t.get("side", "UNKNOWN"),
-                "outcome": t.get("outcome", "Yes"),
-                "shares": round(size, 4),
-                "price": round(price, 4),
-                "total": round(size * price, 2),
-                "tx": t.get("transaction_hash", ""),
+                "question": entry.get("question", "Unknown"),
+                "result": entry.get("result", "UNKNOWN"),
+                "reason": reason,
+                "action": entry.get("action", ""),
+                "hours_left": entry.get("hours_left"),
+                "best_bid": entry.get("best_bid"),
+                "best_ask": entry.get("best_ask"),
+                "spread": entry.get("spread"),
+                "mid": entry.get("mid"),
+                "bet_size_usd": entry.get("bet_size_usd"),
+                "order_id": entry.get("order_id"),
+                "condition_id": entry.get("condition_id", ""),
             })
 
         # Sort by time
-        result_trades.sort(key=lambda x: x["timestamp"])
+        results.sort(key=lambda x: x["timestamp"])
+
+        # Count by result type
+        result_counts = {}
+        for r in results:
+            result_counts[r["result"]] = result_counts.get(r["result"], 0) + 1
 
         return JSONResponse({
-            "trades": result_trades,
+            "results": results,
             "date": filter_date.isoformat(),
-            "count": len(result_trades),
+            "count": len(results),
+            "counts_by_result": result_counts,
         })
 
     except Exception as e:
-        logger.error(f"Trades fetch failed: {e}")
+        logger.error(f"Scan results fetch failed: {e}")
         stats["errors"] += 1
-        return JSONResponse({"trades": [], "error": str(e)})
+        return JSONResponse({"results": [], "error": str(e)})
 
 
 @app.get("/api/balance-history")
