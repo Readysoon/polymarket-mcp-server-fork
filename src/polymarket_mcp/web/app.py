@@ -630,10 +630,13 @@ async def get_scan_results(date: Optional[str] = None):
             except Exception:
                 continue
 
-            # Truncate long error reasons
+            # Truncate long error reasons and strip internal tool errors
             reason = entry.get("reason", "")
             if "\n" in reason:
                 reason = reason.split("\n")[0]
+            # Strip noisy internal mcporter errors
+            if "[mcporter]" in reason or "Unknown MCP server" in reason:
+                reason = reason.split(":")[0].strip()  # keep only the prefix e.g. "No orderbook available"
             if len(reason) > 120:
                 reason = reason[:117] + "..."
 
@@ -645,6 +648,7 @@ async def get_scan_results(date: Optional[str] = None):
                 "reason": reason,
                 "action": entry.get("action", ""),
                 "hours_left": entry.get("hours_left"),
+                "end_datetime": entry.get("end_datetime"),
                 "best_bid": entry.get("best_bid"),
                 "best_ask": entry.get("best_ask"),
                 "spread": entry.get("spread"),
