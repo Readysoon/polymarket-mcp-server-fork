@@ -1032,10 +1032,16 @@
         }
 
         // Map raw result codes to professional labels
-        function resultLabel(raw) {
+        function resultLabel(raw, action) {
+            if (raw === 'NOT_READY') {
+                // Rescheduled = still being watched, not declined
+                if (action && action.toLowerCase().includes('reschedul')) {
+                    return { text: 'Retrying', cls: 'pending' };
+                }
+                return { text: 'Declined', cls: 'skipped' };
+            }
             const map = {
                 'TRADED': { text: 'Executed', cls: 'executed' },
-                'NOT_READY': { text: 'Declined', cls: 'skipped' },
                 'NO_TRADE': { text: 'Skipped', cls: 'skipped' },
                 'EXPIRED': { text: 'Expired', cls: 'expired' },
                 'TIMEOUT': { text: 'Timed Out', cls: 'expired' },
@@ -1105,7 +1111,7 @@
                     <div class="timeline-time">${hourStr} UTC</div>`;
 
                 scans.forEach(s => {
-                    const lbl = resultLabel(s.result);
+                    const lbl = resultLabel(s.result, s.action);
                     html += `<div class="timeline-content">
                         <span class="tl-label ${lbl.cls}">${lbl.text}</span>
                         ${s.question}
