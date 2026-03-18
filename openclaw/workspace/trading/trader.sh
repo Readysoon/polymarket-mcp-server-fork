@@ -2,19 +2,19 @@
 # Event Sniper - Pre-Event Trader
 # Checks watchlist, verifies CLOB spread, places bets
 
-WORKSPACE="/Users/philipp/.openclaw/workspace/trading"
+WORKSPACE="/home/node/.openclaw/workspace/trading"
 
 python3 << 'PYEOF'
 import json, subprocess, sys
 from datetime import datetime, timezone, timedelta
 
-with open('/Users/philipp/.openclaw/workspace/trading/config.json') as f:
+with open('/home/node/.openclaw/workspace/trading/config.json') as f:
     config = json.load(f)
 
-with open('/Users/philipp/.openclaw/workspace/trading/watchlist.json') as f:
+with open('/home/node/.openclaw/workspace/trading/watchlist.json') as f:
     watchlist = json.load(f)
 
-with open('/Users/philipp/.openclaw/workspace/trading/journal.json') as f:
+with open('/home/node/.openclaw/workspace/trading/journal.json') as f:
     journal = json.load(f)
 
 now = datetime.now(timezone.utc)
@@ -110,10 +110,10 @@ for market in watchlist.get('markets', []):
         skipped.append(f"Order failed ({result.get('error','?')[:40]}): {market['question'][:40]}")
 
 # Save updated files
-with open('/Users/philipp/.openclaw/workspace/trading/watchlist.json', 'w') as f:
+with open('/home/node/.openclaw/workspace/trading/watchlist.json', 'w') as f:
     json.dump(watchlist, f, indent=2)
 
-with open('/Users/philipp/.openclaw/workspace/trading/journal.json', 'w') as f:
+with open('/home/node/.openclaw/workspace/trading/journal.json', 'w') as f:
     json.dump(journal, f, indent=2)
 
 # Output summary

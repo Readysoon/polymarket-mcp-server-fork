@@ -53,7 +53,7 @@ A Polymarket MCP server is configured in mcporter as "polymarket". Use it to tra
 - `mcporter call polymarket.get_open_orders` — Check open orders
 - `mcporter call polymarket.get_trade_history` — Get trade history
 
-**Important:** Always use mcporter to call polymarket tools. The server runs locally via stdio from `/Users/philipp/polymarket-mcp-server`.
+**Important:** Always use mcporter to call polymarket tools. The server runs locally via stdio from `/polymarket`.
 
 ### Bankroll Management Rules (MANDATORY)
 

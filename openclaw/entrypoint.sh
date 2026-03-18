@@ -30,7 +30,7 @@ print("OpenClaw config injected successfully")
 PYEOF
 
 mkdir -p "$OC_DIR/agents/main/sessions" "$OC_DIR/telegram"
-sed -i 's|/Users/philipp/polymarket-mcp-server|/polymarket|g' "$OC_DIR/workspace/TOOLS.md" 2>/dev/null || true
+# Workspace files already use container paths (/polymarket, /home/node/.openclaw)
 
 # Debug: show config summary
 echo "Config check:"
