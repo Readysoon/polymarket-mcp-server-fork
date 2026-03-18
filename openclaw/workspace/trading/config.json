@@ -4,10 +4,10 @@
   "balance_threshold": 50,
   "min_bet_usd": 0.50,
   "max_bet_usd": 25,
-  "min_yes_price": 0.55,
-  "max_yes_price": 0.80,
+  "min_yes_price": 0.40,
+  "max_yes_price": 0.85,
   "min_liquidity_usd": 10000,
-  "max_spread": 0.03,
+  "max_spread": 0.10,
   "stop_drawdown_24h_pct": 0.30,
   "excluded_categories": [],
   "notes": "Tiered sizing: <$50 balance → 50% per trade (aggressive growth), >=$50 → 20% per trade (4 slots + 20% reserve)"
