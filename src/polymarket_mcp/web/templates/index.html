@@ -975,6 +975,7 @@
         // ── Watchlist & Timeline ──
         let watchlistMarkets = [];
         let allScans = [];
+        let pendingMarkets = [];
 
         function formatNum(n) {
             if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
@@ -1015,9 +1016,14 @@
 
         async function loadScans() {
             try {
-                const res = await fetch('/api/scan-results');
-                const data = await res.json();
-                allScans = data.results || [];
+                const [scanRes, wlRes] = await Promise.all([
+                    fetch('/api/scan-results'),
+                    fetch('/api/watchlist'),
+                ]);
+                const scanData = await scanRes.json();
+                const wlData = await wlRes.json();
+                allScans = scanData.results || [];
+                pendingMarkets = wlData.markets || [];
                 renderTimeline();
             } catch (e) {
                 document.getElementById('activity-timeline').innerHTML =
@@ -1040,9 +1046,29 @@
 
         function renderTimeline() {
             const container = document.getElementById('activity-timeline');
-            if (allScans.length === 0) {
+            if (allScans.length === 0 && pendingMarkets.length === 0) {
                 container.innerHTML = '<div class="empty-state" style="padding:1rem;font-size:0.85rem">No activity today</div>';
                 return;
+            }
+
+            let html = '';
+
+            // ── Pending / Watching block ──
+            if (pendingMarkets.length > 0) {
+                html += `<div class="timeline-entry has-trade" style="border-left:2px solid #fbbf24;padding-left:0.75rem">
+                    <div class="timeline-time" style="color:#fbbf24">Watching</div>`;
+                pendingMarkets.forEach(m => {
+                    const price = m.yes_price != null ? (m.yes_price * 100).toFixed(0) + '¢' : '--';
+                    const closes = m.end_datetime
+                        ? new Date(m.end_datetime).toLocaleDateString([], {month:'short',day:'numeric'})
+                        : '';
+                    html += `<div class="timeline-content">
+                        <span class="tl-label pending">Pending</span>
+                        ${m.question}
+                    </div>
+                    <div class="timeline-trade-detail">YES ${price}${closes ? ' · closes ' + closes : ''}</div>`;
+                });
+                html += '</div>';
             }
 
             const now = new Date();
@@ -1059,7 +1085,6 @@
             });
 
             const activeHours = Object.keys(scansByHour).map(Number).sort((a, b) => b - a);
-            let html = '';
             for (const h of activeHours) {
                 const scans = scansByHour[h];
                 const hourStr = String(h).padStart(2, '0') + ':00';
