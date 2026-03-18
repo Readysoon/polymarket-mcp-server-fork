@@ -3,9 +3,9 @@
 # Runs every 30min, checks markets closing in next 6h
 # Runs production bot first, then all swarm bots from population.json
 
-cd /Users/philipp/polymarket-mcp-server && source venv/bin/activate
+cd /polymarket
 
-SWARM_DIR="/Users/philipp/.openclaw/workspace/swarm"
+SWARM_DIR="/home/node/.openclaw/workspace/swarm"
 POP_FILE="$SWARM_DIR/population.json"
 GENESIS_FILE="$SWARM_DIR/genesis.json"
 
@@ -24,7 +24,7 @@ python3 << 'PYEOF'
 import json, subprocess, sys
 from datetime import datetime, timezone, timedelta
 
-WORKSPACE = '/Users/philipp/.openclaw/workspace/trading'
+WORKSPACE = '/home/node/.openclaw/workspace/trading'
 
 with open(f'{WORKSPACE}/config.json') as f:
     config = json.load(f)
