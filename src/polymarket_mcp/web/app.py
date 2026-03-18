@@ -346,6 +346,23 @@ async def get_portfolio():
                         total_shares -= size
                         total_cost -= size * price
 
+                # Find last trade date for this market
+                last_trade_date = ""
+                for t in mkt_trades:
+                    ts_str = t.get("match_time") or t.get("created_at") or t.get("timestamp", "")
+                    try:
+                        if isinstance(ts_str, (int, float)):
+                            ts = datetime.utcfromtimestamp(ts_str)
+                        elif ts_str:
+                            ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00").replace("+00:00", ""))
+                        else:
+                            continue
+                        d = ts.strftime("%Y-%m-%d")
+                        if d > last_trade_date:
+                            last_trade_date = d
+                    except Exception:
+                        pass
+
                 if total_shares > 0:
                     avg_price = total_cost / total_shares if total_shares else 0
 
@@ -389,6 +406,7 @@ async def get_portfolio():
                         "market_active": market_active,
                         "tx": mkt_trades[0].get("transaction_hash", ""),
                         "market_url": market_url,
+                        "last_trade_date": last_trade_date,
                     })
 
         total_value = usdc_balance + usdce_balance + sum(p["value"] for p in positions)
@@ -464,6 +482,100 @@ def _save_balance_snapshot(total_value, usdc, usdce, pol, positions_value, pnl):
         HISTORY_FILE.write_text(json.dumps(history))
     except Exception as e:
         logger.error(f"Failed to save balance history: {e}")
+
+
+@app.get("/api/trades")
+async def get_trades(date: Optional[str] = None):
+    """Get individual trades, optionally filtered by date (YYYY-MM-DD). Defaults to today."""
+    stats["api_calls"] += 1
+
+    if not client or not client.has_api_credentials():
+        return JSONResponse({"trades": [], "error": "Not authenticated"})
+
+    try:
+        import httpx
+        from datetime import date as date_type
+
+        clob = client.get_client()
+        trades = clob.get_trades()
+
+        # Parse filter date (default: today)
+        if date:
+            try:
+                filter_date = datetime.strptime(date, "%Y-%m-%d").date()
+            except ValueError:
+                filter_date = datetime.utcnow().date()
+        else:
+            filter_date = datetime.utcnow().date()
+
+        # Resolve market names (cache within request)
+        market_name_cache = {}
+
+        async def resolve_market_name(asset_id):
+            if asset_id in market_name_cache:
+                return market_name_cache[asset_id]
+            try:
+                async with httpx.AsyncClient() as http_client:
+                    r = await http_client.get(
+                        "https://gamma-api.polymarket.com/markets",
+                        params={"clob_token_ids": asset_id},
+                        timeout=5.0
+                    )
+                    markets = r.json()
+                    name = markets[0].get("question", asset_id[:20] + "...") if markets else asset_id[:20] + "..."
+            except Exception:
+                name = asset_id[:20] + "..."
+            market_name_cache[asset_id] = name
+            return name
+
+        result_trades = []
+        for t in trades:
+            # Parse trade timestamp
+            ts_str = t.get("match_time") or t.get("created_at") or t.get("timestamp", "")
+            try:
+                if isinstance(ts_str, (int, float)):
+                    ts = datetime.utcfromtimestamp(ts_str)
+                elif ts_str:
+                    ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00").replace("+00:00", ""))
+                else:
+                    continue
+            except Exception:
+                continue
+
+            # Filter by date
+            if ts.date() != filter_date:
+                continue
+
+            asset_id = t.get("asset_id", "")
+            market_name = await resolve_market_name(asset_id)
+            size = float(t.get("size", 0))
+            price = float(t.get("price", 0))
+
+            result_trades.append({
+                "time": ts.strftime("%H:%M:%S"),
+                "timestamp": ts.isoformat(),
+                "market": market_name,
+                "side": t.get("side", "UNKNOWN"),
+                "outcome": t.get("outcome", "Yes"),
+                "shares": round(size, 4),
+                "price": round(price, 4),
+                "total": round(size * price, 2),
+                "tx": t.get("transaction_hash", ""),
+            })
+
+        # Sort by time
+        result_trades.sort(key=lambda x: x["timestamp"])
+
+        return JSONResponse({
+            "trades": result_trades,
+            "date": filter_date.isoformat(),
+            "count": len(result_trades),
+        })
+
+    except Exception as e:
+        logger.error(f"Trades fetch failed: {e}")
+        stats["errors"] += 1
+        return JSONResponse({"trades": [], "error": str(e)})
 
 
 @app.get("/api/balance-history")
