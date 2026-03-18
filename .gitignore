@@ -84,3 +84,8 @@ benchmark*.json
 .idea/
 *.swp
 *.swo
+
+# Runtime data & private files
+src/polymarket_mcp/web/balance_history.json
+.claude/
+openclaw/
