@@ -1032,10 +1032,13 @@
         }
 
         // Map raw result codes to professional labels
-        function resultLabel(raw, action, hoursLeft) {
+        function resultLabel(raw, action, hoursLeft, endDatetime) {
             if (raw === 'NOT_READY') {
-                // If market already expired at check time → show expired
-                if (hoursLeft != null && hoursLeft <= 0) {
+                // Check if market has since expired (use end_datetime if available, else hours_left)
+                const nowExpired = endDatetime
+                    ? new Date(endDatetime) < new Date()
+                    : (hoursLeft != null && hoursLeft <= 0);
+                if (nowExpired) {
                     return { text: 'Expired', cls: 'expired' };
                 }
                 // Rescheduled = still being watched
@@ -1115,7 +1118,7 @@
                     <div class="timeline-time">${hourStr} UTC</div>`;
 
                 scans.forEach(s => {
-                    const lbl = resultLabel(s.result, s.action, s.hours_left);
+                    const lbl = resultLabel(s.result, s.action, s.hours_left, s.end_datetime);
                     html += `<div class="timeline-content">
                         <span class="tl-label ${lbl.cls}">${lbl.text}</span>
                         ${s.question}
