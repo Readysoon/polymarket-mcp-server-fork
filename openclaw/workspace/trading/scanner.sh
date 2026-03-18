@@ -95,6 +95,66 @@ with httpx.Client(timeout=15) as client:
         if done:
             break
 
+# ── Orderbook pre-filter ─────────────────────────────────────────────────────
+# Check real orderbook for each candidate — drop markets with only placeholder orders
+def mcporter(tool, **kwargs):
+    args = ['mcporter', 'call', f'polymarket.{tool}']
+    for k, v in kwargs.items():
+        args.append(f'{k}={json.dumps(v) if isinstance(v,(dict,list)) else str(v)}')
+    r = subprocess.run(args, capture_output=True, text=True, timeout=30)
+    try:
+        return json.loads(r.stdout)
+    except:
+        return {'error': r.stdout.strip() + r.stderr.strip()}
+
+MIN_REAL_BID = 0.05   # ignore bids below this (placeholders)
+MAX_REAL_ASK = 0.95   # ignore asks above this (placeholders)
+MAX_SPREAD   = 0.10   # max allowed spread on real orders
+MIN_MID      = 0.15   # drop if market is already near-certain (YES < 15%)
+MAX_MID      = 0.85   # drop if market is already near-certain (YES > 85%)
+
+real_candidates = []
+for c in candidates:
+    yes_token = c['clob_token_ids'][0] if c['clob_token_ids'] else ''
+    if not yes_token:
+        print(f"SKIP (no token): {c['question'][:55]}")
+        continue
+
+    ob = mcporter('get_orderbook', token_id=yes_token, depth=5)
+    if 'error' in ob:
+        print(f"SKIP (ob error): {c['question'][:55]}")
+        continue
+
+    # Filter out placeholder orders
+    real_bids = [b for b in ob.get('bids', []) if float(b['price'] if isinstance(b,dict) else b.price) >= MIN_REAL_BID]
+    real_asks = [a for a in ob.get('asks', []) if float(a['price'] if isinstance(a,dict) else a.price) <= MAX_REAL_ASK]
+
+    if not real_bids or not real_asks:
+        print(f"SKIP (no real orders): {c['question'][:55]}")
+        continue
+
+    best_bid = float(real_bids[0]['price'] if isinstance(real_bids[0],dict) else real_bids[0].price)
+    best_ask = float(real_asks[0]['price'] if isinstance(real_asks[0],dict) else real_asks[0].price)
+    spread = best_ask - best_bid
+    mid = (best_bid + best_ask) / 2
+
+    if spread > MAX_SPREAD:
+        print(f"SKIP (spread {spread:.2f}): {c['question'][:55]}")
+        continue
+
+    if not (MIN_MID <= mid <= MAX_MID):
+        print(f"SKIP (mid {mid:.2f} out of range): {c['question'][:55]}")
+        continue
+
+    c['ob_bid'] = best_bid
+    c['ob_ask'] = best_ask
+    c['ob_spread'] = round(spread, 4)
+    c['ob_mid'] = round(mid, 4)
+    real_candidates.append(c)
+    print(f"CANDIDATE: {c['question'][:55]} | mid={mid:.2f} spread={spread:.3f}")
+
+candidates = real_candidates
+
 # Save watchlist
 watchlist = {'markets': candidates, 'last_scanned': now.isoformat()}
 with open(f'{WORKSPACE}/trading/watchlist.json', 'w') as f:
