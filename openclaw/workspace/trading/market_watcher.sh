@@ -95,7 +95,15 @@ if 'error' in ob or not ob.get('bids') or not ob.get('asks'):
             "sessionTarget": "isolated",
             "delivery": {"mode": "announce"}
         }
-        subprocess.run(['openclaw', 'cron', 'add', '--json', json.dumps(job)], capture_output=True)
+        cron_queue_path = f"{TRADING_DIR}/cron_queue.json"
+        try:
+            with open(cron_queue_path) as f:
+                queue = json.load(f)
+        except:
+            queue = []
+        queue.append(job)
+        with open(cron_queue_path, 'w') as f:
+            json.dump(queue, f, indent=2)
         entry = {
             "timestamp": now.isoformat(),
             "question": QUESTION,
@@ -145,7 +153,15 @@ if spread > MAX_SPREAD:
             "sessionTarget": "isolated",
             "delivery": {"mode": "announce"}
         }
-        subprocess.run(['openclaw', 'cron', 'add', '--json', json.dumps(job)], capture_output=True)
+        cron_queue_path = f"{TRADING_DIR}/cron_queue.json"
+        try:
+            with open(cron_queue_path) as f:
+                queue = json.load(f)
+        except:
+            queue = []
+        queue.append(job)
+        with open(cron_queue_path, 'w') as f:
+            json.dump(queue, f, indent=2)
         entry = {
             "timestamp": now.isoformat(),
             "question": QUESTION,

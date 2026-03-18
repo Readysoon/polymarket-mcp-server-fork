@@ -139,13 +139,16 @@ for c in candidates:
         "delivery": {"mode": "announce"}
     }
 
-    r = subprocess.run(
-        ['openclaw', 'cron', 'add', '--json', json.dumps(job)],
-        capture_output=True, text=True
-    )
-    if r.returncode == 0:
-        print(f"SCHEDULED [{fire_iso}]: {c['question'][:55]}")
-    else:
-        print(f"CANDIDATE (cron failed): {c['question'][:55]}")
+    # Write to cron queue for agent to pick up (openclaw CLI hangs without TTY)
+    cron_queue_path = f"{WORKSPACE}/trading/cron_queue.json"
+    try:
+        with open(cron_queue_path) as f:
+            queue = json.load(f)
+    except:
+        queue = []
+    queue.append(job)
+    with open(cron_queue_path, 'w') as f:
+        json.dump(queue, f, indent=2)
+    print(f"QUEUED [{fire_iso}]: {c['question'][:55]}")
 
 PYEOF
