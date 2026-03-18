@@ -510,15 +510,43 @@ async def get_watchlist():
             Path(__file__).parent.parent.parent.parent / "openclaw" / "workspace" / "trading" / "log.json",
         ]
         processed_ids = set()
+        check_counts: dict = {}  # condition_id -> count of NOT_READY checks
+        last_check_times: dict = {}  # condition_id -> last check timestamp
         for lp in log_paths:
             if lp.exists():
                 try:
                     for entry in json.loads(lp.read_text()):
+                        cid = entry.get("condition_id", "")
                         if entry.get("result") in ("TRADED", "EXPIRED", "TIMEOUT"):
-                            processed_ids.add(entry.get("condition_id", ""))
+                            processed_ids.add(cid)
+                        if cid:
+                            check_counts[cid] = check_counts.get(cid, 0) + 1
+                            ts = entry.get("timestamp", "")
+                            if ts > last_check_times.get(cid, ""):
+                                last_check_times[cid] = ts
                 except Exception:
                     pass
                 break
+
+        # Read cron jobs to find next scheduled check per condition_id
+        next_check_times: dict = {}
+        try:
+            import subprocess as sp
+            cron_out = sp.run(["openclaw", "cron", "list", "--json"], capture_output=True, text=True, timeout=5)
+            if cron_out.returncode == 0:
+                cron_jobs = json.loads(cron_out.stdout) if cron_out.stdout.strip() else []
+                for job in cron_jobs:
+                    name = job.get("name", "")
+                    if name.startswith("watch:"):
+                        cid_prefix = name[6:]  # strip "watch:"
+                        fire_at = job.get("schedule", {}).get("at") or job.get("nextRunAt") or ""
+                        if fire_at:
+                            # Match full condition_id by prefix
+                            for full_cid in list(check_counts.keys()) + [m.get("condition_id","") for m in data.get("markets",[])]:
+                                if full_cid.startswith(cid_prefix):
+                                    next_check_times[full_cid] = fire_at
+        except Exception:
+            pass
 
         # Filter: only markets not yet processed, and not already expired
         now = datetime.utcnow()
@@ -543,6 +571,9 @@ async def get_watchlist():
                 "volume_24h": m.get("volume_24h"),
                 "condition_id": cid,
                 "slug": m.get("slug", ""),
+                "check_count": check_counts.get(cid, 0),
+                "last_check": last_check_times.get(cid, None),
+                "next_check": next_check_times.get(cid, None),
             })
 
         return JSONResponse({

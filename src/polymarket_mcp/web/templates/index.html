@@ -1057,16 +1057,28 @@
             if (pendingMarkets.length > 0) {
                 html += `<div class="timeline-entry has-trade" style="border-left:2px solid #fbbf24;padding-left:0.75rem">
                     <div class="timeline-time" style="color:#fbbf24">Watching</div>`;
-                pendingMarkets.forEach(m => {
+                pendingMarkets.forEach((m, idx) => {
                     const price = m.yes_price != null ? (m.yes_price * 100).toFixed(0) + '¢' : '--';
                     const closes = m.end_datetime
-                        ? new Date(m.end_datetime).toLocaleDateString([], {month:'short',day:'numeric'})
+                        ? new Date(m.end_datetime).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})
                         : '';
+                    const lastCheck = m.last_check
+                        ? new Date(m.last_check).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                        : null;
+                    const checkNum = m.check_count > 0 ? `check #${m.check_count}` : 'first check pending';
+                    const countdownId = `pending-countdown-${idx}`;
+                    const nextCheck = m.next_check ? new Date(m.next_check).getTime() : null;
+
                     html += `<div class="timeline-content">
                         <span class="tl-label pending">Pending</span>
                         ${m.question}
                     </div>
-                    <div class="timeline-trade-detail">YES ${price}${closes ? ' · closes ' + closes : ''}</div>`;
+                    <div class="timeline-trade-detail">
+                        YES ${price}${closes ? ' · closes ' + closes : ''}
+                        ${lastCheck ? ' · last check ' + lastCheck : ''}
+                        · ${checkNum}
+                        ${nextCheck ? ` · next in <span id="${countdownId}" data-target="${nextCheck}">…</span>` : ''}
+                    </div>`;
                 });
                 html += '</div>';
             }
@@ -1135,10 +1147,29 @@
         }
 
         // Load watchlist + scans on page load
-        document.addEventListener('DOMContentLoaded', () => { loadWatchlist(); loadScans(); });
+        document.addEventListener('DOMContentLoaded', () => { loadWatchlist(); loadScans(); startCountdowns(); });
 
-        // Auto-refresh
+        // Auto-refresh every 30s (re-renders timeline with updated data)
         setInterval(() => { loadPortfolio(); loadBalanceHistory(); loadWatchlist(); loadScans(); }, 30000);
+
+        // Live countdown tick every second
+        function startCountdowns() {
+            setInterval(() => {
+                document.querySelectorAll('[data-target]').forEach(el => {
+                    const target = parseInt(el.dataset.target);
+                    const diff = target - Date.now();
+                    if (diff <= 0) {
+                        el.textContent = 'checking…';
+                        // Trigger a fresh load shortly after the check fires
+                        setTimeout(() => loadScans(), 5000);
+                    } else {
+                        const m = Math.floor(diff / 60000);
+                        const s = Math.floor((diff % 60000) / 1000);
+                        el.textContent = m > 0 ? `${m}m ${s}s` : `${s}s`;
+                    }
+                });
+            }, 1000);
+        }
 
         // Re-render on window resize
         let resizeTimeout;
