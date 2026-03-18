@@ -1032,11 +1032,15 @@
         }
 
         // Map raw result codes to professional labels
-        function resultLabel(raw, action) {
+        function resultLabel(raw, action, hoursLeft) {
             if (raw === 'NOT_READY') {
-                // Rescheduled = still being watched, not declined
+                // If market already expired at check time → show expired
+                if (hoursLeft != null && hoursLeft <= 0) {
+                    return { text: 'Expired', cls: 'expired' };
+                }
+                // Rescheduled = still being watched
                 if (action && action.toLowerCase().includes('reschedul')) {
-                    return { text: 'Retrying', cls: 'pending' };
+                    return { text: 'Watching', cls: 'pending' };
                 }
                 return { text: 'Declined', cls: 'skipped' };
             }
@@ -1111,7 +1115,7 @@
                     <div class="timeline-time">${hourStr} UTC</div>`;
 
                 scans.forEach(s => {
-                    const lbl = resultLabel(s.result, s.action);
+                    const lbl = resultLabel(s.result, s.action, s.hours_left);
                     html += `<div class="timeline-content">
                         <span class="tl-label ${lbl.cls}">${lbl.text}</span>
                         ${s.question}
