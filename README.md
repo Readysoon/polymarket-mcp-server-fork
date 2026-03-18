@@ -13,47 +13,98 @@ AI-powered trading platform for Polymarket prediction markets. Trade via Claude,
 ## Architecture
 
 ```
-┌──────────────┐     ┌──────────────────┐     ┌───────────────────┐
-│   Telegram   │────▶│    OpenClaw       │────▶│  Polymarket MCP   │
-│   (you)      │◀────│    Gateway        │◀────│  Server (Python)  │
-└──────────────┘     │  (Node.js agent)  │     └────────┬──────────┘
-                     │                    │              │
-                     │  ┌──────────────┐ │     ┌────────▼──────────┐
-                     │  │ Event Sniper │ │     │  Polymarket APIs   │
-                     │  │ (cron-based) │ │     │  CLOB · Gamma ·   │
-                     │  └──────────────┘ │     │  WebSocket · Chain │
-                     └──────────────────┘     └───────────────────┘
-                              │
-                     ┌────────▼────────┐
-                     │  Web Dashboard  │
-                     │  (FastAPI)      │
-                     │  localhost:8080  │
-                     └─────────────────┘
+┌──────────────┐     ┌─────────────────────────────────────┐     ┌───────────────────┐
+│   Telegram   │────▶│          OpenClaw Gateway            │────▶│  Polymarket MCP   │
+│   (you)      │◀────│          (Node.js agent)             │◀────│  Server (45 tools)│
+└──────────────┘     │                                       │     └────────┬──────────┘
+                     │  ┌─────────┐  ┌───────────────────┐  │              │
+                     │  │  Cron   │  │     mcporter       │  │     ┌────────▼──────────┐
+                     │  │ Scheduler│  │  (MCP bridge)      │  │     │  Polymarket APIs  │
+                     │  └────┬────┘  └───────────────────┘  │     │  CLOB · Gamma ·   │
+                     │       │                               │     │  WebSocket · Chain │
+                     └───────┼───────────────────────────────┘     └───────────────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              │              │              │
+     ┌────────▼────┐ ┌──────▼──────┐ ┌─────▼───────┐
+     │   scanner   │ │   market    │ │    Web       │
+     │   .sh       │ │  watcher.sh │ │  Dashboard   │
+     │  (daily 8am)│ │  (per-event)│ │  (FastAPI)   │
+     └─────────────┘ └─────────────┘ └─────────────┘
 ```
+
+**Deployment:** Single Fly.io machine (Amsterdam, 2GB) running the official OpenClaw Docker image with Python/Polymarket overlay. The entrypoint starts the web dashboard as a background process and the OpenClaw gateway in the foreground.
+
+**Key components:**
+- **OpenClaw Gateway** — Node.js agent that connects to Telegram and Claude (Sonnet 4.6). Handles conversations, tool calls, and cron scheduling.
+- **mcporter** — Bridges OpenClaw to the Polymarket MCP server via stdio. Exposes all 45 MCP tools to the agent.
+- **Cron Scheduler** — Built into OpenClaw. Runs jobs at scheduled times, each in an isolated agent session.
+- **Web Dashboard** — FastAPI app on port 8080 with treemap portfolio view and balance chart.
 
 ## Autonomous Trading Loop
 
-The bot runs an **event sniper** — a smart, trigger-based trading system:
+The bot runs an **event sniper** — a cron-driven trading pipeline with no polling:
 
-1. **Weekly Scanner** (every Monday): fetches all markets closing in the next 7 days, filters for CLOB liquidity >$10K and favorable odds (55-80¢)
-2. **Targeted Crons**: instead of polling every 30 min, the scanner schedules one-shot wake-ups 2 hours before each event (e.g. NBA tipoff, election deadline)
-3. **Pre-trade Check**: when a cron fires, the bot verifies the CLOB orderbook has real liquidity and tight spreads (<5%)
-4. **Execution**: if conditions are met, places a limit order and pings you on Telegram
-5. **Post-trade Monitor**: watches for resolution, reports P&L
+### 1. Daily Scanner (`scanner.sh`, cron: 8am Berlin)
+
+Runs every morning via OpenClaw cron. Binary-searches the Gamma API to find all markets closing in the next 7 days, then filters:
+- YES price between 55-80¢ (configurable in `config.json`)
+- CLOB liquidity > $10K
+- Excludes "Up or Down" price markets
+
+Outputs a `watchlist.json` (typically 50-100 candidates) and schedules one-shot cron jobs for each — timed 6 hours before market close.
+
+### 2. Market Watcher (`market_watcher.sh`, one-shot per event)
+
+Each cron fires a watcher for a single market. The watcher:
+
+1. **Checks expiry** — skips if market already closed
+2. **Fetches orderbook** via mcporter → `polymarket.get_orderbook`
+3. **Evaluates spread** — must be < 5% (initial gate) and < 3% (trade gate)
+4. **If not ready** — reschedules itself in 15-30 min (up to market close)
+5. **If ready** — checks price range, portfolio balance, duplicate trades
+6. **Places limit order** via mcporter → `polymarket.create_limit_order`
+7. **Logs everything** to `trading/log.json` with full context (spread, mid price, hours left, result)
+8. **Notifies on Telegram** — TRADED or ALERT lines trigger a message to you
+
+### 3. Trade Lifecycle
 
 ```
-Weekly Scanner → finds 50+ candidates
-       ↓
-Schedule targeted crons (2h before event)
-       ↓
-Cron fires → check CLOB spread & liquidity
-       ↓
-Conditions met? → place bet → notify on Telegram
-       ↓
-Market resolves → report P&L
+scanner.sh (daily 8am)
+  │
+  ├─ fetches Gamma API (binary search for date range)
+  ├─ filters: price 0.55-0.80, liquidity >$10K
+  ├─ writes watchlist.json (50-100 markets)
+  └─ schedules one-shot cron per market (6h before close)
+       │
+       ▼
+market_watcher.sh (fires per event)
+  │
+  ├─ orderbook check via mcporter → get_orderbook
+  ├─ spread > 5%? → reschedule in 30min
+  ├─ spread < 5% but > 3%? → reschedule in 15min
+  ├─ spread < 3% + price in range + balance OK?
+  │     ├─ YES → create_limit_order (12% of portfolio, max $25)
+  │     │        log TRADED → Telegram notification
+  │     └─ NO  → log NO_TRADE reason → silent
+  └─ < 30min left + still not ready? → log TIMEOUT → abandon
 ```
 
-The bot only wakes up when there's an opportunity — no wasted API calls.
+### Trading Config (`config.json`)
+
+```json
+{
+  "bet_pct_of_balance": 0.12,
+  "min_bet_usd": 0.50,
+  "max_bet_usd": 25,
+  "min_yes_price": 0.55,
+  "max_yes_price": 0.80,
+  "min_liquidity_usd": 10000,
+  "max_spread": 0.03
+}
+```
+
+The bot only wakes up when there's an opportunity — no wasted API calls, no constant polling.
 
 ## Web Dashboard
 
