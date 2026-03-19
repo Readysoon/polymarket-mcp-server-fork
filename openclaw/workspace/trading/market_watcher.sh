@@ -314,20 +314,24 @@ try:
 except Exception as _redeem_err:
     print(f"REDEEM_ATTEMPT_ERROR: {_redeem_err}")
 
-# Get portfolio value
-portfolio = mcporter('get_portfolio_value', include_breakdown=False)
+# Get USDC balance directly on-chain (MCP get_portfolio_value is unreliable)
 total_balance = 0.0
-if isinstance(portfolio, dict):
-    import re
-    raw = str(portfolio)
-    for key in ('TOTAL PORTFOLIO VALUE', 'total_portfolio_value', 'total_value', 'Cash Balance (USDC)'):
-        val = portfolio.get(key)
-        if val is not None:
-            try:
-                total_balance = float(str(val).replace('$','').replace(',',''))
-                break
-            except: pass
-    if total_balance == 0:
+try:
+    import httpx as _hx
+    from web3 import Web3 as _W3
+    _w3b = _W3(_W3.HTTPProvider("https://polygon-bor-rpc.publicnode.com"))
+    _USDC_ADDR = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+    _bal_abi = [{"name":"balanceOf","type":"function","inputs":[{"name":"account","type":"address"}],"outputs":[{"type":"uint256"}],"stateMutability":"view"}]
+    _usdc_c = _w3b.eth.contract(address=_USDC_ADDR, abi=_bal_abi)
+    _ADDRESS = os.environ.get('POLYGON_ADDRESS', '')
+    total_balance = _usdc_c.functions.balanceOf(_w3b.to_checksum_address(_ADDRESS)).call() / 1e6
+    print(f"Balance (on-chain): ${total_balance:.2f}")
+except Exception as _be:
+    print(f"On-chain balance check failed: {_be}, falling back to MCP")
+    portfolio = mcporter('get_portfolio_value', include_breakdown=False)
+    if isinstance(portfolio, dict):
+        import re
+        raw = str(portfolio)
         matches = re.findall(r'\$(\d+\.?\d*)', raw)
         if matches:
             total_balance = max(float(m) for m in matches)
