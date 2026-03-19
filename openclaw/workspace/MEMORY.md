@@ -24,12 +24,16 @@
 - **Redeem**: automatisch vor jedem Trade
 
 ## Aktive Cron Jobs
-- `9dc6664a` — Daily Market Scanner, täglich 23:00 UTC (= 00:00 Innsbruck)
+- `9dc6664a` — Daily Market Scanner, täglich 23:00 UTC (= 00:00 Innsbruck), Timeout 300s, Zeiten in Innsbruck-Zeit
 
 ## Git Workflow (PFLICHT)
-1. Session-Start → `git pull` (repo: `/data/openclaw/workspace/repo/`)
-2. Vor jeder Code-Änderung → `git pull`
-3. Nach Änderungen → `git commit` + `git push`
+Zwei Branches im selben Repo (`Readysoon/polymarket-mcp-server-fork`):
+- **`workspace`** → Agent-Dateien (MEMORY, SOUL, USER, memory/, trading/) — Repo: `/home/node/.openclaw/workspace`
+- **`main`** → MCP Server Code, Trading Scripts — Repo: `/data/openclaw/workspace/repo/`
+
+1. Session-Start → `git pull` in beiden Repos
+2. Vor jeder Änderung → `git pull`
+3. Nach Änderungen → `git commit` + `git push` im richtigen Repo
 
 ## Präferenzen / Gelerntes
 - Mitternacht Innsbruck = 23:00 UTC (Winter), 22:00 UTC (Sommer)
