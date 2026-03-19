@@ -1078,11 +1078,24 @@
             let html = '';
 
             // ── Pending / Watching block ──
-            // Sort: most checks first, then by next check time (soonest first)
+            // Sort: by next future check index (highest = most advanced = top)
+            // Calculate next check index for each market
+            function getNextCheckIdx(m) {
+                if (!m.end_datetime) return 0;
+                const end = new Date(m.end_datetime).getTime();
+                const firstCheck = end - 4 * 3600000;
+                let t = firstCheck, idx = 0;
+                const now = Date.now();
+                while (t < end) {
+                    if (t > now) break;
+                    idx++;
+                    t += 15 * 60000;
+                }
+                return idx; // number of checks already past
+            }
             pendingMarkets.sort((a, b) => {
-                const checkDiff = (b.check_count || 0) - (a.check_count || 0);
-                if (checkDiff !== 0) return checkDiff;
-                // Same check count: soonest next_check first
+                const diff = getNextCheckIdx(b) - getNextCheckIdx(a);
+                if (diff !== 0) return diff;
                 const aNext = a.next_check ? new Date(a.next_check).getTime() : Infinity;
                 const bNext = b.next_check ? new Date(b.next_check).getTime() : Infinity;
                 return aNext - bNext;
