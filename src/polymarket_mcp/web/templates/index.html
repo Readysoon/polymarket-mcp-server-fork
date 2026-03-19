@@ -1078,6 +1078,9 @@
             let html = '';
 
             // ── Pending / Watching block ──
+            // Sort: most checks first
+            pendingMarkets.sort((a, b) => (b.check_count || 0) - (a.check_count || 0));
+
             if (pendingMarkets.length > 0) {
                 html += `<div class="timeline-entry has-trade" style="border-left:2px solid #fbbf24;padding-left:0.75rem">
                     <div class="timeline-time" style="color:#fbbf24">Watching</div>`;
