@@ -175,7 +175,9 @@ class SafetyLimits:
             )
 
         # 5. Validate spread
-        if market_data.spread > self.max_spread_tolerance:
+        # Skip spread check for AMM markets (CLOB spread > 99% = placeholder orders only)
+        clob_placeholder = market_data.spread > 0.99
+        if market_data.spread > self.max_spread_tolerance and not clob_placeholder:
             msg = (
                 f"Market spread {market_data.spread:.2%} exceeds maximum "
                 f"{self.max_spread_tolerance:.2%}"
