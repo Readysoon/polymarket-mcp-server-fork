@@ -2,7 +2,7 @@
 
 - **Name:** Philipp
 - **What to call them:** Philipp
-- **Timezone:** GMT+4 (Asia/Tbilisi)
+- **Timezone:** UTC+1 (Innsbruck/CET, UTC+2 in summer)
 - **Notes:** Polymarket trader. Wants sharp, efficient assistance.
 
 ## Context
