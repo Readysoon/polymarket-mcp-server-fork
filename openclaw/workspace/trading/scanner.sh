@@ -169,7 +169,7 @@ for c in candidates:
         "schedule": {"kind": "at", "at": fire_iso},
         "payload": {
             "kind": "agentTurn",
-            "message": f"Run market watcher:\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{c['condition_id']}' '{yes_token}' '{c['end_datetime']}' '{c['question'][:60].replace(chr(39), '')}'\n\nOnly notify Philipp on Telegram if a trade was EXECUTED or FINALLY REJECTED (no retry). Stay completely silent otherwise.",
+            "message": f"Run market watcher:\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{c['condition_id']}' '{yes_token}' '{c['end_datetime']}' '{c['question'][:60].replace(chr(39), '')}'\n\nAfter running, always notify Philipp on Telegram with the result: TRADED (what was bought + price), NO_TRADE (reason), or error. Always report the outcome, never stay silent.",
             "timeoutSeconds": 120
         },
         "sessionTarget": "isolated",
