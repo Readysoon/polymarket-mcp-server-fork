@@ -954,6 +954,26 @@ async def save_strategy_config(request: Request):
                 sp.write_text(txt)
                 break
 
+        # Update watcher bet sizing and confidence threshold
+        if any(k in data for k in ("bet_low", "bet_mid", "bet_high", "min_confidence")):
+            for wp in [
+                Path(os.environ.get("OPENCLAW_STATE_DIR", "/home/node/.openclaw")) / "workspace" / "trading" / "market_watcher.sh",
+                Path(__file__).parent.parent.parent.parent / "openclaw" / "workspace" / "trading" / "market_watcher.sh",
+            ]:
+                if wp.exists():
+                    import re as _re
+                    txt = wp.read_text()
+                    bet_low = data.get("bet_low", 1.00)
+                    bet_mid = data.get("bet_mid", 2.00)
+                    bet_high = data.get("bet_high", 3.00)
+                    min_conf = data.get("min_confidence", 0.55)
+                    txt = _re.sub(r"if confidence >= 0\.\d+:\s*\n\s*bet_size = \d+\.\d+\s*\nelif confidence >= 0\.\d+:\s*\n\s*bet_size = \d+\.\d+\s*\nelse:\s*\n\s*bet_size = \d+\.\d+",
+                        f"if confidence >= 0.75:\n    bet_size = {bet_high:.2f}\nelif confidence >= 0.60:\n    bet_size = {bet_mid:.2f}\nelse:\n    bet_size = {bet_low:.2f}", txt)
+                    txt = _re.sub(r"if confidence > 0 and confidence < 0\.\d+",
+                        f"if confidence > 0 and confidence < {min_conf:.2f}", txt)
+                    wp.write_text(txt)
+                    break
+
         # Update watcher retry_mins
         if "retry_mins" in data:
             watcher_paths = [
