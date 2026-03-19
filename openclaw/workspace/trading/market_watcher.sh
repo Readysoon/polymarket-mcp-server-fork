@@ -343,9 +343,9 @@ if total_balance < 1.0:
     print(f"ALERT: Bankroll too low (${total_balance:.2f}) — deposit more to trade!")
     sys.exit(0)
 
-# Bet sizing: fixed $2.00 per trade
-bet_size = 2.00
-print(f"Bet size: ${bet_size:.2f}")
+# Bet sizing: dynamic $1-3 based on AI confidence (set after analysis)
+bet_size = 2.00  # default, overridden after AI analysis
+print(f"Bet size (default): ${bet_size:.2f}")
 
 # Already traded this market?
 try:
@@ -404,7 +404,14 @@ else:
     analysis_reason = f"Analysis error: {analysis_text[:100]}"
     should_trade = False
 
-print(f"Analysis: trade={should_trade} side={trade_side} reason={analysis_reason[:80]}")
+# Dynamic bet sizing based on confidence: $1 low, $2 medium, $3 high
+if confidence >= 0.75:
+    bet_size = 3.00
+elif confidence >= 0.60:
+    bet_size = 2.00
+else:
+    bet_size = 1.00
+print(f"Analysis: trade={should_trade} side={trade_side} confidence={confidence:.0%} bet=${bet_size:.2f} reason={analysis_reason[:60]}")
 
 if not should_trade:
     entry = {
