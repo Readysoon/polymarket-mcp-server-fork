@@ -252,6 +252,60 @@ if spread > max_s:
     print(json.dumps(entry))
     sys.exit(0)
 
+# Auto-redeem any winning positions before checking balance
+try:
+    import httpx as _httpx
+    from eth_account import Account as _Account
+    from web3 import Web3 as _Web3
+
+    _PRIVATE_KEY = os.environ.get('POLYGON_PRIVATE_KEY', '')
+    _ADDRESS = os.environ.get('POLYGON_ADDRESS', '')
+    _USDC = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+    _CTF  = "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
+    _RPC  = "https://1rpc.io/matic"
+    _CTF_ABI = [{"name":"redeemPositions","type":"function","inputs":[
+        {"name":"collateralToken","type":"address"},
+        {"name":"parentCollectionId","type":"bytes32"},
+        {"name":"conditionId","type":"bytes32"},
+        {"name":"indexSets","type":"uint256[]"}
+    ],"outputs":[]}]
+
+    _r = _httpx.get(f"https://data-api.polymarket.com/positions?user={_ADDRESS}&sizeThreshold=0.01", timeout=15)
+    _positions = _r.json() if _r.status_code == 200 else []
+    _redeemable = [p for p in _positions if p.get('redeemable')]
+
+    if _redeemable and _PRIVATE_KEY:
+        _w3 = _Web3(_Web3.HTTPProvider(_RPC))
+        _ctf = _w3.eth.contract(address=_w3.to_checksum_address(_CTF), abi=_CTF_ABI)
+        _acct = _Account.from_key(_PRIVATE_KEY)
+        _redeemed_value = 0.0
+        for _p in _redeemable:
+            try:
+                _index_set = 1 << _p.get('outcomeIndex', 0)
+                _tx = _ctf.functions.redeemPositions(
+                    _w3.to_checksum_address(_USDC),
+                    b'\x00' * 32,
+                    bytes.fromhex(_p['conditionId'][2:]),
+                    [_index_set]
+                ).build_transaction({
+                    'from': _acct.address,
+                    'nonce': _w3.eth.get_transaction_count(_acct.address),
+                    'gas': 200000,
+                    'gasPrice': _w3.eth.gas_price,
+                    'chainId': 137
+                })
+                _signed = _acct.sign_transaction(_tx)
+                _w3.eth.send_raw_transaction(_signed.raw_transaction)
+                _redeemed_value += float(_p.get('currentValue', 0))
+                print(f"REDEEMED: {_p.get('title','?')[:40]} ${_p.get('currentValue',0):.2f}")
+            except Exception as _e:
+                print(f"REDEEM_ERROR: {_e}")
+        if _redeemed_value > 0:
+            import time as _time
+            _time.sleep(8)  # wait for tx to settle
+except Exception as _redeem_err:
+    print(f"REDEEM_ATTEMPT_ERROR: {_redeem_err}")
+
 # Get portfolio value
 portfolio = mcporter('get_portfolio_value', include_breakdown=False)
 total_balance = 0.0
@@ -270,70 +324,7 @@ if isinstance(portfolio, dict):
         if matches:
             total_balance = max(float(m) for m in matches)
 
-if total_balance < 1.0:
-    # Try to redeem any winning positions first
-    print("Balance too low — checking for redeemable positions...")
-    try:
-        import httpx as _httpx
-        from eth_account import Account as _Account
-        from web3 import Web3 as _Web3
 
-        _PRIVATE_KEY = os.environ.get('POLYGON_PRIVATE_KEY', '')
-        _ADDRESS = os.environ.get('POLYGON_ADDRESS', '')
-        _USDC = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
-        _CTF  = "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
-        _RPC  = "https://1rpc.io/matic"
-        _CTF_ABI = [{"name":"redeemPositions","type":"function","inputs":[
-            {"name":"collateralToken","type":"address"},
-            {"name":"parentCollectionId","type":"bytes32"},
-            {"name":"conditionId","type":"bytes32"},
-            {"name":"indexSets","type":"uint256[]"}
-        ],"outputs":[]}]
-
-        _r = _httpx.get(f"https://data-api.polymarket.com/positions?user={_ADDRESS}&sizeThreshold=0.01", timeout=15)
-        _positions = _r.json() if _r.status_code == 200 else []
-        _redeemable = [p for p in _positions if p.get('redeemable')]
-
-        if _redeemable and _PRIVATE_KEY:
-            _w3 = _Web3(_Web3.HTTPProvider(_RPC))
-            _ctf = _w3.eth.contract(address=_w3.to_checksum_address(_CTF), abi=_CTF_ABI)
-            _acct = _Account.from_key(_PRIVATE_KEY)
-            _redeemed_value = 0.0
-            for _p in _redeemable:
-                try:
-                    _index_set = 1 << _p.get('outcomeIndex', 0)
-                    _tx = _ctf.functions.redeemPositions(
-                        _w3.to_checksum_address(_USDC),
-                        b'\x00' * 32,
-                        bytes.fromhex(_p['conditionId'][2:]),
-                        [_index_set]
-                    ).build_transaction({
-                        'from': _acct.address,
-                        'nonce': _w3.eth.get_transaction_count(_acct.address),
-                        'gas': 200000,
-                        'gasPrice': _w3.eth.gas_price,
-                        'chainId': 137
-                    })
-                    _signed = _acct.sign_transaction(_tx)
-                    _w3.eth.send_raw_transaction(_signed.raw_transaction)
-                    _redeemed_value += float(_p.get('currentValue', 0))
-                    print(f"REDEEMED: {_p.get('title','?')[:40]} ${_p.get('currentValue',0):.2f}")
-                except Exception as _e:
-                    print(f"REDEEM_ERROR: {_e}")
-            if _redeemed_value > 0:
-                import time as _time
-                _time.sleep(8)  # wait for tx to settle
-                # Re-fetch balance
-                _port2 = mcporter('get_portfolio_value', include_breakdown=False)
-                total_balance = 0.0
-                _raw2 = str(_port2)
-                import re as _re
-                _matches2 = _re.findall(r'\$(\d+\.?\d*)', _raw2)
-                if _matches2:
-                    total_balance = max(float(m) for m in _matches2)
-                print(f"Balance after redeem: ${total_balance:.2f}")
-    except Exception as _redeem_err:
-        print(f"REDEEM_ATTEMPT_ERROR: {_redeem_err}")
 
 if total_balance < 1.0:
     entry = {
