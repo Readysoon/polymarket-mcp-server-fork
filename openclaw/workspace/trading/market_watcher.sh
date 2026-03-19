@@ -140,7 +140,7 @@ mid = (best_bid + best_ask) / 2
 MAX_SPREAD = 0.10  # AMM spreads are naturally wider than CLOB
 if spread > MAX_SPREAD:
     if hours_left > 0.5:
-        retry_mins = 30 if hours_left > 2 else 15
+        retry_mins = 15
         fire_at = (now + timedelta(minutes=retry_mins)).strftime('%Y-%m-%dT%H:%M:%SZ')
         job = {
             "name": f"watch:{CONDITION_ID[:16]}",
