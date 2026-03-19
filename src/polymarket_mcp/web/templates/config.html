@@ -151,6 +151,109 @@
             </div>
         </div>
         {% endif %}
+
+        <!-- Scanner & Trading Strategy -->
+        <section class="section" style="margin-top:2rem">
+            <h2>Scanner &amp; Trading Strategy</h2>
+            <div class="card">
+                <div class="card-body">
+                    <form id="strategy-form">
+
+                        <h3 style="margin-bottom:1rem;font-size:0.95rem;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em">Price Filter</h3>
+                        <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                            <div>
+                                <label>Min YES Price</label>
+                                <input type="number" id="min_yes_price" name="min_yes_price" step="0.01" min="0.01" max="0.99" style="width:100%;padding:.5rem;background:#1e1e2e;border:1px solid #2a2a3a;color:#e5e7eb;border-radius:6px">
+                                <span class="help-text">e.g. 0.40 = 40¢</span>
+                            </div>
+                            <div>
+                                <label>Max YES Price</label>
+                                <input type="number" id="max_yes_price" name="max_yes_price" step="0.01" min="0.01" max="0.99" style="width:100%;padding:.5rem;background:#1e1e2e;border:1px solid #2a2a3a;color:#e5e7eb;border-radius:6px">
+                                <span class="help-text">e.g. 0.85 = 85¢</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top:1rem">
+                            <label>Max AMM Spread</label>
+                            <div style="display:flex;align-items:center;gap:1rem">
+                                <input type="range" id="max_spread_strategy" name="max_spread" min="0.01" max="0.30" step="0.01"
+                                       oninput="document.getElementById('max_spread_strategy_val').textContent = (this.value*100).toFixed(0)+'%'">
+                                <span id="max_spread_strategy_val" style="min-width:3rem;color:#a855f7;font-weight:600"></span>
+                            </div>
+                        </div>
+
+                        <h3 style="margin:1.5rem 0 1rem;font-size:0.95rem;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em">Position Sizing</h3>
+                        <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                            <div>
+                                <label>Min Bet (USD)</label>
+                                <input type="number" id="min_bet_usd" name="min_bet_usd" step="0.10" min="0.10" style="width:100%;padding:.5rem;background:#1e1e2e;border:1px solid #2a2a3a;color:#e5e7eb;border-radius:6px">
+                            </div>
+                            <div>
+                                <label>Max Bet (USD)</label>
+                                <input type="number" id="max_bet_usd" name="max_bet_usd" step="1" min="1" style="width:100%;padding:.5rem;background:#1e1e2e;border:1px solid #2a2a3a;color:#e5e7eb;border-radius:6px">
+                            </div>
+                        </div>
+                        <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1rem">
+                            <div>
+                                <label>Bet % (small bankroll &lt; threshold)</label>
+                                <div style="display:flex;align-items:center;gap:1rem">
+                                    <input type="range" id="bet_pct_small" name="bet_pct_small" min="0.05" max="1.0" step="0.05"
+                                           oninput="document.getElementById('bet_pct_small_val').textContent = (this.value*100).toFixed(0)+'%'">
+                                    <span id="bet_pct_small_val" style="min-width:3rem;color:#a855f7;font-weight:600"></span>
+                                </div>
+                            </div>
+                            <div>
+                                <label>Bet % (normal bankroll)</label>
+                                <div style="display:flex;align-items:center;gap:1rem">
+                                    <input type="range" id="bet_pct_normal" name="bet_pct_normal" min="0.05" max="1.0" step="0.05"
+                                           oninput="document.getElementById('bet_pct_normal_val').textContent = (this.value*100).toFixed(0)+'%'">
+                                    <span id="bet_pct_normal_val" style="min-width:3rem;color:#a855f7;font-weight:600"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:1rem">
+                            <label>Balance Threshold (USD) — below this = small bankroll mode</label>
+                            <input type="number" id="balance_threshold" name="balance_threshold" step="5" min="1" style="width:180px;padding:.5rem;background:#1e1e2e;border:1px solid #2a2a3a;color:#e5e7eb;border-radius:6px">
+                        </div>
+
+                        <h3 style="margin:1.5rem 0 1rem;font-size:0.95rem;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em">Scanner Schedule</h3>
+                        <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                            <div>
+                                <label>Scan Time (local HH:MM)</label>
+                                <input type="time" id="scan_time" style="width:100%;padding:.5rem;background:#1e1e2e;border:1px solid #2a2a3a;color:#e5e7eb;border-radius:6px">
+                                <span class="help-text" id="scan_time_utc"></span>
+                            </div>
+                            <div>
+                                <label>Lookahead (hours)</label>
+                                <input type="number" id="scan_lookahead" name="scan_lookahead" step="1" min="4" max="48" style="width:100%;padding:.5rem;background:#1e1e2e;border:1px solid #2a2a3a;color:#e5e7eb;border-radius:6px">
+                                <span class="help-text">Markets closing within this window are scanned</span>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:1rem">
+                            <label>Watch Window (hours before close — first check)</label>
+                            <div style="display:flex;align-items:center;gap:1rem">
+                                <input type="range" id="watch_window" name="watch_window" min="1" max="12" step="1"
+                                       oninput="document.getElementById('watch_window_val').textContent = this.value+'h'">
+                                <span id="watch_window_val" style="min-width:3rem;color:#a855f7;font-weight:600"></span>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:1rem">
+                            <label>Retry Interval (minutes)</label>
+                            <div style="display:flex;align-items:center;gap:1rem">
+                                <input type="range" id="retry_mins" name="retry_mins" min="5" max="60" step="5"
+                                       oninput="document.getElementById('retry_mins_val').textContent = this.value+'min'">
+                                <span id="retry_mins_val" style="min-width:4rem;color:#a855f7;font-weight:600"></span>
+                            </div>
+                        </div>
+
+                        <div class="button-group" style="margin-top:1.5rem">
+                            <button type="submit" class="btn btn-primary">Save Strategy</button>
+                            <span id="strategy-save-status" style="color:#10b981;font-size:0.85rem;margin-left:1rem"></span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
     </main>
 
     <footer class="footer">
@@ -214,7 +317,6 @@
             try {
                 const response = await fetch('/api/test-connection');
                 const data = await response.json();
-
                 if (data.success) {
                     showNotification('Configuration test successful!', 'success');
                 } else {
@@ -224,6 +326,81 @@
                 showNotification('Test failed: ' + error.message, 'error');
             }
         }
+
+        // ── Strategy Config ──────────────────────────────────────────────
+        async function loadStrategyConfig() {
+            try {
+                const res = await fetch('/api/strategy-config');
+                const d = await res.json();
+                document.getElementById('min_yes_price').value = d.min_yes_price ?? 0.40;
+                document.getElementById('max_yes_price').value = d.max_yes_price ?? 0.85;
+                document.getElementById('max_spread_strategy').value = d.max_spread ?? 0.10;
+                document.getElementById('max_spread_strategy_val').textContent = ((d.max_spread ?? 0.10)*100).toFixed(0)+'%';
+                document.getElementById('min_bet_usd').value = d.min_bet_usd ?? 0.50;
+                document.getElementById('max_bet_usd').value = d.max_bet_usd ?? 25;
+                document.getElementById('bet_pct_small').value = d.bet_pct_small ?? 0.50;
+                document.getElementById('bet_pct_small_val').textContent = ((d.bet_pct_small ?? 0.50)*100).toFixed(0)+'%';
+                document.getElementById('bet_pct_normal').value = d.bet_pct_normal ?? 0.20;
+                document.getElementById('bet_pct_normal_val').textContent = ((d.bet_pct_normal ?? 0.20)*100).toFixed(0)+'%';
+                document.getElementById('balance_threshold').value = d.balance_threshold ?? 50;
+                document.getElementById('scan_lookahead').value = d.scan_lookahead_hours ?? 28;
+                document.getElementById('watch_window').value = d.watch_window_hours ?? 4;
+                document.getElementById('watch_window_val').textContent = (d.watch_window_hours ?? 4)+'h';
+                document.getElementById('retry_mins').value = d.retry_mins ?? 15;
+                document.getElementById('retry_mins_val').textContent = (d.retry_mins ?? 15)+'min';
+                // Scan time: convert UTC cron hour to local
+                if (d.scan_time_utc) {
+                    const [h, m] = d.scan_time_utc.split(':');
+                    const d2 = new Date(); d2.setUTCHours(parseInt(h), parseInt(m), 0, 0);
+                    document.getElementById('scan_time').value = d2.toTimeString().slice(0,5);
+                    document.getElementById('scan_time_utc').textContent = `= ${h}:${m} UTC`;
+                }
+            } catch(e) { console.error('Strategy config load failed', e); }
+        }
+
+        document.getElementById('scan_time').addEventListener('input', function() {
+            const [h, m] = this.value.split(':');
+            const d = new Date(); d.setHours(parseInt(h), parseInt(m), 0, 0);
+            document.getElementById('scan_time_utc').textContent = `= ${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')} UTC`;
+        });
+
+        document.getElementById('strategy-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const [h, m] = document.getElementById('scan_time').value.split(':');
+            const d = new Date(); d.setHours(parseInt(h), parseInt(m), 0, 0);
+            const utcH = d.getUTCHours(), utcM = d.getUTCMinutes();
+            const payload = {
+                min_yes_price: parseFloat(document.getElementById('min_yes_price').value),
+                max_yes_price: parseFloat(document.getElementById('max_yes_price').value),
+                max_spread: parseFloat(document.getElementById('max_spread_strategy').value),
+                min_bet_usd: parseFloat(document.getElementById('min_bet_usd').value),
+                max_bet_usd: parseFloat(document.getElementById('max_bet_usd').value),
+                bet_pct_small: parseFloat(document.getElementById('bet_pct_small').value),
+                bet_pct_normal: parseFloat(document.getElementById('bet_pct_normal').value),
+                balance_threshold: parseFloat(document.getElementById('balance_threshold').value),
+                scan_lookahead_hours: parseInt(document.getElementById('scan_lookahead').value),
+                watch_window_hours: parseInt(document.getElementById('watch_window').value),
+                retry_mins: parseInt(document.getElementById('retry_mins').value),
+                scan_time_utc: `${String(utcH).padStart(2,'0')}:${String(utcM).padStart(2,'0')}`,
+            };
+            try {
+                const res = await fetch('/api/strategy-config', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+                const data = await res.json();
+                const status = document.getElementById('strategy-save-status');
+                if (res.ok) {
+                    status.textContent = '✓ Saved';
+                    status.style.color = '#10b981';
+                    setTimeout(() => status.textContent = '', 3000);
+                } else {
+                    status.textContent = '✗ ' + (data.error || 'Save failed');
+                    status.style.color = '#ef4444';
+                }
+            } catch(e) {
+                document.getElementById('strategy-save-status').textContent = '✗ ' + e.message;
+            }
+        });
+
+        loadStrategyConfig();
     </script>
 </body>
 </html>
