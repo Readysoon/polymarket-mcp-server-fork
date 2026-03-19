@@ -885,6 +885,90 @@ async def update_config(config_update: ConfigUpdateRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+STRATEGY_CONFIG_PATHS = [
+    Path(os.environ.get("OPENCLAW_STATE_DIR", "/home/node/.openclaw")) / "workspace" / "trading" / "config.json",
+    Path(__file__).parent.parent.parent.parent / "openclaw" / "workspace" / "trading" / "config.json",
+]
+
+@app.get("/api/strategy-config")
+async def get_strategy_config():
+    """Get trading strategy config from config.json"""
+    for p in STRATEGY_CONFIG_PATHS:
+        if p.exists():
+            try:
+                d = json.loads(p.read_text())
+                # Add scanner settings with defaults
+                d.setdefault("scan_lookahead_hours", 28)
+                d.setdefault("watch_window_hours", 4)
+                d.setdefault("retry_mins", 15)
+                d.setdefault("scan_time_utc", "23:45")
+                return JSONResponse(d)
+            except Exception as e:
+                return JSONResponse({"error": str(e)}, status_code=500)
+    return JSONResponse({"error": "config.json not found"}, status_code=404)
+
+@app.post("/api/strategy-config")
+async def save_strategy_config(request: Request):
+    """Save trading strategy config to config.json and update cron schedule"""
+    try:
+        data = await request.json()
+        config_path = None
+        for p in STRATEGY_CONFIG_PATHS:
+            if p.exists():
+                config_path = p
+                break
+        if not config_path:
+            config_path = STRATEGY_CONFIG_PATHS[0]
+            config_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Load existing and merge
+        try:
+            existing = json.loads(config_path.read_text())
+        except Exception:
+            existing = {}
+
+        existing.update({k: v for k, v in data.items() if k not in ("scan_time_utc", "scan_lookahead_hours", "watch_window_hours", "retry_mins")})
+        # Keep scanner meta in config too
+        for k in ("scan_lookahead_hours", "watch_window_hours", "retry_mins", "scan_time_utc"):
+            if k in data:
+                existing[k] = data[k]
+
+        config_path.write_text(json.dumps(existing, indent=2))
+
+        # Update scanner script with new watch_window and lookahead
+        scanner_paths = [
+            Path(os.environ.get("OPENCLAW_STATE_DIR", "/home/node/.openclaw")) / "workspace" / "trading" / "scanner.sh",
+            Path(__file__).parent.parent.parent.parent / "openclaw" / "workspace" / "trading" / "scanner.sh",
+        ]
+        for sp in scanner_paths:
+            if sp.exists():
+                txt = sp.read_text()
+                if "watch_window_hours" in data:
+                    import re as _re
+                    txt = _re.sub(r"max_window = max\(\[.*?\]\s*\+\s*\[\d+\]\)", f"max_window = max([b.get('window_hours', {data['watch_window_hours']}) for b in pop.get('bots', [])] + [{data['watch_window_hours']}])", txt)
+                if "scan_lookahead_hours" in data:
+                    txt = _re.sub(r"cutoff = datetime\.fromtimestamp\(now\.timestamp\(\) \+ \d+\*\d+", f"cutoff = datetime.fromtimestamp(now.timestamp() + {data['scan_lookahead_hours']}*3600", txt)
+                sp.write_text(txt)
+                break
+
+        # Update watcher retry_mins
+        if "retry_mins" in data:
+            watcher_paths = [
+                Path(os.environ.get("OPENCLAW_STATE_DIR", "/home/node/.openclaw")) / "workspace" / "trading" / "market_watcher.sh",
+                Path(__file__).parent.parent.parent.parent / "openclaw" / "workspace" / "trading" / "market_watcher.sh",
+            ]
+            for wp in watcher_paths:
+                if wp.exists():
+                    import re as _re
+                    txt = wp.read_text()
+                    txt = _re.sub(r"retry_mins = \d+", f"retry_mins = {data['retry_mins']}", txt)
+                    wp.write_text(txt)
+                    break
+
+        return JSONResponse({"ok": True, "message": "Strategy config saved"})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
 @app.get("/api/stats")
 async def get_stats():
     """Get dashboard statistics"""
