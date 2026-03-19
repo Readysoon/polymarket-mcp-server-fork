@@ -1128,7 +1128,7 @@
                     let scheduleStr = '';
                     if (m.end_datetime) {
                         const end = new Date(m.end_datetime).getTime();
-                        const firstCheck = end - 2 * 3600000;
+                        const firstCheck = end - 4 * 3600000;
                         const checkTimes = [];
                         let t = firstCheck;
                         while (t < end) {
