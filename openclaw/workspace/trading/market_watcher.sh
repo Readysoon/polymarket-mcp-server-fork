@@ -33,6 +33,17 @@ LOG_FILE = f"{TRADING_DIR}/log.json"
 
 now = datetime.now(timezone.utc)
 
+# ── Telegram helper ─────────────────────────────────────────────────────────
+def send_telegram(msg):
+    try:
+        import subprocess as _sp
+        _sp.run([
+            'curl', '-s', '-X', 'POST',
+            'https://api.telegram.org/bot8599638540:AAFVTzaLBWQmStBfdd3xSlPEJJQuMH4cEBI/sendMessage',
+            '-d', f'chat_id=866661912&text={msg[:1000]}'
+        ], capture_output=True, timeout=10)
+    except: pass
+
 # ── Log helper ──────────────────────────────────────────────────────────────
 def write_log(entry):
     try:
@@ -134,6 +145,7 @@ if 'error' in price_data or price_data.get('bid') is None or price_data.get('ask
         }
     write_log(entry)
     print(json.dumps(entry))
+    send_telegram(f"⏰ TIMEOUT: {QUESTION[:50]}\nMarket closed before tradeable — abandoned.")
     sys.exit(0)
 
 best_bid = float(price_data['bid'])
@@ -201,6 +213,7 @@ if spread > MAX_SPREAD:
         }
     write_log(entry)
     print(json.dumps(entry))
+    send_telegram(f"⏰ TIMEOUT: {QUESTION[:50]}\nSpread too wide until close — abandoned.")
     sys.exit(0)
 
 # ── Spread OK — attempt trade ────────────────────────────────────────────────
@@ -482,6 +495,7 @@ if result.get('success') or result.get('order_id'):
     write_log(entry)
     print(json.dumps(entry))
     print(f"TRADED: {QUESTION[:50]} @ {best_ask:.2f} ${bet_size:.2f} ({round(bet_size/best_ask,2)} shares)")
+    send_telegram(f"✅ TRADED: {QUESTION[:50]}\n{trade_side} ${bet_size:.2f} @ {best_ask:.2f}¢")
 else:
     err_msg = str(result.get('error', result))
     # CLOB spread safety check failure = illiquid orderbook → treat as NO_TRADE, not ERROR
@@ -530,5 +544,6 @@ else:
         write_log(entry)
         print(json.dumps(entry))
         print(f"ALERT: Order failed for {QUESTION[:50]} — {result}")
+        send_telegram(f"❌ ORDER FAILED: {QUESTION[:50]}\n{str(result)[:200]}")
 
 PYEOF
