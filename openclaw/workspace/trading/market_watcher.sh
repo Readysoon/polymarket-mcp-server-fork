@@ -343,8 +343,8 @@ if total_balance < 1.0:
     print(f"ALERT: Bankroll too low (${total_balance:.2f}) — deposit more to trade!")
     sys.exit(0)
 
-# Bet sizing: fixed $0.50 per trade (balance API unavailable)
-bet_size = 0.50
+# Bet sizing: fixed $1.00 per trade (Polymarket minimum)
+bet_size = 1.00
 print(f"Bet size: ${bet_size:.2f}")
 
 # Already traded this market?
