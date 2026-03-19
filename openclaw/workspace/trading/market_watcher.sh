@@ -97,7 +97,7 @@ if 'error' in price_data or price_data.get('bid') is None or price_data.get('ask
             "schedule": {"kind": "at", "at": fire_at},
             "payload": {
                 "kind": "agentTurn",
-                "message": f"Run market watcher for: {QUESTION[:60]}\n\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{CONDITION_ID}' '{YES_TOKEN}' '{END_DATETIME}' '{QUESTION[:60]}'\n\nAfter running, always notify Philipp on Telegram with the result: TRADED (what was bought + price), NO_TRADE (reason), or error. Always report the outcome, never stay silent.",
+                "message": f"Run market watcher for: {QUESTION[:60]}\n\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{CONDITION_ID}' '{YES_TOKEN}' '{END_DATETIME}' '{QUESTION[:60]}'\n\nAfter running, always notify Philipp on Telegram with the result: TRADED (what was bought + price), NO_TRADE (reason), or error. If there is a technical error in the script: debug it, fix the code in /home/node/.openclaw/workspace/trading/market_watcher.sh, run the fix, git push to the fork, then notify Philipp on Telegram what was fixed. Never give up silently.",
                 "timeoutSeconds": 120
             },
             "sessionTarget": "isolated",
@@ -155,7 +155,7 @@ if spread > MAX_SPREAD:
             "schedule": {"kind": "at", "at": fire_at},
             "payload": {
                 "kind": "agentTurn",
-                "message": f"Run market watcher for: {QUESTION[:60]}\n\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{CONDITION_ID}' '{YES_TOKEN}' '{END_DATETIME}' '{QUESTION[:60]}'\n\nAfter running, always notify Philipp on Telegram with the result: TRADED (what was bought + price), NO_TRADE (reason), or error. Always report the outcome, never stay silent.",
+                "message": f"Run market watcher for: {QUESTION[:60]}\n\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{CONDITION_ID}' '{YES_TOKEN}' '{END_DATETIME}' '{QUESTION[:60]}'\n\nAfter running, always notify Philipp on Telegram with the result: TRADED (what was bought + price), NO_TRADE (reason), or error. If there is a technical error in the script: debug it, fix the code in /home/node/.openclaw/workspace/trading/market_watcher.sh, run the fix, git push to the fork, then notify Philipp on Telegram what was fixed. Never give up silently.",
                 "timeoutSeconds": 120
             },
             "sessionTarget": "isolated",
