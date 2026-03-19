@@ -42,14 +42,29 @@ ctf = w3.eth.contract(address=w3.to_checksum_address(CTF), abi=CTF_ABI)
 account = Account.from_key(PRIVATE_KEY)
 
 redeemed = []
+usdc_abi = [{"name":"balanceOf","type":"function","inputs":[{"name":"account","type":"address"}],"outputs":[{"type":"uint256"}],"stateMutability":"view"}]
+usdc_contract = w3.eth.contract(address=w3.to_checksum_address(USDC), abi=usdc_abi)
+
 for p in redeemable:
     condition_id = p['conditionId']
     outcome_index = p.get('outcomeIndex', 0)
-    index_set = 1 << outcome_index  # bit position for the winning outcome
     title = p.get('title', 'Unknown')[:50]
     value = p.get('currentValue', 0)
 
+    # Skip invalid outcome index (e.g. neg risk markets not yet resolvable)
+    if outcome_index >= 256:
+        print(f"SKIP (invalid outcomeIndex {outcome_index}): {title}")
+        continue
+
+    # Skip if value is 0 (already lost/worthless)
+    if float(value) <= 0:
+        print(f"SKIP (value $0): {title}")
+        continue
+
+    index_set = 1 << outcome_index
+
     try:
+        bal_before = usdc_contract.functions.balanceOf(account.address).call()
         nonce = w3.eth.get_transaction_count(account.address)
         tx = ctf.functions.redeemPositions(
             w3.to_checksum_address(USDC),
@@ -65,7 +80,6 @@ for p in redeemable:
         })
         signed = account.sign_transaction(tx)
         tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
-        # Wait for confirmation
         import time as _time
         confirmed = False
         for _ in range(12):
@@ -76,12 +90,17 @@ for p in redeemable:
                     confirmed = True
                     break
                 elif receipt and receipt.status == 0:
-                    print(f"REDEEM_FAILED (reverted): {title}")
+                    print(f"REDEEM_REVERTED: {title}")
                     break
             except: pass
         if confirmed:
-            print(f"REDEEMED: {title} | ${value:.2f} | tx={tx_hash.hex()[:16]}...")
-            redeemed.append({'title': title, 'value': value, 'tx': tx_hash.hex()})
+            bal_after = usdc_contract.functions.balanceOf(account.address).call()
+            received = (bal_after - bal_before) / 1e6
+            if received > 0:
+                print(f"REDEEMED: {title} | +${received:.2f} USDC | tx={tx_hash.hex()[:16]}...")
+                redeemed.append({'title': title, 'value': received, 'tx': tx_hash.hex()})
+            else:
+                print(f"REDEEM_ZERO: {title} | tx confirmed but $0 received (market not resolved yet)")
         else:
             print(f"REDEEM_UNCONFIRMED: {title} | tx={tx_hash.hex()[:16]}...")
     except Exception as e:
