@@ -38,7 +38,9 @@ Automated prediction market trading system with dashboard.
 - Erster Check **4 Stunden vor Marktschluss**
 - Retries alle **15 Minuten**
 - Löst automatisch gewonnene Positionen ein (Redeem) bevor getradet wird
-- Benachrichtigt nur bei: Trade ausgeführt oder endgültig abgelehnt
+- **AI-Analyse** via `analyze_market_opportunity` vor jedem Trade — BUY/SELL/SKIP je nach Empfehlung
+- Confidence < 55% → kein Trade
+- Benachrichtigt nach **jedem Check** mit Ergebnis (TRADED, NO_TRADE + Grund, oder Fehler)
 
 ### Position Sizing
 - Bankroll < $50: **50% pro Trade**
