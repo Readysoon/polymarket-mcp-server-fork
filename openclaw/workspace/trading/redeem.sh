@@ -10,7 +10,7 @@ PRIVATE_KEY = os.environ.get('POLYGON_PRIVATE_KEY', '')
 ADDRESS = os.environ.get('POLYGON_ADDRESS', '')
 USDC = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
 CTF  = "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
-RPC  = "https://1rpc.io/matic"
+RPC  = "https://polygon-bor-rpc.publicnode.com"  # reliable, no rate limit
 
 if not PRIVATE_KEY:
     print("ERROR: No POLYGON_PRIVATE_KEY set")
@@ -65,8 +65,25 @@ for p in redeemable:
         })
         signed = account.sign_transaction(tx)
         tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
-        print(f"REDEEMED: {title} | ${value:.2f} | tx={tx_hash.hex()[:16]}...")
-        redeemed.append({'title': title, 'value': value, 'tx': tx_hash.hex()})
+        # Wait for confirmation
+        import time as _time
+        confirmed = False
+        for _ in range(12):
+            _time.sleep(5)
+            try:
+                receipt = w3.eth.get_transaction_receipt(tx_hash)
+                if receipt and receipt.status == 1:
+                    confirmed = True
+                    break
+                elif receipt and receipt.status == 0:
+                    print(f"REDEEM_FAILED (reverted): {title}")
+                    break
+            except: pass
+        if confirmed:
+            print(f"REDEEMED: {title} | ${value:.2f} | tx={tx_hash.hex()[:16]}...")
+            redeemed.append({'title': title, 'value': value, 'tx': tx_hash.hex()})
+        else:
+            print(f"REDEEM_UNCONFIRMED: {title} | tx={tx_hash.hex()[:16]}...")
     except Exception as e:
         print(f"REDEEM_ERROR: {title} | {e}")
 
