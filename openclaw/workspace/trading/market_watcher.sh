@@ -45,9 +45,8 @@ def write_log(entry):
         json.dump(log, f, indent=2)
 
 def mcporter(tool, **kwargs):
-    args = ['mcporter', 'call', f'polymarket.{tool}']
-    for k, v in kwargs.items():
-        args.append(f'{k}={json.dumps(v) if isinstance(v,(dict,list)) else str(v)}')
+    # Use --args JSON to ensure correct types (numbers stay numbers, not strings)
+    args = ['mcporter', 'call', f'polymarket.{tool}', '--args', json.dumps(kwargs)]
     r = subprocess.run(args, capture_output=True, text=True, timeout=30)
     try:
         return json.loads(r.stdout)
@@ -369,6 +368,8 @@ if already:
     sys.exit(0)
 
 # AI analysis before placing order
+# Note: the agent running this script should also search for recent news about the market
+# using web_search before making the final trade decision
 print(f"Analyzing market opportunity for: {QUESTION[:60]}")
 analysis = mcporter('analyze_market_opportunity', market_id=CONDITION_ID)
 analysis_text = str(analysis)
@@ -378,7 +379,7 @@ should_trade = False
 trade_side = 'BUY'
 analysis_reason = "No analysis available"
 
-if isinstance(analysis, dict):
+if isinstance(analysis, dict) and 'error' not in analysis:
     rec = str(analysis.get('recommendation', '') or analysis.get('action', '') or '').upper()
     confidence = float(analysis.get('confidence', 0) or analysis.get('confidence_score', 0) or 0)
     analysis_reason = analysis.get('reasoning', '') or analysis.get('analysis', '') or analysis_text[:200]
@@ -433,11 +434,15 @@ if not should_trade:
     print(json.dumps(entry))
     sys.exit(0)
 
-# Place order via AMM (market order — executes at current AMM price)
-result = mcporter('create_market_order',
+# Place order via limit order at AMM price (market order hits illiquid CLOB at 0.99)
+# For BUY: limit at best_ask; for SELL: limit at best_bid
+limit_price = best_ask if trade_side == 'BUY' else best_bid
+shares_to_buy = round(bet_size / limit_price, 2)
+result = mcporter('create_limit_order',
     market_id=CONDITION_ID,
     side=trade_side,
-    size=bet_size
+    price=limit_price,
+    size=shares_to_buy
 )
 
 if result.get('success') or result.get('order_id'):
@@ -482,24 +487,52 @@ if result.get('success') or result.get('order_id'):
     print(json.dumps(entry))
     print(f"TRADED: {QUESTION[:50]} @ {best_ask:.2f} ${bet_size:.2f} ({round(bet_size/best_ask,2)} shares)")
 else:
-    entry = {
-        "timestamp": now.isoformat(),
-        "question": QUESTION,
-        "condition_id": CONDITION_ID,
-        "end_datetime": END_DATETIME,
-        "hours_left": round(hours_left, 2),
-        "best_bid": best_bid,
-        "best_ask": best_ask,
-        "spread": round(spread, 4),
-        "mid": round(mid, 4),
-        "portfolio_value": total_balance,
-        "bet_size_usd": bet_size,
-        "result": "ERROR",
-        "reason": f"Order failed: {result}",
-        "action": "Trade attempt failed"
-    }
-    write_log(entry)
-    print(json.dumps(entry))
-    print(f"ALERT: Order failed for {QUESTION[:50]} — {result}")
+    err_msg = str(result.get('error', result))
+    # CLOB spread safety check failure = illiquid orderbook → treat as NO_TRADE, not ERROR
+    if 'Safety check failed: Market spread' in err_msg and 'exceeds maximum' in err_msg:
+        # Extract CLOB spread from error message for logging
+        import re as _re
+        clob_spread_match = _re.search(r'Market spread ([\d.]+)%', err_msg)
+        clob_spread_pct = clob_spread_match.group(1) if clob_spread_match else 'unknown'
+        entry = {
+            "timestamp": now.isoformat(),
+            "question": QUESTION,
+            "condition_id": CONDITION_ID,
+            "end_datetime": END_DATETIME,
+            "hours_left": round(hours_left, 2),
+            "best_bid": best_bid,
+            "best_ask": best_ask,
+            "amm_spread": round(spread, 4),
+            "clob_spread_pct": clob_spread_pct,
+            "mid": round(mid, 4),
+            "portfolio_value": total_balance,
+            "bet_size_usd": bet_size,
+            "result": "NO_TRADE",
+            "reason": f"CLOB orderbook illiquid (spread {clob_spread_pct}%) — AMM price {mid:.3f} but no liquid CLOB orders",
+            "action": "Skipped — CLOB spread too wide for limit order"
+        }
+        write_log(entry)
+        print(json.dumps(entry))
+        print(f"NO_TRADE: {QUESTION[:50]} — CLOB illiquid ({clob_spread_pct}% spread)")
+    else:
+        entry = {
+            "timestamp": now.isoformat(),
+            "question": QUESTION,
+            "condition_id": CONDITION_ID,
+            "end_datetime": END_DATETIME,
+            "hours_left": round(hours_left, 2),
+            "best_bid": best_bid,
+            "best_ask": best_ask,
+            "spread": round(spread, 4),
+            "mid": round(mid, 4),
+            "portfolio_value": total_balance,
+            "bet_size_usd": bet_size,
+            "result": "ERROR",
+            "reason": f"Order failed: {result}",
+            "action": "Trade attempt failed"
+        }
+        write_log(entry)
+        print(json.dumps(entry))
+        print(f"ALERT: Order failed for {QUESTION[:50]} — {result}")
 
 PYEOF
