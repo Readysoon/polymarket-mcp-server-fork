@@ -576,6 +576,9 @@ async def get_watchlist():
                 "next_check": next_check_times.get(cid, None),
             })
 
+        # Sort: most checks first, then by next_check time (soonest first)
+        pending.sort(key=lambda m: (-(m.get("check_count") or 0), m.get("next_check") or "9999"))
+
         return JSONResponse({
             "markets": pending,
             "count": len(pending),
