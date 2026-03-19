@@ -18,7 +18,7 @@ max_price = config['max_yes_price']
 min_vol = 50000  # min 24h volume — real activity signal
 
 now = datetime.now(timezone.utc)
-cutoff = datetime.fromtimestamp(now.timestamp() + 7*86400, tz=timezone.utc)
+cutoff = datetime.fromtimestamp(now.timestamp() + 28*3600, tz=timezone.utc)
 
 BASE = "https://gamma-api.polymarket.com/markets"
 
@@ -151,7 +151,7 @@ except:
     except:
         pop = {'bots': []}
 
-max_window = max([b.get('window_hours', 20) for b in pop.get('bots', [])] + [20])
+max_window = max([b.get('window_hours', 4) for b in pop.get('bots', [])] + [4])
 
 for c in candidates:
     end_dt = datetime.fromisoformat(c['end_datetime'].replace('Z', '+00:00'))
