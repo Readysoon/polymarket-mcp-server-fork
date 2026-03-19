@@ -368,10 +368,67 @@ if already:
     print(json.dumps(entry))
     sys.exit(0)
 
+# AI analysis before placing order
+print(f"Analyzing market opportunity for: {QUESTION[:60]}")
+analysis = mcporter('analyze_market_opportunity', market_id=CONDITION_ID)
+analysis_text = str(analysis)
+
+# Extract recommendation from analysis
+should_trade = False
+trade_side = 'BUY'
+analysis_reason = "No analysis available"
+
+if isinstance(analysis, dict):
+    rec = str(analysis.get('recommendation', '') or analysis.get('action', '') or '').upper()
+    confidence = float(analysis.get('confidence', 0) or analysis.get('confidence_score', 0) or 0)
+    analysis_reason = analysis.get('reasoning', '') or analysis.get('analysis', '') or analysis_text[:200]
+    
+    if 'BUY' in rec or 'YES' in rec or rec == 'LONG':
+        should_trade = True
+        trade_side = 'BUY'
+    elif 'SELL' in rec or 'NO' in rec or rec == 'SHORT':
+        should_trade = True
+        trade_side = 'SELL'
+    elif 'HOLD' in rec or 'SKIP' in rec or 'AVOID' in rec or 'PASS' in rec:
+        should_trade = False
+    else:
+        # No clear recommendation — skip
+        should_trade = False
+    
+    # Only trade with sufficient confidence
+    if confidence > 0 and confidence < 0.55:
+        should_trade = False
+        analysis_reason = f"Confidence too low ({confidence:.0%}): {analysis_reason}"
+else:
+    # Analysis failed — skip to be safe
+    analysis_reason = f"Analysis error: {analysis_text[:100]}"
+    should_trade = False
+
+print(f"Analysis: trade={should_trade} side={trade_side} reason={analysis_reason[:80]}")
+
+if not should_trade:
+    entry = {
+        "timestamp": now.isoformat(),
+        "question": QUESTION,
+        "condition_id": CONDITION_ID,
+        "end_datetime": END_DATETIME,
+        "hours_left": round(hours_left, 2),
+        "best_bid": best_bid,
+        "best_ask": best_ask,
+        "spread": round(spread, 4),
+        "mid": round(mid, 4),
+        "result": "NO_TRADE",
+        "reason": f"AI skip: {analysis_reason[:120]}",
+        "action": "Skipped by AI analysis"
+    }
+    write_log(entry)
+    print(json.dumps(entry))
+    sys.exit(0)
+
 # Place order via AMM (market order — executes at current AMM price)
 result = mcporter('create_market_order',
     market_id=CONDITION_ID,
-    side='BUY',
+    side=trade_side,
     size=bet_size
 )
 
