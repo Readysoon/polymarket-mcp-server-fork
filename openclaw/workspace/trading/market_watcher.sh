@@ -434,15 +434,11 @@ if not should_trade:
     print(json.dumps(entry))
     sys.exit(0)
 
-# Place order via limit order at AMM price (market order hits illiquid CLOB at 0.99)
-# For BUY: limit at best_ask; for SELL: limit at best_bid
-limit_price = best_ask if trade_side == 'BUY' else best_bid
-shares_to_buy = round(bet_size / limit_price, 2)
-result = mcporter('create_limit_order',
+# Place market order (AMM)
+result = mcporter('create_market_order',
     market_id=CONDITION_ID,
     side=trade_side,
-    price=limit_price,
-    size=shares_to_buy
+    size=float(bet_size)
 )
 
 if result.get('success') or result.get('order_id'):
