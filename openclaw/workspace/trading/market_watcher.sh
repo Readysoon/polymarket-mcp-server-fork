@@ -44,6 +44,27 @@ def send_telegram(msg):
         ], capture_output=True, timeout=10)
     except: pass
 
+def queue_error(error_msg, context=""):
+    """Write error to queue for Sonnet to auto-fix via heartbeat."""
+    try:
+        eq_path = f"{TRADING_DIR}/error_queue.json"
+        try:
+            with open(eq_path) as f:
+                queue = json.load(f)
+        except:
+            queue = []
+        queue.append({
+            "timestamp": now.isoformat(),
+            "script": "market_watcher.sh",
+            "error": error_msg[:500],
+            "context": context[:300],
+            "question": QUESTION,
+            "condition_id": CONDITION_ID,
+        })
+        with open(eq_path, 'w') as f:
+            json.dump(queue, f, indent=2)
+    except: pass
+
 # ── Log helper ──────────────────────────────────────────────────────────────
 def write_log(entry):
     try:
@@ -545,5 +566,6 @@ else:
         print(json.dumps(entry))
         print(f"ALERT: Order failed for {QUESTION[:50]} — {result}")
         send_telegram(f"❌ ORDER FAILED: {QUESTION[:50]}\n{str(result)[:200]}")
+        queue_error(f"Order failed: {str(result)}", f"market_id={CONDITION_ID} side={trade_side} size={bet_size}")
 
 PYEOF
