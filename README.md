@@ -86,6 +86,28 @@ Automated prediction market trading system with dashboard.
 ## 🔧 Git Workflow
 
 - Repo: `Readysoon/polymarket-mcp-server-fork`
-- Scripts: `/data/openclaw/workspace/repo/`
-- Agent Workspace: `/home/node/.openclaw/workspace/`
 - Bei jeder Änderung: `git pull` → ändern → `git commit` → `git push`
+
+### Verzeichnisstruktur (deployed auf Fly.io)
+
+```
+/home/node/.openclaw/workspace/     ← Alias für den Workspace (OpenClaw)
+/data/openclaw/workspace/           ← Echter Workspace
+├── AGENTS.md, SOUL.md, USER.md    ← Agent-Dateien (live, werden genutzt)
+├── MEMORY.md                       ← Langzeitgedächtnis des Agenten
+├── memory/                         ← Tägliche Memory-Logs
+├── trading/                        ← Trading Scripts (live)
+└── repo/                           ← Git Repo Clone
+    ├── src/polymarket_mcp/         ← MCP Server Code
+    ├── openclaw/workspace/         ← Kopie der Agent-Dateien (im Repo versioniert)
+    └── trading/ (via openclaw/)    ← Kopie der Trading Scripts (im Repo versioniert)
+```
+
+**Wichtig:** Die live genutzten Dateien liegen im Workspace (`/data/openclaw/workspace/`).
+Das Repo unter `repo/` ist der Git-Clone. Nach Änderungen im Workspace müssen die
+relevanten Dateien ins Repo kopiert und gepusht werden:
+
+```bash
+cp /home/node/.openclaw/workspace/trading/*.sh /data/openclaw/workspace/repo/openclaw/workspace/trading/
+cd /data/openclaw/workspace/repo && git add -A && git commit -m "..." && git push
+```
