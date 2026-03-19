@@ -343,10 +343,9 @@ if total_balance < 1.0:
     print(f"ALERT: Bankroll too low (${total_balance:.2f}) — deposit more to trade!")
     sys.exit(0)
 
-# Bet sizing: use min_bet as default since we can't read Polymarket balance via API
-# TODO: update when Polymarket exposes balance API
-bet_size = min_bet
-print(f"Bet size: ${bet_size:.2f} (fixed min_bet — balance API unavailable)")
+# Bet sizing: fixed $2 per trade (balance API unavailable)
+bet_size = 2.00
+print(f"Bet size: ${bet_size:.2f}")
 
 # Already traded this market?
 try:
