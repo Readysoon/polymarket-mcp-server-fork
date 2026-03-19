@@ -29,10 +29,11 @@ Automated prediction market trading system with dashboard.
 ## 🤖 System-Übersicht
 
 ### Scanner
-- Läuft täglich um **08:30 Innsbrucker Zeit**
+- Läuft täglich um **00:00 Innsbrucker Zeit** (23:00 UTC winter, 22:00 UTC sommer)
 - Scannt die nächsten **28 Stunden** nach handelbaren Märkten
-- Filtert nach: Volumen >$50k, AMM-Spread <10%, YES-Preis 40-85¢
-- Sendet Zusammenfassung per Telegram
+- Filtert nach: Volumen >$50k, Spread <10%, YES-Preis 40-85¢
+- Sendet Zusammenfassung per Telegram mit **Innsbruck-Lokalzeit**
+- Bei technischen Fehlern: **Auto-Fix** → git push → Telegram-Meldung
 
 ### Watcher
 - Erster Check **4 Stunden vor Marktschluss**
@@ -41,6 +42,7 @@ Automated prediction market trading system with dashboard.
 - **AI-Analyse** via `analyze_market_opportunity` vor jedem Trade — BUY/SELL/SKIP je nach Empfehlung
 - Confidence < 55% → kein Trade
 - Benachrichtigt nach **jedem Check** mit Ergebnis (TRADED, NO_TRADE + Grund, oder Fehler)
+- Bei technischen Fehlern: **Auto-Fix** → git push → Telegram-Meldung
 
 ### Position Sizing
 - Bankroll < $50: **50% pro Trade**
@@ -78,3 +80,12 @@ Automated prediction market trading system with dashboard.
   "balance_threshold": 50
 }
 ```
+
+---
+
+## 🔧 Git Workflow
+
+- Repo: `Readysoon/polymarket-mcp-server-fork`
+- Scripts: `/data/openclaw/workspace/repo/`
+- Agent Workspace: `/home/node/.openclaw/workspace/`
+- Bei jeder Änderung: `git pull` → ändern → `git commit` → `git push`
