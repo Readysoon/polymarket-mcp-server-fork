@@ -74,7 +74,7 @@ body {
 .navbar {
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
-    padding: 1rem 0;
+    padding: 0.75rem 0;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -82,8 +82,8 @@ body {
 
 .navbar .container {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .nav-brand {
@@ -93,23 +93,36 @@ body {
 }
 
 .nav-brand h1 {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: var(--text-primary);
+    white-space: nowrap;
 }
 
+/* Tab bar — scrolls horizontally on mobile */
 .nav-menu {
     display: flex;
     list-style: none;
-    gap: 0.5rem;
+    gap: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-top: 1px solid var(--border-color);
+    padding-top: 0.25rem;
 }
+.nav-menu::-webkit-scrollbar { display: none; }
+
+.nav-menu li { flex-shrink: 0; }
 
 .nav-menu a {
+    display: block;
     color: var(--text-secondary);
     text-decoration: none;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 1.1rem;
     border-radius: var(--radius-md);
     transition: var(--transition);
+    white-space: nowrap;
+    font-size: 0.9rem;
 }
 
 .nav-menu a:hover {
@@ -768,22 +781,10 @@ html, body {
     .container { padding: 0 0.75rem; }
 
     /* Navbar */
-    .navbar .container {
-        flex-direction: column;
-        gap: 0.5rem;
-        padding: 0.5rem 0.75rem;
-    }
-    .nav-menu {
-        width: 100%;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 0.25rem;
-    }
-    .nav-menu a {
-        padding: 0.4rem 0.75rem;
-        font-size: 0.8rem;
-    }
+    .navbar { padding: 0.5rem 0; }
+    .navbar .container { gap: 0.25rem; }
     .nav-brand h1 { font-size: 1rem; }
+    .nav-menu a { padding: 0.45rem 0.9rem; font-size: 0.82rem; }
 
     /* Cards & grids */
     .card-grid,
