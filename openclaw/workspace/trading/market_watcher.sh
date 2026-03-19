@@ -10,17 +10,25 @@ WORKSPACE="/home/node/.openclaw/workspace"
 SWARM_DIR="$WORKSPACE/swarm"
 TRADING_DIR="$WORKSPACE/trading"
 
-python3 << PYEOF
+export MW_CONDITION_ID="$CONDITION_ID"
+export MW_YES_TOKEN="$YES_TOKEN"
+export MW_END_DATETIME="$END_DATETIME"
+export MW_QUESTION="$QUESTION"
+export MW_WORKSPACE="$WORKSPACE"
+export MW_SWARM_DIR="$SWARM_DIR"
+export MW_TRADING_DIR="$TRADING_DIR"
+
+python3 << 'PYEOF'
 import json, subprocess, sys, os
 from datetime import datetime, timezone, timedelta
 
-CONDITION_ID = "$CONDITION_ID"
-YES_TOKEN = "$YES_TOKEN"
-END_DATETIME = "$END_DATETIME"
-QUESTION = "$QUESTION"
-WORKSPACE = "$WORKSPACE"
-SWARM_DIR = "$SWARM_DIR"
-TRADING_DIR = "$TRADING_DIR"
+CONDITION_ID = os.environ['MW_CONDITION_ID']
+YES_TOKEN = os.environ['MW_YES_TOKEN']
+END_DATETIME = os.environ['MW_END_DATETIME']
+QUESTION = os.environ['MW_QUESTION']
+WORKSPACE = os.environ['MW_WORKSPACE']
+SWARM_DIR = os.environ['MW_SWARM_DIR']
+TRADING_DIR = os.environ['MW_TRADING_DIR']
 LOG_FILE = f"{TRADING_DIR}/log.json"
 
 now = datetime.now(timezone.utc)
@@ -262,7 +270,7 @@ try:
     _ADDRESS = os.environ.get('POLYGON_ADDRESS', '')
     _USDC = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
     _CTF  = "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
-    _RPC  = "https://1rpc.io/matic"
+    _RPC  = "https://polygon-bor-rpc.publicnode.com"
     _CTF_ABI = [{"name":"redeemPositions","type":"function","inputs":[
         {"name":"collateralToken","type":"address"},
         {"name":"parentCollectionId","type":"bytes32"},
