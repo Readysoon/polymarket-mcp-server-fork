@@ -1078,8 +1078,15 @@
             let html = '';
 
             // ── Pending / Watching block ──
-            // Sort: most checks first
-            pendingMarkets.sort((a, b) => (b.check_count || 0) - (a.check_count || 0));
+            // Sort: most checks first, then by next check time (soonest first)
+            pendingMarkets.sort((a, b) => {
+                const checkDiff = (b.check_count || 0) - (a.check_count || 0);
+                if (checkDiff !== 0) return checkDiff;
+                // Same check count: soonest next_check first
+                const aNext = a.next_check ? new Date(a.next_check).getTime() : Infinity;
+                const bNext = b.next_check ? new Date(b.next_check).getTime() : Infinity;
+                return aNext - bNext;
+            });
 
             if (pendingMarkets.length > 0) {
                 html += `<div class="timeline-entry has-trade" style="border-left:2px solid #fbbf24;padding-left:0.75rem">
