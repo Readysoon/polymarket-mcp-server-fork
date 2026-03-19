@@ -2,9 +2,9 @@ name: Comprehensive Tests
 
 on:
   push:
-    branches: [ develop ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ develop ]
+    branches: [ main, develop ]
   schedule:
     # Run daily at 2 AM UTC to catch API changes
     - cron: '0 2 * * *'
