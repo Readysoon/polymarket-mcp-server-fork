@@ -1078,27 +1078,31 @@
             let html = '';
 
             // ── Pending / Watching block ──
-            // Sort: by next future check index (highest = most advanced = top)
-            // Calculate next check index for each market
-            function getNextCheckIdx(m) {
-                if (!m.end_datetime) return 0;
+            // Sort: most progress first, but "done" (no future checks) goes to bottom
+            function getCheckProgress(m) {
+                if (!m.end_datetime) return { done: false, pastChecks: 0, nextCheckMs: Infinity };
                 const end = new Date(m.end_datetime).getTime();
                 const firstCheck = end - 4 * 3600000;
-                let t = firstCheck, idx = 0;
                 const now = Date.now();
+                let t = firstCheck, pastChecks = 0, nextCheckMs = Infinity;
                 while (t < end) {
-                    if (t > now) break;
-                    idx++;
+                    if (t > now) { nextCheckMs = t; break; }
+                    pastChecks++;
                     t += 15 * 60000;
                 }
-                return idx; // number of checks already past
+                const done = nextCheckMs === Infinity; // no future checks left
+                return { done, pastChecks, nextCheckMs };
             }
             pendingMarkets.sort((a, b) => {
-                const diff = getNextCheckIdx(b) - getNextCheckIdx(a);
+                const pa = getCheckProgress(a);
+                const pb = getCheckProgress(b);
+                // Done markets go to bottom
+                if (pa.done !== pb.done) return pa.done ? 1 : -1;
+                // Most past checks first
+                const diff = pb.pastChecks - pa.pastChecks;
                 if (diff !== 0) return diff;
-                const aNext = a.next_check ? new Date(a.next_check).getTime() : Infinity;
-                const bNext = b.next_check ? new Date(b.next_check).getTime() : Infinity;
-                return aNext - bNext;
+                // Soonest next check first
+                return pa.nextCheckMs - pb.nextCheckMs;
             });
 
             if (pendingMarkets.length > 0) {
