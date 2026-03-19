@@ -182,43 +182,18 @@
                             </div>
                         </div>
 
-                        <h3 style="margin:1.5rem 0 1rem;font-size:0.95rem;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em">Position Sizing (AI-Dynamic)</h3>
-                        <p class="help-text" style="margin-bottom:1rem;color:#6b7280;font-size:0.8rem">Bet size is determined by AI confidence. Set the range below.</p>
-                        <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem">
+                        <h3 style="margin:1.5rem 0 1rem;font-size:0.95rem;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em">Position Sizing</h3>
+                        <p class="help-text" style="margin-bottom:1rem;color:#6b7280;font-size:0.8rem">Der Agent entscheidet den genauen Betrag innerhalb der Range.</p>
+                        <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
                             <div>
-                                <label>Bet Low (low confidence)</label>
-                                <div style="display:flex;align-items:center;gap:.5rem">
-                                    <input type="range" id="bet_low" name="bet_low" min="0.5" max="10" step="0.5"
-                                           oninput="document.getElementById('bet_low_val').textContent = '$'+parseFloat(this.value).toFixed(2)">
-                                    <span id="bet_low_val" style="min-width:3rem;color:#a855f7;font-weight:600"></span>
-                                </div>
-                                <span class="help-text">Confidence 55–60%</span>
+                                <label>Basis-Betrag (USD)</label>
+                                <input type="number" id="bet_base" name="bet_base" step="0.5" min="1" style="width:100%;padding:.5rem;background:#1e1e2e;border:1px solid #2a2a3a;color:#e5e7eb;border-radius:6px">
+                                <span class="help-text">Mittelpunkt der Range</span>
                             </div>
                             <div>
-                                <label>Bet Mid (medium confidence)</label>
-                                <div style="display:flex;align-items:center;gap:.5rem">
-                                    <input type="range" id="bet_mid" name="bet_mid" min="0.5" max="10" step="0.5"
-                                           oninput="document.getElementById('bet_mid_val').textContent = '$'+parseFloat(this.value).toFixed(2)">
-                                    <span id="bet_mid_val" style="min-width:3rem;color:#a855f7;font-weight:600"></span>
-                                </div>
-                                <span class="help-text">Confidence 60–75%</span>
-                            </div>
-                            <div>
-                                <label>Bet High (high confidence)</label>
-                                <div style="display:flex;align-items:center;gap:.5rem">
-                                    <input type="range" id="bet_high" name="bet_high" min="0.5" max="10" step="0.5"
-                                           oninput="document.getElementById('bet_high_val').textContent = '$'+parseFloat(this.value).toFixed(2)">
-                                    <span id="bet_high_val" style="min-width:3rem;color:#a855f7;font-weight:600"></span>
-                                </div>
-                                <span class="help-text">Confidence ≥ 75%</span>
-                            </div>
-                        </div>
-                        <div class="form-group" style="margin-top:1rem">
-                            <label>Min Confidence to Trade (%)</label>
-                            <div style="display:flex;align-items:center;gap:1rem">
-                                <input type="range" id="min_confidence" name="min_confidence" min="0.50" max="0.90" step="0.05"
-                                       oninput="document.getElementById('min_confidence_val').textContent = (this.value*100).toFixed(0)+'%'">
-                                <span id="min_confidence_val" style="min-width:3rem;color:#a855f7;font-weight:600"></span>
+                                <label>± Range (USD)</label>
+                                <input type="number" id="bet_range" name="bet_range" step="0.5" min="0" style="width:100%;padding:.5rem;background:#1e1e2e;border:1px solid #2a2a3a;color:#e5e7eb;border-radius:6px">
+                                <span class="help-text" id="bet_range_preview"></span>
                             </div>
                         </div>
 
@@ -342,18 +317,11 @@
                 document.getElementById('max_yes_price').value = d.max_yes_price ?? 0.85;
                 document.getElementById('max_spread_strategy').value = d.max_spread ?? 0.10;
                 document.getElementById('max_spread_strategy_val').textContent = ((d.max_spread ?? 0.10)*100).toFixed(0)+'%';
-                const betLow = d.bet_low ?? 1.00;
-                const betMid = d.bet_mid ?? 2.00;
-                const betHigh = d.bet_high ?? 3.00;
-                const minConf = d.min_confidence ?? 0.55;
-                document.getElementById('bet_low').value = betLow;
-                document.getElementById('bet_low_val').textContent = '$'+betLow.toFixed(2);
-                document.getElementById('bet_mid').value = betMid;
-                document.getElementById('bet_mid_val').textContent = '$'+betMid.toFixed(2);
-                document.getElementById('bet_high').value = betHigh;
-                document.getElementById('bet_high_val').textContent = '$'+betHigh.toFixed(2);
-                document.getElementById('min_confidence').value = minConf;
-                document.getElementById('min_confidence_val').textContent = (minConf*100).toFixed(0)+'%';
+                const betBase = d.bet_base ?? 2.00;
+                const betRange = d.bet_range ?? 1.00;
+                document.getElementById('bet_base').value = betBase;
+                document.getElementById('bet_range').value = betRange;
+                updateBetPreview();
                 document.getElementById('scan_lookahead').value = d.scan_lookahead_hours ?? 28;
                 document.getElementById('watch_window').value = d.watch_window_hours ?? 4;
                 document.getElementById('watch_window_val').textContent = (d.watch_window_hours ?? 4)+'h';
@@ -368,6 +336,14 @@
                 }
             } catch(e) { console.error('Strategy config load failed', e); }
         }
+
+        function updateBetPreview() {
+            const base = parseFloat(document.getElementById('bet_base').value) || 2;
+            const range = parseFloat(document.getElementById('bet_range').value) || 1;
+            document.getElementById('bet_range_preview').textContent = `Range: $${(base-range).toFixed(2)} – $${(base+range).toFixed(2)}`;
+        }
+        document.getElementById('bet_base').addEventListener('input', updateBetPreview);
+        document.getElementById('bet_range').addEventListener('input', updateBetPreview);
 
         document.getElementById('scan_time').addEventListener('input', function() {
             const [h, m] = this.value.split(':');
@@ -384,10 +360,8 @@
                 min_yes_price: parseFloat(document.getElementById('min_yes_price').value),
                 max_yes_price: parseFloat(document.getElementById('max_yes_price').value),
                 max_spread: parseFloat(document.getElementById('max_spread_strategy').value),
-                bet_low: parseFloat(document.getElementById('bet_low').value),
-                bet_mid: parseFloat(document.getElementById('bet_mid').value),
-                bet_high: parseFloat(document.getElementById('bet_high').value),
-                min_confidence: parseFloat(document.getElementById('min_confidence').value),
+                bet_base: parseFloat(document.getElementById('bet_base').value),
+                bet_range: parseFloat(document.getElementById('bet_range').value),
                 scan_lookahead_hours: parseInt(document.getElementById('scan_lookahead').value),
                 watch_window_hours: parseInt(document.getElementById('watch_window').value),
                 retry_mins: parseInt(document.getElementById('retry_mins').value),

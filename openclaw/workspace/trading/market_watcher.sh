@@ -404,13 +404,12 @@ else:
     analysis_reason = f"Analysis error: {analysis_text[:100]}"
     should_trade = False
 
-# Dynamic bet sizing based on confidence: $1 low, $2 medium, $3 high
-if confidence >= 0.75:
-    bet_size = 3.00
-elif confidence >= 0.60:
-    bet_size = 2.00
-else:
-    bet_size = 1.00
+# Dynamic bet sizing: scale within configured range based on confidence
+bet_base = float(prod_config.get('bet_base', 2.00))
+bet_range = float(prod_config.get('bet_range', 1.00))
+# confidence 0.55=min, 1.0=max → linear scale within range
+conf_norm = max(0.0, min(1.0, (confidence - 0.55) / 0.45)) if confidence > 0 else 0.5
+bet_size = round(max(1.0, bet_base - bet_range + conf_norm * 2 * bet_range), 2)
 print(f"Analysis: trade={should_trade} side={trade_side} confidence={confidence:.0%} bet=${bet_size:.2f} reason={analysis_reason[:60]}")
 
 if not should_trade:
