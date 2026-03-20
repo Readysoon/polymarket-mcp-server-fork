@@ -248,9 +248,9 @@ async def get_portfolio():
     try:
         import httpx
 
-        # Get trades from CLOB API
+        # Get trades from CLOB API — filter by user address
         clob = client.get_client()
-        trades = clob.get_trades()
+        trades = clob.get_trades(maker_address=config.POLYGON_ADDRESS)
 
         # Get on-chain balances: USDC, USDC.e, POL
         address = config.POLYGON_ADDRESS
