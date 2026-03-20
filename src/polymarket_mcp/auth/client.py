@@ -267,24 +267,41 @@ class PolymarketClient:
             )
 
         try:
-            # Build order args
+            # Build order args (OrderArgs does not accept order_type)
             order_args = OrderArgs(
                 token_id=token_id,
                 price=price,
                 size=size,
                 side=side.upper(),
-                order_type=order_type,
             )
 
             if expiration:
                 order_args.expiration = expiration
 
-            # Post order using client
-            order_response = self.client.create_order(order_args)
+            # Map order_type string to OrderType enum
+            order_type_map = {
+                'GTC': OrderType.GTC,
+                'GTD': OrderType.GTD,
+                'FOK': OrderType.FOK,
+                'FAK': OrderType.FAK,
+            }
+            ot = order_type_map.get(order_type.upper(), OrderType.GTC)
+
+            # create_order returns a SignedOrder object, then post_order submits it
+            signed_order = self.client.create_order(order_args)
+            order_response = self.client.post_order(signed_order, ot)
+
+            # order_response may be dict or object
+            def _get(key, default=None):
+                if isinstance(order_response, dict):
+                    return order_response.get(key, default)
+                return getattr(order_response, key, default)
+
+            order_id = _get('orderID') or _get('order_id') or _get('id')
 
             logger.info(
                 f"Order posted: {side} {size} @ {price} "
-                f"(token: {token_id}, order_id: {order_response.get('orderID')})"
+                f"(token: {token_id}, order_id: {order_id})"
             )
 
             return order_response
