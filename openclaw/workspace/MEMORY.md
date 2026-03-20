@@ -24,7 +24,8 @@
 - **Redeem**: automatisch vor jedem Trade
 
 ## Aktive Cron Jobs
-- `9dc6664a` — Daily Market Scanner, täglich 23:00 UTC (= 00:00 Innsbruck), Timeout 300s, Zeiten in Innsbruck-Zeit
+- `9dc6664a` — Daily Market Scanner, täglich 09:00 UTC (= 10:00 Innsbruck), Timeout 300s, Zeiten in Innsbruck-Zeit
+- `7cb15a18` — Outcome Checker, täglich 08:00 UTC (= 09:00 Innsbruck)
 
 ## Git Workflow (PFLICHT)
 Zwei Branches im selben Repo (`Readysoon/polymarket-mcp-server-fork`):
