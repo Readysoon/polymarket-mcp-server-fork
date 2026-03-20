@@ -27,6 +27,7 @@ RUN npm install -g mcporter 2>/dev/null || true
 COPY openclaw/workspace/ /defaults/workspace/
 COPY openclaw/mcporter.json /defaults/mcporter.json
 COPY openclaw/openclaw.json.template /defaults/openclaw.json.template
+RUN mkdir -p /defaults/credentials
 COPY openclaw/credentials/ /defaults/credentials/
 COPY openclaw/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

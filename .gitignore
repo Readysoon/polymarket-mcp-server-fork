@@ -90,7 +90,7 @@ src/polymarket_mcp/web/balance_history.json
 .claude/
 
 # OpenClaw - ignore credentials and generated files
-openclaw/credentials/
+
 openclaw/workspace/trading/log.json
 openclaw/workspace/trading/journal.json
 openclaw/workspace/trading/watchlist.json
