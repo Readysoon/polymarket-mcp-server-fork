@@ -48,7 +48,7 @@ class PolymarketConfig(BaseSettings):
     )
     POLYMARKET_API_SECRET: Optional[str] = Field(
         default=None,
-        description="L2 API secret (HMAC key, base64 encoded)"
+        description="L2 API secret for authenticated requests"
     )
     POLYMARKET_PASSPHRASE: Optional[str] = Field(
         default=None,
@@ -209,8 +209,6 @@ class PolymarketConfig(BaseSettings):
             data["POLYGON_PRIVATE_KEY"] = "***HIDDEN***"
         if data.get("POLYMARKET_API_KEY"):
             data["POLYMARKET_API_KEY"] = "***HIDDEN***"
-        if data.get("POLYMARKET_API_SECRET"):
-            data["POLYMARKET_API_SECRET"] = "***HIDDEN***"
         if data.get("POLYMARKET_PASSPHRASE"):
             data["POLYMARKET_PASSPHRASE"] = "***HIDDEN***"
         return data
