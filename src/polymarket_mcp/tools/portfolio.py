@@ -121,19 +121,31 @@ async def get_all_positions(
             # Get current market price and token info
             token_id = pos.get('asset', '') or pos.get('asset_id', '')
             market = pos.get('conditionId', '') or pos.get('market', '')
-            current_price = float(pos.get('curPrice', 0))
 
-            # If no current price from data API, try orderbook
-            if current_price <= 0 and token_id:
+            # Try to get current price from CLOB orderbook first (most accurate)
+            current_price = 0.0
+            if token_id:
                 try:
                     await rate_limiter.acquire(EndpointCategory.MARKET_DATA)
                     orderbook = await polymarket_client.get_orderbook(token_id)
-                    best_bid = float(orderbook.get('bids', [{}])[0].get('price', 0)) if orderbook.get('bids') else 0
-                    best_ask = float(orderbook.get('asks', [{}])[0].get('price', 0)) if orderbook.get('asks') else 0
-                    current_price = (best_bid + best_ask) / 2 if (best_bid and best_ask) else avg_price
+                    # get_order_book returns an OrderBookSummary object or dict
+                    if hasattr(orderbook, 'bids') and hasattr(orderbook, 'asks'):
+                        bids = orderbook.bids or []
+                        asks = orderbook.asks or []
+                        best_bid = float(bids[0].price) if bids else 0
+                        best_ask = float(asks[0].price) if asks else 0
+                    else:
+                        bids = orderbook.get('bids', []) if isinstance(orderbook, dict) else []
+                        asks = orderbook.get('asks', []) if isinstance(orderbook, dict) else []
+                        best_bid = float(bids[0].get('price', 0)) if bids else 0
+                        best_ask = float(asks[0].get('price', 0)) if asks else 0
+                    current_price = (best_bid + best_ask) / 2 if (best_bid and best_ask) else 0
                 except Exception as e:
-                    logger.warning(f"Failed to fetch current price for {token_id}: {e}")
-                    current_price = avg_price
+                    logger.warning(f"Failed to fetch CLOB price for {token_id}: {e}")
+
+            # Fall back to data API curPrice, then avg_price
+            if current_price <= 0:
+                current_price = float(pos.get('curPrice', 0)) or avg_price
 
             # Calculate values
             current_value = float(pos.get('currentValue', 0)) or (size * current_price)
@@ -414,10 +426,11 @@ async def get_portfolio_value(
     try:
         from ..utils.rate_limiter import EndpointCategory
 
-        # Get balance
+        # Get balance — returns native USDC + bridged USDC.e combined total
         await rate_limiter.acquire(EndpointCategory.CLOB_GENERAL)
         balance_data = await polymarket_client.get_balance()
-        cash_balance = float(balance_data.get('usdc', balance_data.get('balance', 0)))
+        # 'total' covers both native and bridged; fallback to 'usdc' or 'balance' for older clients
+        cash_balance = float(balance_data.get('total', balance_data.get('usdc', balance_data.get('balance', 0))))
 
         # Get all positions
         await rate_limiter.acquire(EndpointCategory.DATA_API)
@@ -454,8 +467,16 @@ async def get_portfolio_value(
             try:
                 await rate_limiter.acquire(EndpointCategory.MARKET_DATA)
                 orderbook = await polymarket_client.get_orderbook(token_id)
-                best_bid = float(orderbook.get('bids', [{}])[0].get('price', 0)) if orderbook.get('bids') else 0
-                best_ask = float(orderbook.get('asks', [{}])[0].get('price', 0)) if orderbook.get('asks') else 0
+                # orderbook is OrderBookSummary object with .bids/.asks attributes (not dict)
+                def _get_price(items):
+                    if not items:
+                        return 0.0
+                    item = items[0]
+                    return float(item.price if hasattr(item, 'price') else item.get('price', 0))
+                bids = getattr(orderbook, 'bids', None) or (orderbook.get('bids', []) if isinstance(orderbook, dict) else [])
+                asks = getattr(orderbook, 'asks', None) or (orderbook.get('asks', []) if isinstance(orderbook, dict) else [])
+                best_bid = _get_price(bids)
+                best_ask = _get_price(asks)
                 mid_price = (best_bid + best_ask) / 2 if (best_bid and best_ask) else float(pos.get('average_price', 0))
             except Exception as e:
                 logger.warning(f"Failed to fetch price for {token_id}: {e}")
@@ -481,14 +502,20 @@ async def get_portfolio_value(
         # Total value
         total_value = cash_balance + position_value + pending_value
 
+        # Extract native vs bridged breakdown if available
+        usdc_native = float(balance_data.get('usdc', 0))
+        usdc_bridged = float(balance_data.get('usdce', 0))
+
         # Format output
         output_lines = [
             "Portfolio Value Summary",
             "=" * 80,
             "",
-            f"Cash Balance (USDC): ${cash_balance:.2f}",
-            f"Open Positions Value: ${position_value:.2f}",
-            f"Pending Orders Value: ${pending_value:.2f}",
+            f"Cash Balance (USDC):   ${usdc_native:.4f}",
+            f"Cash Balance (USDC.e): ${usdc_bridged:.4f}",
+            f"Total Cash:            ${cash_balance:.2f}",
+            f"Open Positions Value:  ${position_value:.2f}",
+            f"Pending Orders Value:  ${pending_value:.2f}",
             "-" * 80,
             f"TOTAL PORTFOLIO VALUE: ${total_value:.2f}",
             ""
