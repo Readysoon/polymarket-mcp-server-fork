@@ -248,12 +248,6 @@ async def get_portfolio():
     try:
         import httpx
 
-        # Get trades from CLOB API — filter by user address
-        from py_clob_client.clob_types import TradeParams
-        clob = client.get_client()
-        trades = clob.get_trades(TradeParams(maker_address=config.POLYGON_ADDRESS))
-
-        # Get on-chain balances: USDC, USDC.e, POL
         address = config.POLYGON_ADDRESS
         usdc_contract = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
         usdce_contract = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
@@ -285,126 +279,54 @@ async def get_portfolio():
         usdce_balance = await rpc_call("eth_call", [{"to": usdce_contract, "data": balance_selector}, "latest"], 6)
         pol_balance = await rpc_call("eth_getBalance", [address, "latest"], 18)
 
-        # Group trades by market and resolve market names
-        market_trades = {}
-        for trade in trades:
-            market_id = trade.get("market", "unknown")
-            if market_id not in market_trades:
-                market_trades[market_id] = []
-            market_trades[market_id].append(trade)
-
-        # Resolve market names from Gamma API
+        # Get positions from Polymarket Data API (correct user filter, no CLOB trades needed)
         positions = []
         async with httpx.AsyncClient() as http_client:
-            for market_id, mkt_trades in market_trades.items():
-                # Try to get market name and resolution status
-                market_name = market_id[:20] + "..."
-                market_resolved = False
-                market_active = True
+            try:
+                r = await http_client.get(
+                    "https://data-api.polymarket.com/positions",
+                    params={"user": address.lower(), "sizeThreshold": "0.01"},
+                    timeout=10.0
+                )
+                raw_positions = r.json() if r.status_code == 200 else []
+            except Exception:
+                raw_positions = []
+
+            for pos in raw_positions:
+                size = float(pos.get("size", 0))
+                if size <= 0:
+                    continue
+
                 market_url = ""
-                try:
-                    r = await http_client.get(
-                        "https://gamma-api.polymarket.com/markets",
-                        params={"clob_token_ids": mkt_trades[0].get("asset_id", "")},
-                        timeout=5.0
-                    )
-                    markets = r.json()
-                    if markets:
-                        market_name = markets[0].get("question", market_name)
-                        market_active = markets[0].get("active", True)
-                        market_resolved = markets[0].get("closed", False)
-                        # Build Polymarket URL: /event/{event_slug}/{market_slug}
-                        market_slug = markets[0].get("slug", "")
-                        event_slug = ""
-                        events = markets[0].get("events", [])
-                        if events and isinstance(events, list):
-                            event_slug = events[0].get("slug", "")
-                        if event_slug and market_slug:
-                            market_url = f"https://polymarket.com/event/{event_slug}/{market_slug}"
-                        elif event_slug:
-                            market_url = f"https://polymarket.com/event/{event_slug}"
-                        elif market_slug:
-                            market_url = f"https://polymarket.com/event/{market_slug}"
-                except Exception:
-                    pass
+                slug = pos.get("slug", "")
+                if slug:
+                    market_url = f"https://polymarket.com/event/{slug}"
 
-                # Calculate position
-                total_shares = 0
-                total_cost = 0
-                outcome = mkt_trades[0].get("outcome", "Yes")
-                for t in mkt_trades:
-                    size = float(t.get("size", 0))
-                    price = float(t.get("price", 0))
-                    if t.get("side") == "BUY":
-                        total_shares += size
-                        total_cost += size * price
-                    else:
-                        total_shares -= size
-                        total_cost -= size * price
+                avg_price = float(pos.get("avgPrice", 0))
+                cur_price = float(pos.get("curPrice", avg_price))
+                current_value = float(pos.get("currentValue", size * cur_price))
+                initial_value = float(pos.get("initialValue", size * avg_price))
+                pnl = float(pos.get("cashPnl", current_value - initial_value))
+                pnl_pct = float(pos.get("percentPnl", (pnl / initial_value * 100) if initial_value > 0 else 0))
 
-                # Find last trade date for this market
-                last_trade_date = ""
-                for t in mkt_trades:
-                    ts_str = t.get("match_time") or t.get("created_at") or t.get("timestamp", "")
-                    try:
-                        if isinstance(ts_str, (int, float)):
-                            ts = datetime.utcfromtimestamp(ts_str)
-                        elif ts_str:
-                            ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00").replace("+00:00", ""))
-                        else:
-                            continue
-                        d = ts.strftime("%Y-%m-%d")
-                        if d > last_trade_date:
-                            last_trade_date = d
-                    except Exception:
-                        pass
+                positions.append({
+                    "market": pos.get("title", pos.get("conditionId", "")[:20]),
+                    "outcome": pos.get("outcome", "Yes"),
+                    "shares": round(size, 4),
+                    "avg_price": round(avg_price, 4),
+                    "current_price": round(cur_price, 4),
+                    "cost": round(initial_value, 2),
+                    "value": round(current_value, 2),
+                    "pnl": round(pnl, 2),
+                    "pnl_pct": round(pnl_pct, 1),
+                    "realized": bool(pos.get("redeemable", False)),
+                    "market_active": True,
+                    "tx": "",
+                    "market_url": market_url,
+                    "last_trade_date": "",
+                })
 
-                if total_shares > 0:
-                    avg_price = total_cost / total_shares if total_shares else 0
-
-                    # Get current price
-                    current_price = avg_price  # fallback
-                    try:
-                        r = await http_client.get(
-                            "https://gamma-api.polymarket.com/markets",
-                            params={"clob_token_ids": mkt_trades[0].get("asset_id", "")},
-                            timeout=5.0
-                        )
-                        markets = r.json()
-                        if markets:
-                            # outcomePrices is a JSON string like "[\"0.57\",\"0.43\"]"
-                            prices_str = markets[0].get("outcomePrices", "")
-                            if prices_str:
-                                import json as _json
-                                prices = _json.loads(prices_str)
-                                if outcome == "Yes" and len(prices) > 0:
-                                    current_price = float(prices[0])
-                                elif outcome == "No" and len(prices) > 1:
-                                    current_price = float(prices[1])
-                    except Exception:
-                        pass
-
-                    current_value = total_shares * current_price
-                    pnl = current_value - total_cost
-                    pnl_pct = (pnl / total_cost * 100) if total_cost > 0 else 0
-
-                    positions.append({
-                        "market": market_name,
-                        "outcome": outcome,
-                        "shares": round(total_shares, 4),
-                        "avg_price": round(avg_price, 4),
-                        "current_price": round(current_price, 4),
-                        "cost": round(total_cost, 2),
-                        "value": round(current_value, 2),
-                        "pnl": round(pnl, 2),
-                        "pnl_pct": round(pnl_pct, 1),
-                        "realized": market_resolved or not market_active,
-                        "market_active": market_active,
-                        "tx": mkt_trades[0].get("transaction_hash", ""),
-                        "market_url": market_url,
-                        "last_trade_date": last_trade_date,
-                    })
-
+        total_value = usdc_balance + usdce_balance + sum(p["value"] for p in positions)
         total_value = usdc_balance + usdce_balance + sum(p["value"] for p in positions)
 
         # Save balance snapshot for history chart
@@ -424,7 +346,7 @@ async def get_portfolio():
             "pol_balance": round(pol_balance, 4),
             "total_value": round(total_value, 2),
             "total_pnl": round(sum(p["pnl"] for p in positions), 2),
-            "trade_count": len(trades),
+            "trade_count": len(positions),
         })
 
     except Exception as e:
