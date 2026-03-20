@@ -13,11 +13,12 @@ Automatisches Prediction Market Trading System mit AI-Agent (Delta Δ) und Web-D
 - **USDC Typen:** Hält Native USDC (`0x3c499c...`) + Bridged USDC.e (`0x2791Bc...`)
 - ⚠️ **Geld muss auf diese Adresse**, nicht auf das Polymarket Proxy Wallet!
 
-### Polymarket Proxy Wallet
+### Polymarket Proxy Wallet (irrelevant für das automatische Trading)
 - **Adresse:** `0xA94Fe7429BDBDed0DBbDecB49d12806a062fCC8C`
-- **Was es ist:** Automatisch von Polymarket erstelltes Wallet beim Login mit MetaMask
-- **Kein Private Key** — wird intern von Polymarket verwaltet
-- ⚠️ Der MCP kann **nicht** mit diesem Wallet handeln — Geld muss auf das MetaMask Wallet!
+- **Was es ist:** Automatisch von Polymarket erstelltes Wallet beim Login mit MetaMask auf polymarket.com
+- **Kein Private Key** exportierbar — wird intern von Polymarket verwaltet
+- Nur relevant für **manuelles Trading** auf der Polymarket Website
+- Der MCP-Server kann damit **nicht** handeln → für die Automatisierung vollständig ignorieren
 
 ### USDC auf Polygon
 | Token | Adresse | Beschreibung |
@@ -47,7 +48,7 @@ Automatisches Prediction Market Trading System mit AI-Agent (Delta Δ) und Web-D
 
 > ⚠️ **Immer Polygon-Netzwerk!** Ethereum Mainnet = hohe Fees + manuelles Bridging.
 
-> ⚠️ **Nicht über Polymarket Deposit einzahlen** — das landet auf dem Proxy Wallet, nicht auf dem Trading Wallet!
+> ⚠️ **NICHT über Polymarket Deposit einzahlen** — das landet auf dem Proxy Wallet (`0xA94Fe7...`), nicht auf dem Trading Wallet! Der MCP kann auf Proxy-Wallet-Geld **nicht** zugreifen.
 
 ---
 
