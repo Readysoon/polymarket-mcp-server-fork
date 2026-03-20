@@ -252,7 +252,12 @@ class TradingTools:
             if not tokens:
                 raise ValueError(f"No tokens found for market {market_id}")
 
-            token_id = tokens[0]['token_id']
+            # Always use the YES token for market orders to avoid pricing at ~0.99 (NO token)
+            yes_token = next(
+                (t for t in tokens if str(t.get('outcome', '')).lower() in ('yes', 'true', '1')),
+                None
+            )
+            token_id = yes_token['token_id'] if yes_token else tokens[0]['token_id']
 
             # Get best price from orderbook
             orderbook = await self.client.get_orderbook(token_id)
