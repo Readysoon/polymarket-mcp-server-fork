@@ -460,36 +460,43 @@ async def get_portfolio_value(
             if size <= 0:
                 continue
 
-            token_id = pos.get('asset_id')
-            market_id = pos.get('market')
+            # Data API uses 'asset' and 'conditionId'; older APIs use 'asset_id' and 'market'
+            token_id = pos.get('asset') or pos.get('asset_id')
+            market_id = pos.get('conditionId') or pos.get('market')
 
-            # Get current price
-            try:
-                await rate_limiter.acquire(EndpointCategory.MARKET_DATA)
-                orderbook = await polymarket_client.get_orderbook(token_id)
-                # orderbook is OrderBookSummary object with .bids/.asks attributes (not dict)
-                def _get_price(items):
-                    if not items:
-                        return 0.0
-                    item = items[0]
-                    return float(item.price if hasattr(item, 'price') else item.get('price', 0))
-                bids = getattr(orderbook, 'bids', None) or (orderbook.get('bids', []) if isinstance(orderbook, dict) else [])
-                asks = getattr(orderbook, 'asks', None) or (orderbook.get('asks', []) if isinstance(orderbook, dict) else [])
-                best_bid = _get_price(bids)
-                best_ask = _get_price(asks)
-                mid_price = (best_bid + best_ask) / 2 if (best_bid and best_ask) else float(pos.get('average_price', 0))
-            except Exception as e:
-                logger.warning(f"Failed to fetch price for {token_id}: {e}")
-                mid_price = float(pos.get('average_price', 0))
+            # Prefer pre-calculated currentValue from Data API
+            if pos.get('currentValue') is not None:
+                value = float(pos.get('currentValue', 0))
+                mid_price = float(pos.get('curPrice', pos.get('avgPrice', pos.get('average_price', 0))))
+            else:
+                # Fallback: fetch price from orderbook
+                try:
+                    await rate_limiter.acquire(EndpointCategory.MARKET_DATA)
+                    orderbook = await polymarket_client.get_orderbook(token_id)
+                    def _get_price(items):
+                        if not items:
+                            return 0.0
+                        item = items[0]
+                        return float(item.price if hasattr(item, 'price') else item.get('price', 0))
+                    bids = getattr(orderbook, 'bids', None) or (orderbook.get('bids', []) if isinstance(orderbook, dict) else [])
+                    asks = getattr(orderbook, 'asks', None) or (orderbook.get('asks', []) if isinstance(orderbook, dict) else [])
+                    best_bid = _get_price(bids)
+                    best_ask = _get_price(asks)
+                    mid_price = (best_bid + best_ask) / 2 if (best_bid and best_ask) else float(pos.get('avgPrice', pos.get('average_price', 0)))
+                except Exception as e:
+                    logger.warning(f"Failed to fetch price for {token_id}: {e}")
+                    mid_price = float(pos.get('avgPrice', pos.get('average_price', 0)))
+                value = size * mid_price
 
-            value = size * mid_price
             position_value += value
 
             market_breakdown[market_id]['value'] += value
             market_breakdown[market_id]['positions'].append({
-                'outcome': pos.get('outcome', 'Unknown'),
+                'outcome': pos.get('outcome', 'Yes'),
                 'size': size,
-                'value': value
+                'value': value,
+                'pnl': float(pos.get('cashPnl', 0)),
+                'title': pos.get('title', market_id or ''),
             })
 
         # Calculate pending order value
