@@ -258,36 +258,31 @@ async def get_portfolio():
         usdce_contract = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
         balance_selector = "0x70a08231" + address[2:].lower().zfill(64)
 
-        async with httpx.AsyncClient() as http_client:
-            # Fetch all balances in parallel
-            rpc_calls = [
-                # USDC (native)
-                http_client.post("https://1rpc.io/matic", json={
-                    "jsonrpc": "2.0", "method": "eth_call",
-                    "params": [{"to": usdc_contract, "data": balance_selector}, "latest"], "id": 1
-                }, timeout=10.0),
-                # USDC.e (bridged)
-                http_client.post("https://1rpc.io/matic", json={
-                    "jsonrpc": "2.0", "method": "eth_call",
-                    "params": [{"to": usdce_contract, "data": balance_selector}, "latest"], "id": 2
-                }, timeout=10.0),
-                # POL (native token balance)
-                http_client.post("https://1rpc.io/matic", json={
-                    "jsonrpc": "2.0", "method": "eth_getBalance",
-                    "params": [address, "latest"], "id": 3
-                }, timeout=10.0),
-            ]
-            results = await asyncio.gather(*rpc_calls, return_exceptions=True)
+        # Try multiple RPC endpoints for reliability
+        RPC_ENDPOINTS = [
+            "https://polygon-bor-rpc.publicnode.com",
+            "https://polygon.llamarpc.com",
+            "https://1rpc.io/matic",
+        ]
 
-            def parse_balance(resp, decimals=6):
-                if isinstance(resp, Exception):
-                    return 0.0
-                val = resp.json().get("result", "0x0")
-                return int(val, 16) / 10**decimals if val and val != "0x" else 0.0
+        async def rpc_call(method, params, decimals=6):
+            async with httpx.AsyncClient() as http_client:
+                for rpc in RPC_ENDPOINTS:
+                    try:
+                        r = await http_client.post(rpc, json={
+                            "jsonrpc": "2.0", "method": method,
+                            "params": params, "id": 1
+                        }, timeout=8.0)
+                        val = r.json().get("result", "0x0")
+                        if val and val != "0x":
+                            return int(val, 16) / 10**decimals
+                    except Exception:
+                        continue
+            return 0.0
 
-            usdc_balance = parse_balance(results[0], 6)
-            usdce_balance = parse_balance(results[1], 6)
-            pol_balance = parse_balance(results[2], 18)
+        usdc_balance = await rpc_call("eth_call", [{"to": usdc_contract, "data": balance_selector}, "latest"], 6)
+        usdce_balance = await rpc_call("eth_call", [{"to": usdce_contract, "data": balance_selector}, "latest"], 6)
+        pol_balance = await rpc_call("eth_getBalance", [address, "latest"], 18)
 
         # Group trades by market and resolve market names
         market_trades = {}
