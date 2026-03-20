@@ -347,11 +347,23 @@ try:
 except Exception as _redeem_err:
     print(f"REDEEM_ATTEMPT_ERROR: {_redeem_err}")
 
-# Skip balance check — Polymarket's new system doesn't expose balance via API
-# The trade will fail naturally if there are insufficient funds
-# Use config min_bet as proxy for "do we have enough"
-total_balance = 999.0  # Assume funded; real check happens at order placement
-print("Balance check bypassed — relying on Polymarket order validation")
+# Get real balance via RPC
+import httpx as _httpx
+_address = os.environ.get('POLYGON_ADDRESS', '').lower()
+_selector = '0x70a08231' + _address[2:].zfill(64)
+_rpcs = ['https://polygon-bor-rpc.publicnode.com', 'https://polygon.llamarpc.com']
+_tokens = ['0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174']
+total_balance = 0.0
+for _token in _tokens:
+    for _rpc in _rpcs:
+        try:
+            _r = _httpx.post(_rpc, json={'jsonrpc':'2.0','method':'eth_call','params':[{'to':_token,'data':_selector},'latest'],'id':1}, timeout=5.0)
+            _val = _r.json().get('result','0x0')
+            if _val and _val != '0x':
+                total_balance += int(_val, 16) / 1e6
+                break
+        except: continue
+print(f"Balance: ${total_balance:.2f} USDC")
 
 
 
@@ -467,6 +479,37 @@ if not should_trade:
     write_log(entry)
     print(json.dumps(entry))
     sys.exit(0)
+
+# Enforce minimum share size (Polymarket requires >= 5 shares per order)
+MIN_SHARES = 5
+trade_price = best_ask if trade_side == 'BUY' else best_bid
+projected_shares = bet_size / trade_price if trade_price > 0 else 0
+if projected_shares < MIN_SHARES:
+    min_usd_needed = MIN_SHARES * trade_price
+    if min_usd_needed <= max_bet:
+        print(f"Adjusting bet_size from ${bet_size:.2f} to ${min_usd_needed:.2f} to meet minimum {MIN_SHARES} shares (price={trade_price:.3f})")
+        bet_size = round(min_usd_needed, 2)
+    else:
+        entry = {
+            "timestamp": now.isoformat(),
+            "question": QUESTION,
+            "condition_id": CONDITION_ID,
+            "end_datetime": END_DATETIME,
+            "hours_left": round(hours_left, 2),
+            "best_bid": best_bid,
+            "best_ask": best_ask,
+            "spread": round(spread, 4),
+            "mid": round(mid, 4),
+            "portfolio_value": total_balance,
+            "bet_size_usd": bet_size,
+            "min_usd_needed": round(min_usd_needed, 2),
+            "result": "NO_TRADE",
+            "reason": f"Minimum shares ({MIN_SHARES}) requires ${min_usd_needed:.2f} which exceeds max_bet (${max_bet})",
+            "action": "Skipped — min order size too large"
+        }
+        write_log(entry)
+        print(json.dumps(entry))
+        sys.exit(0)
 
 # Place market order (AMM)
 result = mcporter('create_market_order',
