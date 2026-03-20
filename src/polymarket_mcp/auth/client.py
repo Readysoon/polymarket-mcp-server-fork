@@ -291,7 +291,7 @@ class PolymarketClient:
             signed_order = self.client.create_order(order_args)
             order_response = self.client.post_order(signed_order, ot)
 
-            # order_response may be dict or object
+            # order_response may be dict or object — normalize to dict for JSON safety
             def _get(key, default=None):
                 if isinstance(order_response, dict):
                     return order_response.get(key, default)
@@ -304,7 +304,16 @@ class PolymarketClient:
                 f"(token: {token_id}, order_id: {order_id})"
             )
 
-            return order_response
+            # Always return a serializable dict (SignedOrder objects can't be JSON-encoded)
+            if isinstance(order_response, dict):
+                return order_response
+            else:
+                return {
+                    "orderID": order_id,
+                    "order_id": order_id,
+                    "status": _get('status', 'submitted'),
+                    "errorMsg": _get('errorMsg', ''),
+                }
 
         except Exception as e:
             logger.error(f"Failed to post order: {e}")
