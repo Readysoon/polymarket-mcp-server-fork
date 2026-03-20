@@ -140,8 +140,8 @@ class TradingTools:
             except Exception:
                 positions = []
 
-            # Convert size from USD to shares
-            size_in_shares = size / price
+            # Convert size from USD to shares; round to 4 decimal places (Polymarket taker amount requirement)
+            size_in_shares = round(size / price, 4)
 
             # Create order request for validation
             order_request = OrderRequest(
@@ -252,49 +252,38 @@ class TradingTools:
             if not tokens:
                 raise ValueError(f"No tokens found for market {market_id}")
 
-            # Always use the YES token for market orders to avoid pricing at ~0.99 (NO token)
+            # Always use the YES token for market orders
             yes_token = next(
                 (t for t in tokens if str(t.get('outcome', '')).lower() in ('yes', 'true', '1')),
                 None
             )
             token_id = yes_token['token_id'] if yes_token else tokens[0]['token_id']
 
-            # Get best price from orderbook
-            orderbook = await self.client.get_orderbook(token_id)
-
             side_upper = side.upper()
-            # Support both dict and object (OrderBookSummary) responses
-            if isinstance(orderbook, dict):
-                ob_asks = orderbook.get('asks', [])
-                ob_bids = orderbook.get('bids', [])
-            else:
-                ob_asks = getattr(orderbook, 'asks', []) or []
-                ob_bids = getattr(orderbook, 'bids', []) or []
-            # Normalize entries to dicts
-            def _price(entry):
-                if isinstance(entry, dict):
-                    return float(entry.get('price', entry.get('p', 0)))
-                return float(getattr(entry, 'price', getattr(entry, 'p', 0)))
+
+            # Use AMM price from get_current_price (reliable, AMM-based)
+            # CLOB orderbook asks for YES token shows ~0.99 (NO-side sellers) which is wrong
+            price_data = await self.client.get_price(token_id, side_upper)
             if side_upper == 'BUY':
-                if not ob_asks:
-                    raise ValueError("No asks available in orderbook")
-                best_price = _price(ob_asks[0])
+                # Use ask price for buys, round to 2 decimal places (Polymarket requirement)
+                raw_price = price_data if isinstance(price_data, float) else float(price_data)
             else:
-                if not ob_bids:
-                    raise ValueError("No bids available in orderbook")
-                best_price = _price(ob_bids[0])
+                raw_price = price_data if isinstance(price_data, float) else float(price_data)
+
+            # Clamp and round to 2 decimal places (Polymarket API requirement)
+            best_price = round(min(max(raw_price, 0.01), 0.99), 2)
 
             logger.info(
-                f"Executing market order: {side} ${size} @ market price {best_price}"
+                f"Executing market order: {side} ${size} @ AMM price {best_price}"
             )
 
-            # Use FOK (Fill-Or-Kill) for market orders
+            # Use GTC limit order at AMM price (FOK fails on low-liquidity CLOB books)
             result = await self.create_limit_order(
                 market_id=market_id,
                 side=side,
                 price=best_price,
                 size=size,
-                order_type='FOK'
+                order_type='GTC'
             )
 
             result['execution_type'] = 'market_order'
