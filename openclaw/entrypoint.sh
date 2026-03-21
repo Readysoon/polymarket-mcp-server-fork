@@ -19,14 +19,14 @@ mkdir -p "$OC_DIR/workspace" "$OC_DIR/memory" "$OC_DIR/cron" \
 
 # Copy workspace defaults (only missing files, never overwrite)
 if [ -d /defaults/workspace ]; then
-    cp -rn /defaults/workspace/ "$OC_DIR/workspace/" 2>/dev/null || \
+    cp -rn /defaults/workspace/* "$OC_DIR/workspace/" 2>/dev/null || \
     rsync -a --ignore-existing /defaults/workspace/ "$OC_DIR/workspace/" 2>/dev/null || true
     echo "  Workspace: synced defaults (existing files preserved)"
 fi
 
 # Copy credentials (only if missing)
 if [ -d /defaults/credentials ]; then
-    cp -rn /defaults/credentials/ "$OC_DIR/credentials/" 2>/dev/null || \
+    cp -rn /defaults/credentials/* "$OC_DIR/credentials/" 2>/dev/null || \
     rsync -a --ignore-existing /defaults/credentials/ "$OC_DIR/credentials/" 2>/dev/null || true
 fi
 
@@ -36,32 +36,45 @@ cp /defaults/openclaw.json.template "$OC_DIR/openclaw.json.template" 2>/dev/null
 # mcporter config
 cp -n /defaults/mcporter.json /home/node/.config/mcporter/mcporter.json 2>/dev/null || true
 
-# Init git repo in workspace if not present
-# Git setup for workspace
-cd "$OC_DIR/workspace"
-if [ ! -d ".git" ]; then
-    echo "  Cloning workspace repo..."
+# Clone full repo into workspace/repo/ (separate from bot state files)
+# This gives the bot read+write access to the codebase
+# Disable set -e for git operations — git failures must not crash the container
+set +e
+REPO_DIR="$OC_DIR/workspace/repo"
+if [ ! -d "$REPO_DIR/.git" ]; then
+    echo "  Cloning repo into workspace/repo/..."
+    # Remove any leftover non-git directory so clone can succeed
+    rm -rf "$REPO_DIR"
     if [ -n "$GIT_REMOTE_TOKEN" ]; then
-        git clone "https://$GIT_REMOTE_TOKEN@github.com/Readysoon/polymarket-mcp-server-fork.git" /tmp/repo
-        cp -rn /tmp/repo/.git "$OC_DIR/workspace/.git" 2>/dev/null || \
-        rsync -a --ignore-existing /tmp/repo/.git/ "$OC_DIR/workspace/.git/" 2>/dev/null || true
-        rm -rf /tmp/repo
+        git clone "https://$GIT_REMOTE_TOKEN@github.com/Readysoon/polymarket-mcp-server-fork.git" "$REPO_DIR" 2>&1 && \
+        echo "  Git: repo cloned into workspace/repo/" || {
+            echo "  WARNING: git clone failed"
+            mkdir -p "$REPO_DIR"
+        }
     else
-        git init
-        echo "  WARNING: GIT_REMOTE_TOKEN not set — no remote configured"
+        echo "  WARNING: GIT_REMOTE_TOKEN not set — repo not cloned"
+        mkdir -p "$REPO_DIR"
     fi
 fi
-git config user.email "openclaw@bot"
-git config user.name "OpenClaw"
-if [ -n "$GIT_REMOTE_TOKEN" ]; then
-    git remote set-url origin "https://$GIT_REMOTE_TOKEN@github.com/Readysoon/polymarket-mcp-server-fork.git" 2>/dev/null || \
-    git remote add origin "https://$GIT_REMOTE_TOKEN@github.com/Readysoon/polymarket-mcp-server-fork.git" 2>/dev/null || true
-    git fetch origin 2>/dev/null || true
-    echo "  Git remote: origin configured (Readysoon/polymarket-mcp-server-fork)"
+# Configure git in repo dir (non-fatal)
+if [ -d "$REPO_DIR/.git" ]; then
+    git config --global --add safe.directory "$REPO_DIR" 2>/dev/null || true
+    cd "$REPO_DIR"
+    git config user.email "openclaw@bot" 2>/dev/null || true
+    git config user.name "OpenClaw" 2>/dev/null || true
+    if [ -n "$GIT_REMOTE_TOKEN" ]; then
+        git remote set-url origin "https://$GIT_REMOTE_TOKEN@github.com/Readysoon/polymarket-mcp-server-fork.git" 2>/dev/null || \
+        git remote add origin "https://$GIT_REMOTE_TOKEN@github.com/Readysoon/polymarket-mcp-server-fork.git" 2>/dev/null || true
+        git pull origin main 2>/dev/null || true
+        echo "  Git remote: origin configured, pulled latest"
+    fi
+    cd /
 fi
-cd /
+set -e
 
 # Symlink so OpenClaw finds its state dir at the expected path
+# Must remove existing directory first, otherwise ln creates symlink inside it
+rm -rf /home/node/.openclaw
 ln -sfn "$OC_DIR" /home/node/.openclaw
 
 chown -R node:node "$OC_DIR" /home/node/.config 2>/dev/null || true
