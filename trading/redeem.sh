@@ -41,6 +41,10 @@ w3 = Web3(Web3.HTTPProvider(RPC))
 ctf = w3.eth.contract(address=w3.to_checksum_address(CTF), abi=CTF_ABI)
 account = Account.from_key(PRIVATE_KEY)
 
+# Get base nonce once, increment manually to avoid conflicts
+base_nonce = w3.eth.get_transaction_count(account.address, 'pending')
+nonce_counter = [base_nonce]  # mutable via list
+
 redeemed = []
 usdc_abi = [{"name":"balanceOf","type":"function","inputs":[{"name":"account","type":"address"}],"outputs":[{"type":"uint256"}],"stateMutability":"view"}]
 usdc_contract = w3.eth.contract(address=w3.to_checksum_address(USDC), abi=usdc_abi)
@@ -65,7 +69,8 @@ for p in redeemable:
 
     try:
         bal_before = usdc_contract.functions.balanceOf(account.address).call()
-        nonce = w3.eth.get_transaction_count(account.address)
+        nonce = nonce_counter[0]
+        nonce_counter[0] += 1  # increment for next tx
         # Use 1.5x current gas price to avoid "replacement transaction underpriced"
         gas_price = int(w3.eth.gas_price * 1.5)
         tx = ctf.functions.redeemPositions(
