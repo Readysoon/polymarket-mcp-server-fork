@@ -176,19 +176,53 @@ for c in candidates:
 
 MARKET: {c['question'][:80].replace(chr(39), '')}
 
-STEP 1 — RESEARCH (use web_search):
-Search for: "{c['question'][:60].replace(chr(39), '')} prediction form standings"
-Collect:
-- Current league table position of both teams/players
-- Recent form (last 5 games: W/D/L)
+STEP 1 — DETECT SPORT TYPE from market title, then use web_search accordingly:
+
+⚽ SOCCER — search "{c['question'][:50].replace(chr(39), '')} preview lineup":
+- League table position of both teams
+- Last 5 results (W/D/L)
 - Head-to-head record
-- Any injuries or suspensions
-- Home/away advantage
+- Key injuries/suspensions
+- Is it a must-win game or rotation expected?
+- Home/away record this season
+- Friendly or competitive match? (rotation risk!)
+
+🏀 BASKETBALL (NBA/NCAA) — search "{c['question'][:50].replace(chr(39), '')} injury report back-to-back":
+- Current season standings & win %
+- Last 5 games form
+- Back-to-back schedule? (fatigue = upset risk)
+- NBA injury report (check for star players out)
+- Pace match-up (fast vs slow team)
+- Home/away record
+
+🥊 UFC/MMA — search "{c['question'][:50].replace(chr(39), '')} fight prediction record":
+- Fighter records & recent wins/losses
+- Fighting style match-up (wrestler vs striker)
+- Weight class change?
+- Camp/training news
+- Last fight performance
+
+🎾 TENNIS — search "{c['question'][:50].replace(chr(39), '')} h2h surface":
+- Surface (clay/hard/grass) — who performs better?
+- Head-to-head on this surface
+- Recent tournament results
+- Injury/fatigue from previous rounds
+
+🎮 ESPORTS — search "{c['question'][:50].replace(chr(39), '')} recent results roster":
+- Recent match results
+- Roster changes/stand-ins
+- Tournament stage (group vs playoffs → motivation)
+- Head-to-head
+
+📊 OTHER — search "{c['question'][:50].replace(chr(39), '')} prediction analysis":
+- Any relevant recent data
+- Historical base rate for this type of market
 
 STEP 2 — DECISION:
 Based on the research, decide:
 - Does the Polymarket price ({c.get('amm_mid', c.get('yes_price', '?'))}) reflect the actual strength of the favorite?
-- Is there a clear favorite supported by form/standings?
+- Is there a clear favorite supported by form/standings/data?
+- Any red flags (injury, fatigue, rotation, bad form)? → SKIP
 - If research is inconclusive or both sides seem equal → SKIP, do not trade
 
 STEP 3 — IF TRADING:
