@@ -186,14 +186,25 @@ for c in candidates:
 
 MARKET: {q_80}
 
-STEP 1 — Read /home/node/.openclaw/workspace/trading/research.json
-Find the entry for condition_id: {cond}
+STEP 1 — RESEARCH using web_fetch (not web_search):
+Market: {q_80}
+Type: detect automatically (soccer/NBA/NHL/NCAA/esports/crypto)
 
-Collect:
-- confidence_pct
-- sources_summary
-- red_flags
-- decision (TRADE or SKIP)
+Choose the best sources for this market type and fetch them directly:
+- NCAA Basketball: web_fetch('https://www.covers.com/picks/ncaab')
+- NBA: web_fetch('https://www.covers.com/picks/nba')
+- NHL: web_fetch('https://www.covers.com/picks/nhl')
+- Soccer: web_fetch('https://www.soccerway.com') or web_fetch('https://www.bbc.com/sport/football')
+- Esports: web_fetch('https://liquipedia.net') relevant page
+- Crypto: web_fetch('https://coinmarketcap.com/currencies/bitcoin/')
+
+You decide which sources make sense. Fetch 1-2 relevant pages and look for expert picks, predictions, injury news, form for this specific matchup.
+
+Based on findings assign:
+- confidence_pct (0-100)
+- sources_summary (1 sentence)
+- red_flags (or 'none')
+- decision: TRADE if confidence>=65 and no red flags, else SKIP
 
 STEP 2 — CONFIDENCE SCORE:
 Based on all research, calculate a confidence score (0-100%):
