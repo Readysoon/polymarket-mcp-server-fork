@@ -359,7 +359,7 @@ async def get_portfolio():
 # Balance History
 # ============================================================================
 
-HISTORY_FILE = Path(__file__).parent / "balance_history.json"
+HISTORY_FILE = Path(os.environ.get("OPENCLAW_STATE_DIR", "/home/node/.openclaw")) / "workspace" / "trading" / "balance_history.json"
 _SNAPSHOT_INTERVAL = 300  # minimum seconds between snapshots (5 min)
 _last_snapshot_time = 0.0
 
