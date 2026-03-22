@@ -582,7 +582,7 @@
 
         <!-- Positions Grid -->
         <div id="positions-tab">
-            <div id="positions-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;padding:8px 0;">
+            <div id="positions-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;padding:8px 0;">
                 <div class="loading-skeleton" style="height:80px;border-radius:8px;"></div>
                 <div class="loading-skeleton" style="height:80px;border-radius:8px;"></div>
                 <div class="loading-skeleton" style="height:80px;border-radius:8px;"></div>
@@ -774,7 +774,10 @@
                     ? '<span class="status-badge-pos settled">RESOLVED</span>'
                     : '<span class="status-badge-pos live">LIVE</span>';
                 const tileUrl = pos.market_url || '';
-                return `<div style="background:${bg};border:${border};border-radius:8px;padding:10px;cursor:${tileUrl?'pointer':'default'};min-height:80px;display:flex;flex-direction:column;justify-content:space-between;"
+                // Span 2 columns for large value positions
+                const span = pos.value >= 4 ? 'grid-column:span 2;' : '';
+                const minH = pos.value >= 4 ? '100px' : '80px';
+                return `<div style="background:${bg};border:${border};border-radius:8px;padding:10px;cursor:${tileUrl?'pointer':'default'};min-height:${minH};display:flex;flex-direction:column;justify-content:space-between;${span}"
                     ${tileUrl ? `onclick="window.open('${tileUrl}','_blank')"` : ''}>
                     <div>
                         <div style="font-size:0.78rem;font-weight:600;color:#e5e7eb;line-height:1.2;margin-bottom:4px;">${pos.market}</div>
