@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "polymarket": {
+      "command": "polymarket-mcp",
+      "args": [],
+      "cwd": "/polymarket"
+    }
+  },
+  "imports": []
+}
