@@ -1033,25 +1033,26 @@
                 if (!state) return;
                 const { values, times, toPoint, padL, padR, padT, padB, chartW, chartH, W, H, color, isUp, dpr } = state;
 
+                // Mouse position in CSS pixels (not scaled)
                 const rect = canvas.getBoundingClientRect();
-                const mouseX = (e.clientX - rect.left) * dpr;
+                const mouseX = e.clientX - rect.left;
 
-                // Find nearest data point
-                const relX = mouseX - padL * dpr;
-                const idx = Math.round(relX / (chartW * dpr) * (values.length - 1));
+                // Find nearest data point using CSS coords
+                const relX = mouseX - padL;
+                const idx = Math.round(relX / chartW * (values.length - 1));
                 const clampedIdx = Math.max(0, Math.min(values.length - 1, idx));
-                const pt = toPoint(clampedIdx);
+                const pt = toPoint(clampedIdx); // pt is in CSS coords
 
-                // Redraw chart
+                // Redraw chart then overlay
                 drawChart();
                 const ctx = canvas.getContext('2d');
-                ctx.scale(dpr, dpr);
+                ctx.scale(dpr, dpr); // back to CSS coord space
 
                 // Vertical line
                 ctx.beginPath();
-                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.strokeStyle = 'rgba(255,255,255,0.25)';
                 ctx.lineWidth = 1;
-                ctx.setLineDash([4, 4]);
+                ctx.setLineDash([3, 3]);
                 ctx.moveTo(pt.x, padT);
                 ctx.lineTo(pt.x, padT + chartH);
                 ctx.stroke();
@@ -1060,34 +1061,34 @@
                 // Dot
                 const dotColor = isUp ? '#10b981' : '#ef4444';
                 ctx.beginPath();
-                ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+                ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
                 ctx.fillStyle = dotColor;
                 ctx.fill();
                 ctx.strokeStyle = '#0a0a0f';
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 1.5;
                 ctx.stroke();
 
-                // Tooltip
+                // Tooltip in CSS px font
                 const val = values[clampedIdx];
                 const t = times[clampedIdx];
                 const timeLabel = t.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' +
                     t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 const label = '$' + val.toFixed(2) + '  ' + timeLabel;
 
-                ctx.font = `bold ${11 * dpr}px -apple-system, sans-serif`;
+                ctx.font = 'bold 11px -apple-system, sans-serif';
                 const tw = ctx.measureText(label).width;
-                let tx = pt.x + 10;
-                if (tx + tw + 12 > W * dpr) tx = pt.x - tw - 22;
-                const ty = Math.max(pt.y - 10, padT + 16);
+                let tx = pt.x + 8;
+                if (tx + tw + 10 > W) tx = pt.x - tw - 18;
+                const ty = Math.max(pt.y - 8, padT + 14);
 
                 ctx.fillStyle = 'rgba(15,15,25,0.85)';
                 ctx.beginPath();
-                ctx.roundRect(tx - 6, ty - 14, tw + 12, 20, 4);
+                ctx.roundRect(tx - 5, ty - 13, tw + 10, 18, 3);
                 ctx.fill();
                 ctx.fillStyle = '#e5e7eb';
                 ctx.fillText(label, tx, ty);
 
-                // Update header total
+                // Update header
                 const totalEl = document.getElementById('chart-total');
                 totalEl.textContent = '$' + val.toFixed(2);
                 totalEl.style.color = dotColor;
