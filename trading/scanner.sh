@@ -172,7 +172,29 @@ for c in candidates:
         "schedule": {"kind": "at", "at": fire_iso},
         "payload": {
             "kind": "agentTurn",
-            "message": f"Run market watcher:\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{c['condition_id']}' '{yes_token}' '{c['end_datetime']}' '{c['question'][:60].replace(chr(39), '')}'\n\nOnly notify Philipp on Telegram if a trade was placed (TRADED) or a technical error occurred. Do NOT notify for NO_TRADE.\n\nIf a trade WAS placed: use the cron tool to register an outcome-checker job with these parameters:\n- name: 'outcome:{c['condition_id'][:20]}'\n- schedule: at '{(datetime.fromisoformat(c[\"end_datetime\"].replace(\"Z\",\"+00:00\")) + timedelta(hours=3)).strftime(\"%Y-%m-%dT%H:%M:%SZ\")}'\n- sessionTarget: isolated\n- timeoutSeconds: 120\n- delivery: announce to Philipp 866661912 on telegram\n- message: 'Check outcome for market: {c['question'][:60].replace(chr(39), '')} (condition_id: {c['condition_id']}, yes_token: {yes_token}, end: {c['end_datetime']})\\n\\nIMPORTANT: Markets take 2-4h to resolve after end time.\\n1. Run bash /home/node/.openclaw/workspace/trading/redeem.sh\\n2. If REDEEMED with amount > 0 → WON, notify Philipp\\n3. If REDEEM_ZERO → not resolved yet, schedule retry in 2h silently\\n4. If SKIP value $0 → LOST, notify Philipp\\n5. Notification: WON or LOST — {c['question'][:50].replace(chr(39), '')} | P&L: +/- $X.XX | Portfolio: $XX.XX'\n\nOn technical error: debug, fix, git push, notify Philipp.",
+            "message": f"""BEFORE running the market watcher script, research the following:
+
+MARKET: {c['question'][:80].replace(chr(39), '')}
+
+STEP 1 — RESEARCH (use web_search):
+Search for: "{c['question'][:60].replace(chr(39), '')} prediction form standings"
+Collect:
+- Current league table position of both teams/players
+- Recent form (last 5 games: W/D/L)
+- Head-to-head record
+- Any injuries or suspensions
+- Home/away advantage
+
+STEP 2 — DECISION:
+Based on the research, decide:
+- Does the Polymarket price ({c.get('amm_mid', c.get('yes_price', '?'))}) reflect the actual strength of the favorite?
+- Is there a clear favorite supported by form/standings?
+- If research is inconclusive or both sides seem equal → SKIP, do not trade
+
+STEP 3 — IF TRADING:
+Run: bash /home/node/.openclaw/workspace/trading/market_watcher.sh '{c['condition_id']}' '{yes_token}' '{c['end_datetime']}' '{c['question'][:60].replace(chr(39), '')}'
+
+Only notify Philipp on Telegram if a trade was placed (TRADED) or a technical error occurred. Do NOT notify for NO_TRADE.\n\nIf a trade WAS placed: use the cron tool to register an outcome-checker job with these parameters:\n- name: 'outcome:{c['condition_id'][:20]}'\n- schedule: at '{(datetime.fromisoformat(c[\"end_datetime\"].replace(\"Z\",\"+00:00\")) + timedelta(hours=3)).strftime(\"%Y-%m-%dT%H:%M:%SZ\")}'\n- sessionTarget: isolated\n- timeoutSeconds: 120\n- delivery: announce to Philipp 866661912 on telegram\n- message: 'Check outcome for market: {c['question'][:60].replace(chr(39), '')} (condition_id: {c['condition_id']}, yes_token: {yes_token}, end: {c['end_datetime']})\\n\\nIMPORTANT: Markets take 2-4h to resolve after end time.\\n1. Run bash /home/node/.openclaw/workspace/trading/redeem.sh\\n2. If REDEEMED with amount > 0 → WON, notify Philipp\\n3. If REDEEM_ZERO → not resolved yet, schedule retry in 2h silently\\n4. If SKIP value $0 → LOST, notify Philipp\\n5. Notification: WON or LOST — {c['question'][:50].replace(chr(39), '')} | P&L: +/- $X.XX | Portfolio: $XX.XX'\n\nOn technical error: debug, fix, git push, notify Philipp.",
             "timeoutSeconds": 120
         },
         "sessionTarget": "isolated",
