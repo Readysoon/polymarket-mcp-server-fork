@@ -578,17 +578,27 @@ if result.get('success') or result.get('order_id'):
         'timestamp': now.isoformat(),
         'question': QUESTION,
         'condition_id': CONDITION_ID,
-        'price': best_ask,
+        # Entry data
+        'entry_price': best_ask,
         'spread_at_entry': round(spread, 4),
+        'mid_at_entry': round(mid, 4),
         'hours_before_close': round(hours_left, 2),
         'size_usd': bet_size,
         'shares': round(bet_size / best_ask, 2),
+        'max_payout': round(bet_size / best_ask, 2),  # shares * $1.00
+        'max_return_pct': round((1.0 - best_ask) / best_ask * 100, 1),  # % gain if won
         'end_datetime': END_DATETIME,
         'order_id': result.get('order_id'),
+        # Research data
+        'confidence_pct': research_confidence,
+        'research_summary': research_summary,
+        # Outcome (filled later)
         'status': 'open',
+        'outcome': None,
         'pnl': None,
+        'pnl_pct': None,
         'resolved_at': None,
-        'outcome': None
+        'redeem_amount': None
     }
     prod_journal.setdefault('trades', []).append(trade)
     with open(f'{TRADING_DIR}/journal.json', 'w') as f:
