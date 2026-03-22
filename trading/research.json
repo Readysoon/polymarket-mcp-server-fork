@@ -1,0 +1,192 @@
+{
+  "0x261619a081b347ff183cc4b315647ee98e6645552f65bbeffe15cc83a9d07d26": {
+    "question": "Texas Tech Red Raiders vs. Alabama Crimson Tide",
+    "confidence_pct": 50,
+    "sources_summary": "No expert pick found on Covers for this matchup today.",
+    "red_flags": "none",
+    "decision": "SKIP",
+    "reason": "No expert consensus found, confidence below threshold",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0xde5ff3427dcc8f53e95d9825721b011458b657837033a6237dc3cfc99777e827": {
+    "question": "Tennessee Volunteers vs. Virginia Cavaliers",
+    "confidence_pct": 50,
+    "sources_summary": "No moneyline pick found, only O/U pick available (Under 137.5).",
+    "red_flags": "none",
+    "decision": "SKIP",
+    "reason": "No win/loss expert pick found",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0x18b53e6a6a409aabda0410890908f37a956027a32faa556a4761186f315cd66d": {
+    "question": "Tennessee Volunteers vs. Virginia Cavaliers: O/U 137.5",
+    "confidence_pct": 78,
+    "sources_summary": "Covers expert: UNDER 137.5 — Virginia shuts down Tennessee post game (97th percentile vs post-ups), elite transition defense, slow pace expected.",
+    "red_flags": "none",
+    "decision": "TRADE",
+    "reason": "Clear expert pick for Under with strong reasoning, KenPom alignment",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0x56947b146740d145037901ed76611ac388418f4573b6abc623e45e7238c26fde": {
+    "question": "Raptors vs. Suns",
+    "confidence_pct": 50,
+    "sources_summary": "No expert pick found on Covers for Raptors vs Suns today.",
+    "red_flags": "none",
+    "decision": "SKIP",
+    "reason": "No expert consensus found",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0x3e90fe6e3d3f5b1acb196be6cff2ab474556af1af2a950e8ea5da6438791b6ae": {
+    "question": "Hurricanes vs. Penguins",
+    "confidence_pct": 72,
+    "sources_summary": "Covers: Nikolaj Ehlers red-hot (points in 12 of last 18 games), Penguins bottom-6 in shots/xG/goals allowed last 10 games, back-to-back fatigue for PIT.",
+    "red_flags": "none",
+    "decision": "TRADE",
+    "reason": "Carolina clear favorite, Penguins on back-to-back with poor recent form",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0x4894a87bf837238e58bba3768d046a053946bc54fd8c800f7cd2a561f1796977": {
+    "question": "St. John's Red Storm vs. Kansas Jayhawks",
+    "confidence_pct": 75,
+    "sources_summary": "Covers 3 expert picks: Kansas moneyline (+140) — best 3PT shooter, Darryn Peterson best player on floor, better FT shooting in physical game.",
+    "red_flags": "none",
+    "decision": "TRADE",
+    "reason": "3 expert picks all favor Kansas, strong reasoning around shooting and key player advantage. Note: market is priced on St. John's (0.615) — Kansas is underdog on Polymarket!",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0x659bca08f21a30cc5bdb0f5278f73d6a9d9f5c94977c24e195e245e4407ea1ca": {
+    "question": "Will Real Madrid CF win on 2026-03-22?",
+    "confidence_pct": 55,
+    "sources_summary": "Forebet blocked (403). No soccer picks found on Covers. Insufficient data.",
+    "red_flags": "forebet unavailable",
+    "decision": "SKIP",
+    "reason": "Primary soccer research source unavailable, no expert data",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0xc3c777f7bd2f8ba4274e48c116e98f73d9643d46c75dfa9b93b0399bd0f067bb": {
+    "question": "Miami Hurricanes vs. Purdue Boilermakers: O/U 147.5",
+    "confidence_pct": 82,
+    "sources_summary": "Covers expert: OVER 147.5 — Purdue highest rated KenPom offense ever (38.5% 3PT), Miami weak on 3PT defense (319th). KenPom projects 153, Bart Torvik 154 points.",
+    "red_flags": "none",
+    "decision": "TRADE",
+    "reason": "Strong expert pick with data backing, KenPom/Torvik both project well over the total",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0x1f160d10be07d555f2ccbf1dc62fde7beb62ee2d5577ae419fa0d008d90d1f00": {
+    "question": "Spread: St. John's Red Storm (-3.5)",
+    "confidence_pct": 35,
+    "sources_summary": "Covers experts favor Kansas moneyline — St. John's spread is against expert consensus.",
+    "red_flags": "experts favor Kansas",
+    "decision": "SKIP",
+    "reason": "Expert picks favor Kansas, betting St. John's -3.5 goes against consensus",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0x0069614f24be5cbeec94527a0164086479c73e644ef4f0ab2243283122f49090": {
+    "question": "Will FC Internazionale Milano win on 2026-03-22?",
+    "confidence_pct": 55,
+    "sources_summary": "Forebet blocked (403). No soccer data available.",
+    "red_flags": "research unavailable",
+    "decision": "SKIP",
+    "reason": "Soccer research source unavailable",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0xf0ba560ac93a959ac21d0ee63d4cb20650777f2638038c1f0a0b4386f1126b02": {
+    "question": "Spread: Connecticut Huskies (-4.5)",
+    "confidence_pct": 60,
+    "sources_summary": "Covers: Under pick for UCLA/UConn total (136.5), both teams play slow halfcourt. No explicit ATS pick found.",
+    "red_flags": "none",
+    "decision": "SKIP",
+    "reason": "No explicit ATS pick, confidence below threshold",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0xd3d9d17acf11d19a23f8b71d06826ec2100f41f95b6d0bc46707960185c09388": {
+    "question": "St. John's Red Storm vs. Kansas Jayhawks: O/U 144.5",
+    "confidence_pct": 50,
+    "sources_summary": "No O/U expert pick found for this specific game on Covers today.",
+    "red_flags": "none",
+    "decision": "SKIP",
+    "reason": "No expert O/U pick found",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0x44dc43de601cf755abe0892523549b14b5837576df3200f002f5588b97ae13a6": {
+    "question": "Kentucky Wildcats vs. Iowa State Cyclones: O/U 146.5",
+    "confidence_pct": 70,
+    "pick": "UNDER",
+    "sources_summary": "Fresh research (2026-03-22 15:05 UTC). KEY: Iowa State F Joshua Jefferson (All-American) confirmed \"appears unlikely\" to play per coach — left ankle injury. Iowa State controls tempo (slow game). Both teams injured. Kentucky: Quaintance (knee), Lowe (shoulder) out. Kentucky shooting: Chandler 6-of-28 3PT in March. Iowa State scored 108 in R1 without Jefferson (Toure 25/11/6). Kentucky scored 89 in OT. Public lean: 53% Under. Expert (SportsLine): Iowa State spread pick implying controlled game, under pressure. KenPom/Torvik not available but slow pace + Jefferson absence supports under.",
+    "red_flags": "Iowa State scored 108 R1 even without Jefferson; Oweh (35pts R1) is dangerous; total may be higher than expected if tempo opens up",
+    "decision": "TRADE",
+    "reason": "Under: Iowa State controls tempo, Jefferson likely out (reduced offense), Kentucky transition offense neutralized by elite ISU defense. Chandler cold from 3. Public money 53% under. Confidence 70% > 65% threshold.",
+    "researched_at": "2026-03-22T15:05:00Z"
+  },
+  "0x8c11cbf546db17c00f4b1afdb7db3bfac0e5dff3e8ff56211e3854a6472f6a6e": {
+    "question": "Will Olympique de Marseille win on 2026-03-22?",
+    "confidence_pct": 70,
+    "sources_summary": "Transfermarkt season data (accessible). Match: OM vs Lille, MD27 Ligue 1, HOME for Marseille (16:15 UTC). Marseille home record: W9 D3 L1 (2.31 avg pts — very strong). Lille is 5th (44pts/26g) vs Marseille 4th (49pts/26g), 5pt gap. Reverse fixture: OM won 1-0 at Lille (MD15 Dec 2025). Marseille out of CL and Coupe de France (lost on pens QF Mar 4) — FULL FOCUS on Ligue 1. Recent Ligue 1 form: W(Auxerre H), L(Toulouse A), W(Lyon H), W(Brest A), D(Strasbourg H). Forebet/web search unavailable but structural edge is clear: dominant home record vs 5th-place rival chasing them, with nothing else to play for.",
+    "red_flags": "Lost away at Toulouse last weekend; Forebet/Covers unavailable for expert confirmation; Coupe loss on pens may affect squad morale",
+    "decision": "TRADE",
+    "reason": "Strong home record (9W/3D/1L), full Ligue 1 focus (eliminated from all cups/CL), 5-point table lead over Lille, won reverse fixture. Structural confidence 70% >= 65% threshold. Price 0.515 on YES appears underpriced vs ~68-72% true win probability at home.",
+    "researched_at": "2026-03-22T15:10:00Z"
+  },
+  "0x561c29873d53345023c886e00cf80f454e9ddf1b8abcec073cf10d95ea0fd556": {
+    "question": "Blue Jackets vs. Islanders",
+    "confidence_pct": 50,
+    "sources_summary": "No expert pick found on Covers for Blue Jackets vs Islanders today.",
+    "red_flags": "none",
+    "decision": "SKIP",
+    "reason": "No expert consensus found",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0x0c5e51bb81aa30cbe3b598d618a62bbb32f8a79735a35ad0aa51582f074be5d1": {
+    "question": "Avalanche vs. Capitals",
+    "confidence_pct": 68,
+    "sources_summary": "ESPN data (fresh, 2026-03-22). COL record: 45-13-10 (100pts, 1st Central). WSH record: 35-27-8 (78pts, 5th Metro). COL stats: 3.69 GF/G, 2.46 GA/G. WSH: 3.10 GF/G, 2.84 GA/G. Goaltending: Wedgewood 2.19 GAA/.916 vs Thompson 2.36/.915 (COL advantage). Season series: COL leads 1-0 (won 5-2 Jan 19). Sportsbook ML: COL -162 / WSH +136. MacKinnon 114pts vs Ovechkin 52pts. COL last 5: 2-3 (incl. 7-2 loss to PIT). WSH last 5: 3-2 (home). COL injuries: Lehkonen OUT, O'Connor IR-LT. WSH injuries: Kampf OUT (minor). Brave API unavailable — no Forebet/Covers/Reddit expert picks obtained.",
+    "red_flags": "COL 2-3 in last 5; away game; Lehkonen and O'Connor missing from forwards; no expert picks sourced (web search API unavailable)",
+    "decision": "TRADE",
+    "reason": "COL superior on all metrics: record, GF/G, GA/G, goaltending, season series win. ML -162 implies ~61.8% probability; structural edge bumps true prob to ~65-68%. Polymarket 0.615 is slightly underpriced. Confidence 68% >= 65% threshold.",
+    "researched_at": "2026-03-22T15:18:00Z"
+  },
+  "0x59b6076eabbe9cff28e0225876e740611da080a03f951e9291f649b3aa8db3d9": {
+    "question": "Spread: Purdue Boilermakers (-7.5)",
+    "confidence_pct": 72,
+    "sources_summary": "Covers expert: Over 147.5 for Miami/Purdue — Purdue offense elite, Miami defense weak. Implies Purdue scoring big, supports covering -7.5.",
+    "red_flags": "none",
+    "decision": "TRADE",
+    "reason": "Expert projects high Purdue scoring, supports ATS cover",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0x1eda8a614d0b7844e91a77a65bc6de3d76a31cd36417af6922f0a799725088c5": {
+    "question": "Olympique de Marseille vs. Lille OSC: O/U 2.5",
+    "confidence_pct": 50,
+    "sources_summary": "Forebet blocked, no soccer data available.",
+    "red_flags": "research unavailable",
+    "decision": "SKIP",
+    "reason": "Soccer research unavailable",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0x04be8fa265d0c59b89eecf4059f94135c979b7e7dd80c5c070de578b86cc63bc": {
+    "question": "Predators vs. Blackhawks",
+    "confidence_pct": 50,
+    "sources_summary": "No expert pick found on Covers for Predators vs Blackhawks today.",
+    "red_flags": "none",
+    "decision": "SKIP",
+    "reason": "No expert consensus found",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0x1a94f7cde06cee95128d12bc1c3703933d1dcd55f0e40826e28c05cfef75808d": {
+    "question": "Sabres vs. Ducks",
+    "confidence_pct": 50,
+    "sources_summary": "Covers: Troy Terry over 0.5 points pick for Ducks — no moneyline pick found.",
+    "red_flags": "none",
+    "decision": "SKIP",
+    "reason": "No moneyline expert pick found",
+    "researched_at": "2026-03-22T15:03:00Z"
+  },
+  "0x2de191c02975a23a990005fac782ecb2e61249c90d946f6adbd1b13f2bfa4ff5": {
+    "question": "Will Bitcoin dip to $68,000 March 16-22?",
+    "confidence_pct": 50,
+    "sources_summary": "Crypto market volatile, no clear directional signal available.",
+    "red_flags": "high variance",
+    "decision": "SKIP",
+    "reason": "Crypto markets too unpredictable without reliable signal",
+    "researched_at": "2026-03-22T15:03:00Z"
+  }
+}
