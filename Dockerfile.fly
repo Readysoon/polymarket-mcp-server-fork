@@ -1,0 +1,43 @@
+# Combined: Polymarket Dashboard + OpenClaw Telegram Bot
+# Runs on Fly.io (Amsterdam)
+#
+# Uses official OpenClaw image as base (Node 24 + gateway binary)
+# Adds Python + Polymarket dashboard as a background process
+FROM ghcr.io/openclaw/openclaw:latest
+
+USER root
+
+# Install Python 3.12 and pip
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip python3-venv gcc python3-dev git && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Polymarket MCP server in separate directory
+WORKDIR /polymarket
+COPY pyproject.toml README.md ./
+COPY src/ ./src/
+RUN pip install --no-cache-dir --break-system-packages -e ".[web]" 2>/dev/null || \
+    pip install --no-cache-dir --break-system-packages -e .
+
+# Install mcporter for MCP tool integration
+RUN npm install -g mcporter 2>/dev/null || true
+
+# Copy OpenClaw config files to /defaults (image-baked, read-only reference)
+# At runtime, entrypoint syncs these into the persistent volume
+COPY openclaw/workspace/ /defaults/workspace/
+COPY openclaw/mcporter.json /defaults/mcporter.json
+COPY openclaw/openclaw.json.template /defaults/openclaw.json.template
+RUN mkdir -p /defaults/credentials
+COPY openclaw/credentials/ /defaults/credentials/
+COPY openclaw/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Create required dirs (will be symlinked to /data volume at runtime)
+RUN mkdir -p /home/node/.openclaw /home/node/.config && \
+    chown -R node:node /home/node/.openclaw /home/node/.config 2>/dev/null || true
+
+ENV PYTHONUNBUFFERED=1 LOG_LEVEL=INFO NODE_OPTIONS="--max-old-space-size=1536"
+
+EXPOSE 8080
+
+ENTRYPOINT ["/entrypoint.sh"]
