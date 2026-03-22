@@ -635,7 +635,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadPortfolio();
             loadTrendingMarkets();
-            loadBalanceHistory();
+            loadBalanceHistory().then(() => setupChartHover());
         });
 
         function showTab(tab) {
@@ -1018,6 +1018,90 @@
             const latestTotal = values[values.length - 1];
             totalEl.textContent = '$' + latestTotal.toFixed(2);
             totalEl.style.color = isUp ? '#10b981' : '#ef4444';
+
+            // Store chart state for hover
+            canvas._chartState = { values, times, toPoint, padL, padR, padT, padB, chartW, chartH, W, H, color, isUp, dpr };
+        }
+
+        // ── Chart Hover ──
+        function setupChartHover() {
+            const canvas = document.getElementById('balance-chart');
+            if (!canvas) return;
+
+            canvas.addEventListener('mousemove', (e) => {
+                const state = canvas._chartState;
+                if (!state) return;
+                const { values, times, toPoint, padL, padR, padT, padB, chartW, chartH, W, H, color, isUp, dpr } = state;
+
+                const rect = canvas.getBoundingClientRect();
+                const mouseX = (e.clientX - rect.left) * dpr;
+
+                // Find nearest data point
+                const relX = mouseX - padL * dpr;
+                const idx = Math.round(relX / (chartW * dpr) * (values.length - 1));
+                const clampedIdx = Math.max(0, Math.min(values.length - 1, idx));
+                const pt = toPoint(clampedIdx);
+
+                // Redraw chart
+                drawChart();
+                const ctx = canvas.getContext('2d');
+                ctx.scale(dpr, dpr);
+
+                // Vertical line
+                ctx.beginPath();
+                ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.moveTo(pt.x, padT);
+                ctx.lineTo(pt.x, padT + chartH);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Dot
+                const dotColor = isUp ? '#10b981' : '#ef4444';
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2);
+                ctx.fillStyle = dotColor;
+                ctx.fill();
+                ctx.strokeStyle = '#0a0a0f';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Tooltip
+                const val = values[clampedIdx];
+                const t = times[clampedIdx];
+                const timeLabel = t.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' +
+                    t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const label = '$' + val.toFixed(2) + '  ' + timeLabel;
+
+                ctx.font = `bold ${11 * dpr}px -apple-system, sans-serif`;
+                const tw = ctx.measureText(label).width;
+                let tx = pt.x + 10;
+                if (tx + tw + 12 > W * dpr) tx = pt.x - tw - 22;
+                const ty = Math.max(pt.y - 10, padT + 16);
+
+                ctx.fillStyle = 'rgba(15,15,25,0.85)';
+                ctx.beginPath();
+                ctx.roundRect(tx - 6, ty - 14, tw + 12, 20, 4);
+                ctx.fill();
+                ctx.fillStyle = '#e5e7eb';
+                ctx.fillText(label, tx, ty);
+
+                // Update header total
+                const totalEl = document.getElementById('chart-total');
+                totalEl.textContent = '$' + val.toFixed(2);
+                totalEl.style.color = dotColor;
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                drawChart();
+                const state = canvas._chartState;
+                if (!state) return;
+                const { values, isUp } = state;
+                const totalEl = document.getElementById('chart-total');
+                totalEl.textContent = '$' + values[values.length - 1].toFixed(2);
+                totalEl.style.color = isUp ? '#10b981' : '#ef4444';
+            });
         }
 
         // ── Watchlist & Timeline ──
