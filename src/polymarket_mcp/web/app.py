@@ -144,8 +144,7 @@ async def dashboard_home(request: Request):
         "tools_available": 45 if (client and client.has_api_credentials()) else 25,
     }
 
-    return templates.TemplateResponse("index.html", context={
-        "request": request,
+    return templates.TemplateResponse(request, "index.html", {
         "mcp_status": mcp_status,
         "stats": stats,
         "uptime": str(uptime).split('.')[0],  # Remove microseconds
@@ -179,8 +178,7 @@ async def config_page(request: Request):
             "has_api_credentials": client.has_api_credentials() if client else False,
         }
 
-    return templates.TemplateResponse("config.html", context={
-        "request": request,
+    return templates.TemplateResponse(request, "config.html", {
         "config": current_config,
     })
 
@@ -190,9 +188,7 @@ async def markets_page(request: Request):
     """Markets discovery and analysis page"""
     stats["requests_total"] += 1
 
-    return templates.TemplateResponse("markets.html", context={
-        "request": request,
-    })
+    return templates.TemplateResponse(request, "markets.html")
 
 
 @app.get("/monitoring", response_class=HTMLResponse)
@@ -224,8 +220,7 @@ async def monitoring_page(request: Request):
         "tools_available": 45 if (client and client.has_api_credentials()) else 25,
     }
 
-    return templates.TemplateResponse("monitoring.html", context={
-        "request": request,
+    return templates.TemplateResponse(request, "monitoring.html", {
         "stats": stats,
         "rate_status": rate_status,
         "system_info": system_info,
