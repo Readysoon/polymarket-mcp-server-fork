@@ -377,6 +377,25 @@
         .token-name { font-size: 0.7rem; color: #6b7280; }
         .token-amount { font-size: 0.85rem; font-weight: 600; }
 
+        /* Time Range Buttons */
+        .chart-timerange {
+            display: flex;
+            gap: 0.4rem;
+            padding: 0.4rem 1rem;
+        }
+        .tr-btn {
+            background: #1e1e2e;
+            border: 1px solid #2a2a3e;
+            color: #6b7280;
+            border-radius: 6px;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .tr-btn:hover { border-color: #6366f1; color: #a5b4fc; }
+        .tr-btn.active { background: #6366f1; border-color: #6366f1; color: #fff; }
+
         /* Balance Chart */
         .chart-panel {
             background: #111118;
@@ -531,6 +550,12 @@
                 <div class="chart-header">
                     <span class="chart-title">Account Balance</span>
                     <span class="chart-total" id="chart-total">--</span>
+                </div>
+                <div class="chart-timerange">
+                    <button class="tr-btn" onclick="setTimeRange(5)">5h</button>
+                    <button class="tr-btn active" onclick="setTimeRange(24)">24h</button>
+                    <button class="tr-btn" onclick="setTimeRange(168)">7d</button>
+                    <button class="tr-btn" onclick="setTimeRange(720)">30d</button>
                 </div>
                 <div class="chart-canvas-wrap" id="chart-wrap">
                     <canvas id="balance-chart"></canvas>
@@ -854,6 +879,17 @@
 
         // ── Balance History Chart ──
         let balanceHistory = [];
+        let activeRangeHours = 24;
+
+        function setTimeRange(hours) {
+            activeRangeHours = hours;
+            document.querySelectorAll('.tr-btn').forEach(b => b.classList.remove('active'));
+            const labels = {5: '5h', 24: '24h', 168: '7d', 720: '30d'};
+            document.querySelectorAll('.tr-btn').forEach(b => {
+                if (b.textContent === labels[hours]) b.classList.add('active');
+            });
+            drawChart();
+        }
 
         async function loadBalanceHistory() {
             try {
@@ -867,6 +903,10 @@
         }
 
         function drawChart() {
+            // Filter by time range
+            const cutoff = new Date(Date.now() - activeRangeHours * 3600 * 1000);
+            const filtered = balanceHistory.filter(h => new Date(h.t) >= cutoff);
+            const history = filtered.length >= 2 ? filtered : balanceHistory;
             const canvas = document.getElementById('balance-chart');
             const wrap = document.getElementById('chart-wrap');
             if (!canvas || !wrap) return;
@@ -882,7 +922,7 @@
 
             ctx.clearRect(0, 0, W, H);
 
-            if (balanceHistory.length < 2) {
+            if (history.length < 2) {
                 ctx.fillStyle = '#4b5563';
                 ctx.font = '13px -apple-system, sans-serif';
                 ctx.textAlign = 'center';
@@ -890,13 +930,13 @@
                 return;
             }
 
-            const values = balanceHistory.map(h => h.total);
-            const times = balanceHistory.map(h => new Date(h.t));
-            const minVal = Math.min(...values) * 0.95;
-            const maxVal = Math.max(...values) * 1.05;
+            const values = history.map(h => h.total);
+            const times = history.map(h => new Date(h.t));
+            const minVal = Math.min(...values) * 0.995;
+            const maxVal = Math.max(...values) * 1.005;
             const range = maxVal - minVal || 1;
 
-            const padL = 8, padR = 8, padT = 8, padB = 24;
+            const padL = 48, padR = 8, padT = 8, padB = 24;
             const chartW = W - padL - padR;
             const chartH = H - padT - padB;
 
@@ -912,24 +952,26 @@
             }
 
             // Y-axis labels
-            ctx.fillStyle = '#4b5563';
+            ctx.fillStyle = '#6b7280';
             ctx.font = '10px -apple-system, sans-serif';
             ctx.textAlign = 'right';
             for (let i = 0; i <= 4; i++) {
                 const val = maxVal - (range / 4) * i;
                 const y = padT + (chartH / 4) * i;
-                ctx.fillText('$' + val.toFixed(2), padL + chartW + padR - 2, y + 3);
+                ctx.fillText('$' + val.toFixed(0), padL - 4, y + 3);
             }
 
-            // X-axis time labels
+            // X-axis time labels — show date if range > 24h
             ctx.textAlign = 'center';
-            ctx.fillStyle = '#4b5563';
-            const labelCount = Math.min(5, balanceHistory.length);
+            ctx.fillStyle = '#6b7280';
+            const labelCount = Math.min(5, history.length);
             for (let i = 0; i < labelCount; i++) {
-                const idx = Math.floor(i * (balanceHistory.length - 1) / (labelCount - 1));
-                const x = padL + (idx / (balanceHistory.length - 1)) * chartW;
+                const idx = Math.floor(i * (history.length - 1) / (labelCount - 1));
+                const x = padL + (idx / (history.length - 1)) * chartW;
                 const t = times[idx];
-                const label = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const label = activeRangeHours > 24
+                    ? t.toLocaleDateString([], { month: 'short', day: 'numeric' })
+                    : t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 ctx.fillText(label, x, H - 4);
             }
 
@@ -941,8 +983,6 @@
             }
 
             // Gradient fill
-            const firstPt = toPoint(0);
-            const lastPt = toPoint(values.length - 1);
             const isUp = values[values.length - 1] >= values[0];
             const color = isUp ? '#10b981' : '#ef4444';
             const colorFade = isUp ? 'rgba(16,185,129,' : 'rgba(239,68,68,';
