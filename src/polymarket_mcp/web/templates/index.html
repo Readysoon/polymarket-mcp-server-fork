@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polymarket MCP Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        * { box-sizing: border-box; }
+        body { background: #0a0a0f; color: #e5e7eb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+        .dash-container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; overflow-x: hidden; width: 100%; }
+
+        /* Profile Header */
+        .profile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 2rem;
+            gap: 2rem;
+        }
+        .profile-left { flex: 1; }
+        .profile-identity {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .profile-avatar {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 700; color: white;
+        }
+        .profile-name { font-size: 1.5rem; font-weight: 700; }
+        .profile-address {
+            font-size: 0.8rem; color: #6b7280;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: flex;
+            gap: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-block .stat-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+        .stat-block .stat-val {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        /* PnL Chart Area */
+        .pnl-panel {
+            background: #111118;
+            border: 1px solid #1e1e2e;
+            border-radius: 12px;
+            padding: 1.25rem;
+            min-width: 380px;
+        }
+        .pnl-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .pnl-title { font-size: 0.85rem; color: #9ca3af; }
+        .pnl-value { font-size: 1.8rem; font-weight: 700; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid #1e1e2e;
+            margin-bottom: 1.25rem;
+        }
+        .tab {
+            padding: 0.75rem 1.25rem;
+            font-size: 0.9rem;
+            color: #6b7280;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            background: none; border-top: none; border-left: none; border-right: none;
+        }
+        .tab:hover { color: #e5e7eb; }
+        .tab.active {
+            color: #e5e7eb;
+            border-bottom-color: #a855f7;
+            font-weight: 600;
+        }
+
+        /* Controls Row */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .toggle-group {
+            display: flex;
+            background: #1a1a2e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .toggle-btn {
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem;
+            background: transparent;
+            color: #9ca3af;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .toggle-btn.active {
+            background: #2a2a4a;
+            color: white;
+            font-weight: 600;
+        }
+        .view-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .size-label { font-size: 0.75rem; color: #6b7280; }
+
+        /* Treemap container - absolute positioning for real treemap */
+        .treemap-wrap {
+            position: relative;
+            width: 100%;
+            margin-bottom: 2rem;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+        .treemap-item {
+            position: absolute;
+            border-radius: 6px;
+            padding: 0.6rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            overflow: hidden;
+        }
+        .treemap-item:hover { opacity: 0.85; z-index: 2; }
+        .treemap-item.realized { border-style: dashed !important; opacity: 0.85; }
+        .treemap-item.realized::after {
+            content: 'RESOLVED';
+            position: absolute;
+            top: 6px; right: 6px;
+            background: rgba(0,0,0,0.7);
+            color: #fbbf24;
+            font-size: 0.5rem; font-weight: 700;
+            padding: 2px 5px; border-radius: 3px;
+            letter-spacing: 0.05em;
+        }
+        .status-badge-pos {
+            font-size: 0.5rem; font-weight: 600;
+            padding: 1px 5px; border-radius: 3px;
+            display: inline-block; margin-left: 4px;
+        }
+        .status-badge-pos.live { background: rgba(16,185,129,0.2); color: #34d399; }
+        .status-badge-pos.settled { background: rgba(251,191,36,0.2); color: #fbbf24; }
+        .treemap-title {
+            font-size: 0.75rem; font-weight: 600;
+            line-height: 1.25; margin-bottom: 0.15rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .treemap-item.tm-small .treemap-title {
+            font-size: 0.65rem;
+            -webkit-line-clamp: 1;
+        }
+        .treemap-item.tm-tiny .treemap-title {
+            font-size: 0.6rem;
+            -webkit-line-clamp: 1;
+        }
+        .treemap-item.tm-tiny .treemap-bottom { display: none; }
+        .treemap-item.tm-tiny .treemap-outcome { font-size: 0.55rem; }
+        .treemap-outcome {
+            font-size: 0.65rem; font-weight: 700;
+            text-transform: uppercase;
+        }
+        .treemap-outcome.yes { color: #34d399; }
+        .treemap-outcome.no { color: #f87171; }
+        .treemap-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+        .treemap-price { font-size: 0.65rem; color: #9ca3af; }
+        .treemap-pnl { font-size: 0.85rem; font-weight: 700; }
+        .treemap-item.tm-small .treemap-pnl { font-size: 0.75rem; }
+        .treemap-pnl.positive { color: #34d399; }
+        .treemap-pnl.negative { color: #f87171; }
+
+        /* Trending Section */
+        .market-card {
+            background: #111118;
+            border: 1px solid #1e1e2e;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: border-color 0.2s;
+        }
+        .market-card:hover { border-color: #374151; }
+        .market-card-title { font-size: 0.85rem; font-weight: 500; }
+        .market-card-meta { font-size: 0.75rem; color: #6b7280; }
+
+        /* Loading */
+        .loading-skeleton {
+            background: linear-gradient(90deg, #1a1a2e 25%, #2a2a4a 50%, #1a1a2e 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .empty-state { text-align: center; padding: 3rem; color: #4b5563; }
+
+        /* Trades Panel (scrollable) */
+        .trades-section { margin-top: 2rem; }
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .section-title { font-size: 1rem; font-weight: 700; }
+        .section-subtitle { font-size: 0.75rem; color: #6b7280; }
+        .trades-scroll {
+            background: #111118; border: 1px solid #1e1e2e;
+            border-radius: 12px; max-height: 260px; overflow-y: auto;
+        }
+        .trades-scroll::-webkit-scrollbar { width: 6px; }
+        .trades-scroll::-webkit-scrollbar-track { background: transparent; }
+        .trades-scroll::-webkit-scrollbar-thumb { background: #2a2a4a; border-radius: 3px; }
+        .trade-row {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.6rem 1rem; border-bottom: 1px solid #1a1a2a;
+            font-size: 0.8rem; transition: background 0.15s;
+        }
+        .trade-row:last-child { border-bottom: none; }
+        .trade-row:hover { background: #1a1a2e; }
+        .trade-time { color: #6b7280; font-family: 'SF Mono', monospace; font-size: 0.75rem; min-width: 60px; }
+        .trade-market { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .wl-price { font-size: 0.8rem; font-weight: 600; color: #a855f7; min-width: 45px; text-align: center; }
+        .wl-meta { color: #6b7280; font-size: 0.7rem; white-space: nowrap; }
+        .wl-liq { font-size: 0.7rem; color: #6b7280; min-width: 70px; text-align: right; }
+        .scan-counts { display: flex; gap: 0.75rem; }
+        .scan-count-badge {
+            font-size: 0.7rem; padding: 2px 8px; border-radius: 4px;
+            background: #1a1a2e; color: #9ca3af;
+        }
+        /* Timeline result labels */
+        .tl-label {
+            font-size: 0.65rem; font-weight: 700; padding: 1px 6px;
+            border-radius: 3px; display: inline-block; margin-right: 0.3rem;
+        }
+        .tl-label.executed { background: rgba(16,185,129,0.2); color: #34d399; }
+        .tl-label.pending { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .tl-label.skipped { background: rgba(107,114,128,0.2); color: #9ca3af; }
+        .tl-label.expired { background: rgba(239,68,68,0.15); color: #f87171; }
+        .tl-label.failed { background: rgba(239,68,68,0.25); color: #ef4444; }
+
+        /* Activity Timeline */
+        .timeline-section { margin-top: 2rem; }
+        .timeline {
+            position: relative; padding-left: 1.5rem;
+        }
+        .timeline::before {
+            content: ''; position: absolute; left: 5px; top: 8px; bottom: 8px;
+            width: 2px; background: #1e1e2e;
+        }
+        .timeline-entry {
+            position: relative; padding: 0.5rem 0 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+        .timeline-entry::before {
+            content: ''; position: absolute;
+            left: -1.5rem; top: 0.85rem;
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #2a2a4a; border: 2px solid #1e1e2e;
+        }
+        .timeline-entry.has-trade::before { background: #a855f7; border-color: #7c3aed; }
+        .timeline-entry.no-trade::before { background: #1e1e2e; border-color: #1a1a2a; }
+        .timeline-time {
+            font-family: 'SF Mono', monospace; font-size: 0.7rem;
+            color: #6b7280; margin-bottom: 0.15rem;
+        }
+        .timeline-content { color: #e5e7eb; }
+        .timeline-content.inactive { color: #4b5563; font-style: italic; }
+        .timeline-trade-detail { font-size: 0.7rem; color: #9ca3af; margin-top: 0.1rem; }
+
+        /* Date Selector for closed positions */
+        .date-selector {
+            display: flex; align-items: center; gap: 0.5rem; margin-left: auto;
+        }
+        .date-selector label { font-size: 0.75rem; color: #6b7280; }
+        .date-selector input[type="date"] {
+            background: #1a1a2e; border: 1px solid #2a2a4a; color: #e5e7eb;
+            border-radius: 6px; padding: 0.3rem 0.5rem; font-size: 0.75rem;
+            font-family: inherit;
+        }
+        .date-selector input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.7);
+        }
+
+        .tx-link {
+            font-size: 0.6rem; color: #6366f1;
+            text-decoration: none; font-family: monospace;
+        }
+        .tx-link:hover { text-decoration: underline; }
+
+        /* Wallet + Chart Row */
+        .wallet-chart-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .wallet-panel {
+            background: #111118;
+            border: 1px solid #1e1e2e;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            min-width: 190px;
+            flex-shrink: 0;
+            height: 210px;
+            overflow: hidden;
+        }
+        .wallet-title {
+            font-size: 0.75rem; text-transform: uppercase;
+            letter-spacing: 0.1em; color: #6b7280;
+            margin-bottom: 0.75rem;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .wallet-title .dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; }
+        .wallet-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+        .wallet-token {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.4rem 0.5rem;
+            background: #0a0a14; border-radius: 8px; border: 1px solid #1e1e2e;
+        }
+        .token-icon {
+            width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 700;
+        }
+        .token-icon.usdc { background: #2775ca; color: white; }
+        .token-icon.usdce { background: #2775ca; color: white; border: 2px dashed rgba(255,255,255,0.4); }
+        .token-icon.pol { background: #8247e5; color: white; }
+        .token-name { font-size: 0.7rem; color: #6b7280; }
+        .token-amount { font-size: 0.85rem; font-weight: 600; }
+
+        /* Balance Chart */
+        .chart-panel {
+            background: #111118;
+            border: 1px solid #1e1e2e;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            flex: 1;
+            height: 210px;
+            position: relative;
+        }
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .chart-title {
+            font-size: 0.75rem; text-transform: uppercase;
+            letter-spacing: 0.1em; color: #6b7280;
+        }
+        .chart-total {
+            font-size: 1.1rem; font-weight: 700;
+        }
+        .chart-canvas-wrap {
+            position: relative;
+            width: 100%;
+            height: calc(100% - 40px);
+        }
+        .chart-canvas-wrap canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .chart-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: calc(100% - 40px);
+            color: #4b5563;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 1024px) {
+            .dash-container { padding: 1rem; }
+            .pnl-panel { min-width: 280px; }
+        }
+        @media (max-width: 768px) {
+            .dash-container { padding: 0.5rem; overflow-x: hidden; }
+            .profile-header { flex-direction: column; gap: 1rem; }
+            .pnl-panel { min-width: 0 !important; width: 100% !important; }
+            .stats-row { gap: 1rem; flex-wrap: wrap; }
+            .stats-row > * { min-width: 0; }
+            .wallet-chart-row { flex-direction: column; }
+            .wallet-panel { min-width: 0 !important; width: 100% !important; height: auto !important; }
+            .controls { flex-direction: column; gap: 0.75rem; align-items: flex-start; }
+            .scan-counts { flex-wrap: wrap; }
+            .timeline-section, .trades-section, .watchlist-section { overflow-x: hidden; }
+            .trade-row { flex-wrap: wrap; }
+            .trade-market { max-width: calc(100vw - 2rem); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .section-card { overflow-x: hidden; }
+            /* Treemap */
+            #treemap-container { overflow: hidden; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>Polymarket MCP</h1>
+                <span class="status-badge" id="mcp-status">
+                    {% if mcp_status.connected %}
+                    <span class="status-dot status-online"></span> Connected
+                    {% else %}
+                    <span class="status-dot status-offline"></span> Disconnected
+                    {% endif %}
+                </span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="/" class="active">Dashboard</a></li>
+                <li><a href="/config">Configuration</a></li>
+                <li><a href="/markets">Markets</a></li>
+                <li><a href="/monitoring">Monitoring</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="dash-container">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="profile-left">
+                <div class="profile-identity">
+                    <div class="profile-avatar">P</div>
+                    <div>
+                        <div class="profile-name">My Portfolio</div>
+                        <div class="profile-address">{{ mcp_status.address[:6] }}...{{ mcp_status.address[-4:] if mcp_status.address != "Not configured" else "" }}</div>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-block">
+                        <div class="stat-label">Positions Value</div>
+                        <div class="stat-val" id="stat-value">--</div>
+                    </div>
+                    <div class="stat-block">
+                        <div class="stat-label">Cash Balance</div>
+                        <div class="stat-val" id="stat-cash">--</div>
+                    </div>
+                    <div class="stat-block">
+                        <div class="stat-label">Predictions</div>
+                        <div class="stat-val" id="stat-trades">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pnl-panel">
+                <div class="pnl-header">
+                    <span class="pnl-title">Profit/Loss</span>
+                </div>
+                <div class="pnl-value" id="pnl-display">--</div>
+            </div>
+        </div>
+
+        <!-- Wallet + Chart Row -->
+        <div class="wallet-chart-row">
+            <div class="wallet-panel">
+                <div class="wallet-title"><span class="dot"></span> Wallet</div>
+                <div class="wallet-stack">
+                    <div class="wallet-token">
+                        <div class="token-icon usdc">$</div>
+                        <div>
+                            <div class="token-name">USDC</div>
+                            <div class="token-amount" id="bal-usdc">--</div>
+                        </div>
+                    </div>
+                    <div class="wallet-token">
+                        <div class="token-icon usdce">$</div>
+                        <div>
+                            <div class="token-name">USDC.e</div>
+                            <div class="token-amount" id="bal-usdce">--</div>
+                        </div>
+                    </div>
+                    <div class="wallet-token">
+                        <div class="token-icon pol">P</div>
+                        <div>
+                            <div class="token-name">POL</div>
+                            <div class="token-amount" id="bal-pol">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-panel">
+                <div class="chart-header">
+                    <span class="chart-title">Account Balance</span>
+                    <span class="chart-total" id="chart-total">--</span>
+                </div>
+                <div class="chart-canvas-wrap" id="chart-wrap">
+                    <canvas id="balance-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('positions')">Positions</button>
+            <button class="tab" onclick="showTab('trending')">Trending Markets</button>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls" id="positions-controls">
+            <div class="toggle-group" id="status-toggle">
+                <button class="toggle-btn active" onclick="setFilter('active')">Active</button>
+                <button class="toggle-btn" onclick="setFilter('closed')">Closed</button>
+            </div>
+            <div class="view-controls">
+                <span class="size-label">Size by:</span>
+                <div class="toggle-group" id="size-toggle">
+                    <button class="toggle-btn active" onclick="setSizeBy('pnl')">P&L</button>
+                    <button class="toggle-btn" onclick="setSizeBy('value')">Value</button>
+                </div>
+            </div>
+            <div class="date-selector" id="closed-date-selector" style="display:none;">
+                <label for="closed-date">Date:</label>
+                <input type="date" id="closed-date" onchange="filterClosedByDate()">
+                <button class="toggle-btn" onclick="clearClosedDate()" style="font-size:0.7rem;padding:0.3rem 0.5rem;">All</button>
+            </div>
+        </div>
+
+        <!-- Positions Treemap -->
+        <div id="positions-tab">
+            <div class="treemap-wrap" id="treemap-container">
+                <div class="loading-skeleton" style="height: 300px;"></div>
+            </div>
+        </div>
+
+        <!-- Trending Tab -->
+        <div id="trending-tab" style="display: none;">
+            <div id="trending-markets">
+                <div class="loading-skeleton" style="height: 60px; margin-bottom: 8px;"></div>
+                <div class="loading-skeleton" style="height: 60px; margin-bottom: 8px;"></div>
+                <div class="loading-skeleton" style="height: 60px;"></div>
+            </div>
+        </div>
+
+        <!-- Market Watchlist (scrollable) -->
+        <div class="trades-section">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Market Watchlist</div>
+                    <div class="section-subtitle" id="wl-count">Loading...</div>
+                </div>
+            </div>
+            <div class="trades-scroll" id="wl-list">
+                <div class="loading-skeleton" style="height: 40px; margin: 8px;"></div>
+                <div class="loading-skeleton" style="height: 40px; margin: 8px;"></div>
+                <div class="loading-skeleton" style="height: 40px; margin: 8px;"></div>
+            </div>
+        </div>
+
+        <!-- Activity Timeline -->
+        <div class="timeline-section">
+            <div class="section-header">
+                <div>
+                    <div class="section-title">Activity Timeline</div>
+                    <div class="section-subtitle">Hourly breakdown of trading activity</div>
+                </div>
+            </div>
+            <div class="timeline" id="activity-timeline">
+                <div class="loading-skeleton" style="height: 200px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+    <script>
+        // Global state
+        let allPositions = [];
+        let currentFilter = 'active'; // 'active' or 'closed'
+        let currentSizeBy = 'pnl';    // 'pnl' or 'value'
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPortfolio();
+            loadTrendingMarkets();
+            loadBalanceHistory();
+        });
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('positions-tab').style.display = tab === 'positions' ? '' : 'none';
+            document.getElementById('trending-tab').style.display = tab === 'trending' ? '' : 'none';
+            document.getElementById('positions-controls').style.display = tab === 'positions' ? '' : 'none';
+        }
+
+        function setSizeBy(mode) {
+            currentSizeBy = mode;
+            document.querySelectorAll('#size-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            renderTreemap();
+        }
+
+        // ── Squarified Treemap Algorithm ──
+        function squarify(items, x, y, w, h) {
+            if (items.length === 0) return [];
+            if (items.length === 1) {
+                return [{ ...items[0], x, y, w, h }];
+            }
+
+            const total = items.reduce((s, d) => s + d._area, 0);
+            if (total <= 0) return [];
+
+            const results = [];
+            let row = [];
+            let rowArea = 0;
+            const isWide = w >= h;
+            const side = isWide ? h : w;
+
+            function worstRatio(row, rowArea) {
+                if (row.length === 0) return Infinity;
+                const s2 = (rowArea * side / total) ** 2;
+                if (s2 === 0) return Infinity;
+                let worst = 0;
+                for (const item of row) {
+                    const r = item._area / total * side * side / s2 * (rowArea / item._area);
+                    const r2 = item._area / total * s2 / (rowArea * rowArea) * total * total / (side * side) * item._area;
+                    const ratio = Math.max(
+                        (rowArea / total * side) / (item._area / rowArea * (total / side)),
+                        (item._area / rowArea * (total / side)) / (rowArea / total * side)
+                    );
+                    worst = Math.max(worst, ratio);
+                }
+                return worst;
+            }
+
+            // Simplified squarify: split into two halves recursively
+            // Sort by area descending
+            const sorted = [...items].sort((a, b) => b._area - a._area);
+            let half = 0;
+            let sum = 0;
+            const halfTotal = total / 2;
+            for (let i = 0; i < sorted.length; i++) {
+                sum += sorted[i]._area;
+                if (sum >= halfTotal) {
+                    half = i + 1;
+                    break;
+                }
+            }
+            if (half === 0) half = 1;
+            if (half >= sorted.length) half = sorted.length - 1;
+
+            const first = sorted.slice(0, half);
+            const second = sorted.slice(half);
+            const firstTotal = first.reduce((s, d) => s + d._area, 0);
+            const ratio = firstTotal / total;
+
+            if (isWide) {
+                const splitX = x + w * ratio;
+                results.push(...squarify(first, x, y, w * ratio, h));
+                results.push(...squarify(second, splitX, y, w * (1 - ratio), h));
+            } else {
+                const splitY = y + h * ratio;
+                results.push(...squarify(first, x, y, w, h * ratio));
+                results.push(...squarify(second, x, splitY, w, h * (1 - ratio)));
+            }
+
+            return results;
+        }
+
+        function getItemStyle(pos, maxAbsPnl) {
+            const isRealized = pos.realized || false;
+            const intensity = 0.15 + 0.85 * (Math.abs(pos.pnl) / maxAbsPnl);
+            let bg, border;
+            if (pos.pnl > 0.01) {
+                const r1 = Math.round(6 * intensity), g1 = Math.round(78 * intensity), b1 = Math.round(59 * intensity);
+                const r2 = Math.round(6 * intensity), g2 = Math.round(95 * intensity), b2 = Math.round(70 * intensity);
+                bg = `linear-gradient(135deg, rgb(${r1},${g1},${b1}), rgb(${r2},${g2},${b2}))`;
+                border = `1px ${isRealized ? 'dashed' : 'solid'} rgba(16,185,129,${(0.3 + 0.7 * intensity).toFixed(2)})`;
+            } else if (pos.pnl < -0.01) {
+                const r1 = Math.round(69 * intensity), g1 = Math.round(10 * intensity), b1 = Math.round(10 * intensity);
+                const r2 = Math.round(127 * intensity), g2 = Math.round(29 * intensity), b2 = Math.round(29 * intensity);
+                bg = `linear-gradient(135deg, rgb(${r1},${g1},${b1}), rgb(${r2},${g2},${b2}))`;
+                border = `1px ${isRealized ? 'dashed' : 'solid'} rgba(239,68,68,${(0.3 + 0.7 * intensity).toFixed(2)})`;
+            } else {
+                bg = 'linear-gradient(135deg, #1a1a2e, #2a2a4a)';
+                border = `1px ${isRealized ? 'dashed' : 'solid'} #374151`;
+            }
+            return { bg, border };
+        }
+
+        function renderTreemap() {
+            const container = document.getElementById('treemap-container');
+            let filtered = allPositions.filter(p =>
+                currentFilter === 'active' ? !p.realized : p.realized
+            );
+            // Apply date filter for closed positions
+            if (currentFilter === 'closed' && closedDateFilter) {
+                filtered = filtered.filter(p => p.last_trade_date === closedDateFilter);
+            }
+
+            if (filtered.length === 0) {
+                const msg = currentFilter === 'active'
+                    ? 'No active positions.<br><span style="font-size:0.85rem">Place trades via the MCP server to see them here.</span>'
+                    : 'No closed/resolved positions.';
+                container.innerHTML = `<div class="empty-state">${msg}</div>`;
+                container.style.height = 'auto';
+                return;
+            }
+
+            // Calculate area values based on sizeBy mode
+            const items = filtered.map(p => ({
+                ...p,
+                _area: currentSizeBy === 'pnl'
+                    ? Math.max(Math.abs(p.pnl), 0.01)
+                    : Math.max(p.value, 0.01)
+            }));
+
+            const containerWidth = (container.getBoundingClientRect().width || container.offsetWidth || 800) - 4;
+            // Scale height based on number of positions
+            const baseHeight = Math.min(800, Math.max(300, filtered.length * 25));
+            container.style.height = baseHeight + 'px';
+
+            const GAP = 3;
+            const rects = squarify(items, 0, 0, containerWidth, baseHeight);
+            const maxAbsPnl = Math.max(...filtered.map(p => Math.abs(p.pnl)), 0.01);
+
+            container.innerHTML = rects.map(r => {
+                const pos = r;
+                const { bg, border } = getItemStyle(pos, maxAbsPnl);
+                const isRealized = pos.realized || false;
+                const pnlCls = pos.pnl >= 0 ? 'positive' : 'negative';
+                const pnlStr = pos.pnl >= 0 ? '+$' + pos.pnl.toFixed(2) : '-$' + Math.abs(pos.pnl).toFixed(2);
+                const badge = isRealized
+                    ? '<span class="status-badge-pos settled">RESOLVED</span>'
+                    : '<span class="status-badge-pos live">LIVE</span>';
+
+                // Size class based on area
+                const area = r.w * r.h;
+                const sizeClass = area < 3000 ? 'tm-tiny' : area < 8000 ? 'tm-small' : '';
+
+                const tileUrl = pos.market_url || (pos.tx ? `https://polygonscan.com/tx/${pos.tx}` : '');
+                return `<div class="treemap-item ${isRealized ? 'realized' : ''} ${sizeClass}"
+                    style="left:${r.x + GAP/2}px; top:${r.y + GAP/2}px; width:${r.w - GAP}px; height:${r.h - GAP}px; background:${bg}; border:${border};"
+                    ${tileUrl ? `onclick="window.open('${tileUrl}','_blank')"` : ''}>
+                    <div>
+                        <div class="treemap-title">${pos.market}</div>
+                        <div class="treemap-outcome ${pos.outcome.toLowerCase()}">${pos.outcome}${badge}</div>
+                    </div>
+                    <div class="treemap-bottom">
+                        <div>
+                            <div class="treemap-price">${pos.shares} @ $${pos.current_price.toFixed(2)}</div>
+                            ${pos.tx && area >= 5000 ? `<a class="tx-link" href="https://polygonscan.com/tx/${pos.tx}" target="_blank" onclick="event.stopPropagation()">${pos.tx.substring(0,10)}...</a>` : ''}
+                        </div>
+                        <div class="treemap-pnl ${pnlCls}">${pnlStr}</div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function loadPortfolio() {
+            try {
+                const response = await fetch('/api/portfolio');
+                const data = await response.json();
+
+                // Stats
+                const posValue = (data.positions || []).reduce((s, p) => s + p.value, 0);
+                document.getElementById('stat-value').textContent = '$' + posValue.toFixed(2);
+                const totalCash = (data.usdc_balance || 0) + (data.usdce_balance || 0);
+                document.getElementById('stat-cash').textContent = '$' + totalCash.toFixed(2);
+                document.getElementById('stat-trades').textContent = data.trade_count || 0;
+
+                // Wallet balances
+                document.getElementById('bal-usdc').textContent = (data.usdc_balance || 0).toFixed(4);
+                document.getElementById('bal-usdce').textContent = (data.usdce_balance || 0).toFixed(4);
+                document.getElementById('bal-pol').textContent = (data.pol_balance || 0).toFixed(4);
+
+                // PnL
+                const pnl = data.total_pnl || 0;
+                const pnlEl = document.getElementById('pnl-display');
+                pnlEl.textContent = (pnl >= 0 ? '+$' : '-$') + Math.abs(pnl).toFixed(2);
+                pnlEl.style.color = pnl >= 0 ? '#10b981' : '#ef4444';
+
+                // Store and render
+                allPositions = data.positions || [];
+                renderTreemap();
+
+            } catch (error) {
+                document.getElementById('treemap-container').innerHTML =
+                    `<div class="empty-state">Failed to load: ${error.message}</div>`;
+            }
+        }
+
+        async function loadTrendingMarkets() {
+            const container = document.getElementById('trending-markets');
+            try {
+                const response = await fetch('/api/markets/trending?limit=8');
+                const data = await response.json();
+                if (data.markets && data.markets.length > 0) {
+                    container.innerHTML = data.markets.map(market => `
+                        <div class="market-card">
+                            <div>
+                                <div class="market-card-title">${market.question || 'Unknown Market'}</div>
+                                <div class="market-card-meta">Volume: $${formatNumber(market.volume_24h || 0)} &middot; Liquidity: $${formatNumber(market.liquidity || 0)}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="empty-state">No trending markets</div>';
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="empty-state">Failed to load markets: ${error.message}</div>`;
+            }
+        }
+
+        // ── Balance History Chart ──
+        let balanceHistory = [];
+
+        async function loadBalanceHistory() {
+            try {
+                const res = await fetch('/api/balance-history');
+                const data = await res.json();
+                balanceHistory = data.history || [];
+                drawChart();
+            } catch (e) {
+                console.error('Failed to load balance history:', e);
+            }
+        }
+
+        function drawChart() {
+            const canvas = document.getElementById('balance-chart');
+            const wrap = document.getElementById('chart-wrap');
+            if (!canvas || !wrap) return;
+
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const rect = wrap.getBoundingClientRect();
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            const W = rect.width;
+            const H = rect.height;
+
+            ctx.clearRect(0, 0, W, H);
+
+            if (balanceHistory.length < 2) {
+                ctx.fillStyle = '#4b5563';
+                ctx.font = '13px -apple-system, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Collecting data... chart appears after 2+ snapshots', W / 2, H / 2);
+                return;
+            }
+
+            const values = balanceHistory.map(h => h.total);
+            const times = balanceHistory.map(h => new Date(h.t));
+            const minVal = Math.min(...values) * 0.95;
+            const maxVal = Math.max(...values) * 1.05;
+            const range = maxVal - minVal || 1;
+
+            const padL = 8, padR = 8, padT = 8, padB = 24;
+            const chartW = W - padL - padR;
+            const chartH = H - padT - padB;
+
+            // Draw grid lines
+            ctx.strokeStyle = '#1e1e2e';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = padT + (chartH / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(padL, y);
+                ctx.lineTo(W - padR, y);
+                ctx.stroke();
+            }
+
+            // Y-axis labels
+            ctx.fillStyle = '#4b5563';
+            ctx.font = '10px -apple-system, sans-serif';
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 4; i++) {
+                const val = maxVal - (range / 4) * i;
+                const y = padT + (chartH / 4) * i;
+                ctx.fillText('$' + val.toFixed(2), padL + chartW + padR - 2, y + 3);
+            }
+
+            // X-axis time labels
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#4b5563';
+            const labelCount = Math.min(5, balanceHistory.length);
+            for (let i = 0; i < labelCount; i++) {
+                const idx = Math.floor(i * (balanceHistory.length - 1) / (labelCount - 1));
+                const x = padL + (idx / (balanceHistory.length - 1)) * chartW;
+                const t = times[idx];
+                const label = t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                ctx.fillText(label, x, H - 4);
+            }
+
+            // Plot to points
+            function toPoint(i) {
+                const x = padL + (i / (values.length - 1)) * chartW;
+                const y = padT + chartH - ((values[i] - minVal) / range) * chartH;
+                return { x, y };
+            }
+
+            // Gradient fill
+            const firstPt = toPoint(0);
+            const lastPt = toPoint(values.length - 1);
+            const isUp = values[values.length - 1] >= values[0];
+            const color = isUp ? '#10b981' : '#ef4444';
+            const colorFade = isUp ? 'rgba(16,185,129,' : 'rgba(239,68,68,';
+
+            const grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
+            grad.addColorStop(0, colorFade + '0.3)');
+            grad.addColorStop(1, colorFade + '0.02)');
+
+            // Fill area
+            ctx.beginPath();
+            ctx.moveTo(toPoint(0).x, padT + chartH);
+            for (let i = 0; i < values.length; i++) {
+                const p = toPoint(i);
+                ctx.lineTo(p.x, p.y);
+            }
+            ctx.lineTo(toPoint(values.length - 1).x, padT + chartH);
+            ctx.closePath();
+            ctx.fillStyle = grad;
+            ctx.fill();
+
+            // Draw line
+            ctx.beginPath();
+            for (let i = 0; i < values.length; i++) {
+                const p = toPoint(i);
+                if (i === 0) ctx.moveTo(p.x, p.y);
+                else ctx.lineTo(p.x, p.y);
+            }
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            // Current value dot
+            const last = toPoint(values.length - 1);
+            ctx.beginPath();
+            ctx.arc(last.x, last.y, 4, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = '#0a0a0f';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Update total display
+            const totalEl = document.getElementById('chart-total');
+            const latestTotal = values[values.length - 1];
+            totalEl.textContent = '$' + latestTotal.toFixed(2);
+            totalEl.style.color = isUp ? '#10b981' : '#ef4444';
+        }
+
+        // ── Watchlist & Timeline ──
+        let watchlistMarkets = [];
+        let allScans = [];
+        let pendingMarkets = [];
+
+        function formatNum(n) {
+            if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
+            if (n >= 1000) return '$' + (n/1000).toFixed(0) + 'K';
+            return '$' + n.toFixed(0);
+        }
+
+        async function loadWatchlist() {
+            try {
+                const res = await fetch('/api/watchlist');
+                const data = await res.json();
+                watchlistMarkets = data.markets || [];
+                renderWatchlist();
+                document.getElementById('wl-count').textContent =
+                    `${data.count || 0} pending market${(data.count || 0) !== 1 ? 's' : ''} (${data.total_scanned || 0} total scanned)`;
+            } catch (e) {
+                document.getElementById('wl-list').innerHTML =
+                    '<div class="empty-state" style="padding:1.5rem">Failed to load watchlist</div>';
+            }
+        }
+
+        function renderWatchlist() {
+            const container = document.getElementById('wl-list');
+            if (watchlistMarkets.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding:1.5rem;font-size:0.85rem">No pending markets</div>';
+                return;
+            }
+            container.innerHTML = watchlistMarkets.map(m => {
+                const endTime = m.end_datetime ? new Date(m.end_datetime).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+                return `<div class="trade-row">
+                    <span class="wl-price">${m.yes_price != null ? (m.yes_price * 100).toFixed(0) + '¢' : '--'}</span>
+                    <span class="trade-market" title="${m.question}">${m.question}</span>
+                    <span class="wl-meta">${endTime ? 'closes ' + endTime : ''}</span>
+                    <span class="wl-liq">${m.liquidity ? formatNum(m.liquidity) : '--'}</span>
+                </div>`;
+            }).join('');
+        }
+
+        async function loadScans() {
+            try {
+                const [scanRes, wlRes] = await Promise.all([
+                    fetch('/api/scan-results'),
+                    fetch('/api/watchlist'),
+                ]);
+                const scanData = await scanRes.json();
+                const wlData = await wlRes.json();
+                allScans = scanData.results || [];
+                pendingMarkets = wlData.markets || [];
+                renderTimeline();
+            } catch (e) {
+                document.getElementById('activity-timeline').innerHTML =
+                    '<div class="empty-state" style="padding:1rem">Failed to load activity</div>';
+            }
+        }
+
+        // Map raw result codes to professional labels
+        function resultLabel(raw, action, hoursLeft, endDatetime, reason) {
+            if (raw === 'NOT_READY') {
+                // Check if market has since expired (use end_datetime if available, else hours_left)
+                const nowExpired = endDatetime
+                    ? new Date(endDatetime) < new Date()
+                    : (hoursLeft != null && hoursLeft <= 0);
+                if (nowExpired) {
+                    return { text: 'Expired', cls: 'expired' };
+                }
+                // Pick label based on reason
+                if (reason) {
+                    const r = reason.toLowerCase();
+                    if (r.includes('spread')) return { text: 'Spread Wide', cls: 'skipped' };
+                    if (r.includes('orderbook') || r.includes('no bids') || r.includes('no book')) return { text: 'No Book', cls: 'skipped' };
+                    if (r.includes('liquidity')) return { text: 'Low Liquidity', cls: 'skipped' };
+                }
+                return { text: 'Not Ready', cls: 'skipped' };
+            }
+            const map = {
+                'TRADED': { text: 'Executed', cls: 'executed' },
+                'NO_TRADE': { text: 'Skipped', cls: 'skipped' },
+                'EXPIRED': { text: 'Expired', cls: 'expired' },
+                'TIMEOUT': { text: 'Timed Out', cls: 'expired' },
+                'ERROR': { text: 'Failed', cls: 'failed' },
+            };
+            return map[raw] || { text: raw, cls: 'skipped' };
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('activity-timeline');
+            if (allScans.length === 0 && pendingMarkets.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="padding:1rem;font-size:0.85rem">No activity today</div>';
+                return;
+            }
+
+            let html = '';
+
+            // ── Pending / Watching block ──
+            // Sort: most progress first, but "done" (no future checks) goes to bottom
+            function getCheckProgress(m) {
+                if (!m.end_datetime) return { done: false, pastChecks: 0, nextCheckMs: Infinity };
+                const end = new Date(m.end_datetime).getTime();
+                const firstCheck = end - 4 * 3600000;
+                const now = Date.now();
+                let t = firstCheck, pastChecks = 0, nextCheckMs = Infinity;
+                while (t < end) {
+                    if (t > now) { nextCheckMs = t; break; }
+                    pastChecks++;
+                    t += 15 * 60000;
+                }
+                const done = nextCheckMs === Infinity; // no future checks left
+                return { done, pastChecks, nextCheckMs };
+            }
+            pendingMarkets.sort((a, b) => {
+                const pa = getCheckProgress(a);
+                const pb = getCheckProgress(b);
+                // Done markets go to bottom
+                if (pa.done !== pb.done) return pa.done ? 1 : -1;
+                // Most past checks first
+                const diff = pb.pastChecks - pa.pastChecks;
+                if (diff !== 0) return diff;
+                // Soonest next check first
+                return pa.nextCheckMs - pb.nextCheckMs;
+            });
+
+            if (pendingMarkets.length > 0) {
+                html += `<div class="timeline-entry has-trade" style="border-left:2px solid #fbbf24;padding-left:0.75rem">
+                    <div class="timeline-time" style="color:#fbbf24">Watching</div>`;
+                pendingMarkets.forEach((m, idx) => {
+                    const price = m.yes_price != null ? (m.yes_price * 100).toFixed(0) + '¢' : '--';
+                    const closes = m.end_datetime
+                        ? new Date(m.end_datetime).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})
+                        : '';
+                    const lastCheck = m.last_check
+                        ? new Date(m.last_check).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                        : null;
+                    const checkNum = m.check_count > 0 ? `check #${m.check_count}` : 'first check pending';
+                    const countdownId = `pending-countdown-${idx}`;
+                    const nextCheck = m.next_check ? new Date(m.next_check) : null;
+                    const nextCheckTarget = nextCheck ? nextCheck.getTime() : null;
+                    const nextCheckTime = nextCheck
+                        ? nextCheck.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                        : null;
+
+                    // Estimate total checks: first check at (close - 2h), then every 15min
+                    let scheduleStr = '';
+                    if (m.end_datetime) {
+                        const end = new Date(m.end_datetime).getTime();
+                        const firstCheck = end - 4 * 3600000;
+                        const checkTimes = [];
+                        let t = firstCheck;
+                        while (t < end) {
+                            checkTimes.push(t);
+                            const hoursLeft = (end - t) / 3600000;
+                            t += hoursLeft > 2 ? 30 * 60000 : 15 * 60000;
+                        }
+                        const totalChecks = checkTimes.length;
+                        const now = Date.now();
+
+                        // Find next FUTURE check (skip past ones)
+                        const nextFutureIdx = checkTimes.findIndex(ct => ct > now);
+                        const checksDone = m.check_count || 0;
+
+                        if (nextFutureIdx === -1) {
+                            scheduleStr = `${checksDone}/${totalChecks} done`;
+                        } else {
+                            const nextTime = nextCheck
+                                ? nextCheck.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                                : new Date(checkTimes[nextFutureIdx]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+                            const followIdx = nextFutureIdx + 1;
+                            const followTime = checkTimes[followIdx]
+                                ? new Date(checkTimes[followIdx]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+                                : null;
+                            const nextNum = nextFutureIdx + 1;
+                            scheduleStr = `${nextNum}/${totalChecks} @ ${nextTime}`;
+                            if (followTime) scheduleStr += ` → ${nextNum + 1}/${totalChecks} @ ${followTime}`;
+                        }
+                    }
+
+                    html += `<div class="timeline-content">
+                        <span class="tl-label pending">Pending</span>
+                        ${m.question}
+                    </div>
+                    <div class="timeline-trade-detail">
+                        YES ${price}${closes ? ' · closes ' + closes : ''}
+                        ${scheduleStr ? ` · check ${scheduleStr}` : ''}
+                        ${nextCheckTarget ? ` · <span id="${countdownId}" data-target="${nextCheckTarget}">…</span>` : ''}
+                    </div>`;
+                });
+                html += '</div>';
+            }
+
+            const now = new Date();
+            const currentHour = now.getUTCHours();
+
+            // Convert timestamps to local time and group by local hour
+            const scansByHour = {};
+            allScans.forEach(s => {
+                const local = new Date(s.timestamp);
+                const hour = local.getHours();
+                s._localTime = local.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+                if (!scansByHour[hour]) scansByHour[hour] = [];
+                scansByHour[hour].push(s);
+            });
+
+            const activeHours = Object.keys(scansByHour).map(Number).sort((a, b) => b - a);
+            for (const h of activeHours) {
+                const scans = scansByHour[h];
+                const hourStr = String(h).padStart(2, '0') + ':00';
+
+                html += `<div class="timeline-entry has-trade">
+                    <div class="timeline-time">${hourStr} UTC</div>`;
+
+                scans.forEach(s => {
+                    const lbl = resultLabel(s.result, s.action, s.hours_left, s.end_datetime, s.reason);
+                    html += `<div class="timeline-content">
+                        <span class="tl-label ${lbl.cls}">${lbl.text}</span>
+                        ${s.question}
+                    </div>
+                    <div class="timeline-trade-detail">${s.reason ? s.reason.split('\n')[0].slice(0, 80) : ''}</div>`;
+                });
+
+                html += '</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        // ── Date selector for closed positions ──
+        let closedDateFilter = null;
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('#status-toggle .toggle-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Show/hide date selector
+            const dateSel = document.getElementById('closed-date-selector');
+            dateSel.style.display = filter === 'closed' ? 'flex' : 'none';
+
+            renderTreemap();
+        }
+
+        function filterClosedByDate() {
+            const val = document.getElementById('closed-date').value;
+            closedDateFilter = val || null;
+            renderTreemap();
+        }
+
+        function clearClosedDate() {
+            document.getElementById('closed-date').value = '';
+            closedDateFilter = null;
+            renderTreemap();
+        }
+
+        // Load watchlist + scans on page load
+        document.addEventListener('DOMContentLoaded', () => { loadWatchlist(); loadScans(); startCountdowns(); });
+
+        // Auto-refresh every 30s (re-renders timeline with updated data)
+        setInterval(() => { loadPortfolio(); loadBalanceHistory(); loadWatchlist(); loadScans(); }, 30000);
+
+        // Live countdown tick every second
+        function startCountdowns() {
+            setInterval(() => {
+                document.querySelectorAll('[data-target]').forEach(el => {
+                    const target = parseInt(el.dataset.target);
+                    const diff = target - Date.now();
+                    if (diff <= 0) {
+                        el.textContent = 'checking…';
+                        // Trigger a fresh load shortly after the check fires
+                        setTimeout(() => loadScans(), 5000);
+                    } else {
+                        const m = Math.floor(diff / 60000);
+                        const s = Math.floor((diff % 60000) / 1000);
+                        el.textContent = m > 0 ? `${m}m ${s}s` : `${s}s`;
+                    }
+                });
+            }, 1000);
+        }
+
+        // Re-render on window resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => { renderTreemap(); drawChart(); }, 200);
+        });
+    </script>
+</body>
+</html>
