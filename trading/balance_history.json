@@ -1,0 +1,15 @@
+[
+  {"t": "2026-03-19T23:00:00Z", "total": 30.0, "usdc": 30.0, "usdce": 0, "pol": 0, "positions": 0, "pnl": 0},
+  {"t": "2026-03-20T14:00:00Z", "total": 28.5, "usdc": 4.86, "usdce": 0, "pol": 0, "positions": 23.64, "pnl": -1.5},
+  {"t": "2026-03-20T22:00:00Z", "total": 32.0, "usdc": 4.86, "usdce": 0, "pol": 0, "positions": 27.14, "pnl": 2.0},
+  {"t": "2026-03-21T06:00:00Z", "total": 35.18, "usdc": 4.86, "usdce": 0, "pol": 0, "positions": 30.32, "pnl": 5.18},
+  {"t": "2026-03-21T12:00:00Z", "total": 43.52, "usdc": 4.86, "usdce": 0, "pol": 0, "positions": 38.66, "pnl": 13.52},
+  {"t": "2026-03-21T16:30:00Z", "total": 50.14, "usdc": 4.86, "usdce": 0, "pol": 0, "positions": 45.28, "pnl": 16.48},
+  {"t": "2026-03-21T19:00:00Z", "total": 51.35, "usdc": 12.36, "usdce": 0, "pol": 0, "positions": 38.99, "pnl": 13.99},
+  {"t": "2026-03-21T22:00:00Z", "total": 46.05, "usdc": 12.36, "usdce": 0, "pol": 0, "positions": 33.69, "pnl": 6.5},
+  {"t": "2026-03-22T10:00:00Z", "total": 35.18, "usdc": 4.86, "usdce": 0, "pol": 0, "positions": 30.32, "pnl": 4.25},
+  {"t": "2026-03-22T15:30:00Z", "total": 55.0, "usdc": 4.86, "usdce": 0, "pol": 0, "positions": 50.14, "pnl": 10.0},
+  {"t": "2026-03-22T18:00:00Z", "total": 68.0, "usdc": 4.86, "usdce": 0, "pol": 0, "positions": 63.14, "pnl": 14.0},
+  {"t": "2026-03-22T21:17:02Z", "total": 74.02, "usdc": 4.86, "usdce": 0.68, "pol": 0, "positions": 68.48, "pnl": 16.26},
+  {"t": "2026-03-22T21:32:29Z", "total": 74.12, "usdc": 4.86, "usdce": 0.68, "pol": 0, "positions": 68.58, "pnl": 16.26}
+]
