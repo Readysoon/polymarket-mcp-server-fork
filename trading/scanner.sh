@@ -240,7 +240,8 @@ Run: bash /home/node/.openclaw/workspace/trading/market_watcher.sh '{cond}' '{ye
 
 Only notify Philipp on Telegram if a trade was placed (TRADED) or a technical error occurred. Do NOT notify for NO_TRADE.
 
-If a trade WAS placed: use the cron tool to register an outcome-checker job with these parameters:
+If a trade WAS placed:
+1. Use the cron tool to register an outcome-checker job:
 - name: outcome:{cond20}
 - schedule: at {outcome_check_iso}
 - sessionTarget: isolated
@@ -254,6 +255,11 @@ IMPORTANT: Markets take 2-4h to resolve after end time.
 3. If REDEEM_ZERO -> not resolved yet, schedule retry in 2h silently
 4. If SKIP value $0 -> LOST, notify Philipp
 5. Notification: WON or LOST -- {q_50} | P&L: +/- $X.XX | Portfolio: $XX.XX
+
+2. Also check the cron job list using the cron tool (action=list) and find the NEXT upcoming watcher job after this one. Include it in the trade notification to Philipp:
+
+✅ TRADED: [market] [side] [shares] @ [price]¢ = $[total]
+📅 Next bet: [next market name] @ [HH:MM Innsbruck time]
 
 On technical error: debug, fix, git push, notify Philipp.""",
             "timeoutSeconds": 300
