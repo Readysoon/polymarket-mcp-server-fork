@@ -176,54 +176,33 @@ for c in candidates:
 
 MARKET: {c['question'][:80].replace(chr(39), '')}
 
-STEP 1 — DETECT SPORT TYPE from market title, then use web_search accordingly:
+STEP 1 — RESEARCH using web_search on these specific sources:
 
-⚽ SOCCER — search "{c['question'][:50].replace(chr(39), '')} preview lineup":
-- League table position of both teams
-- Last 5 results (W/D/L)
-- Head-to-head record
-- Key injuries/suspensions
-- Is it a must-win game or rotation expected?
-- Home/away record this season
-- Friendly or competitive match? (rotation risk!)
+Search 1: site:forebet.com "{c['question'][:50].replace(chr(39), '')}"
+→ Get mathematical win probability and prediction
 
-🏀 BASKETBALL (NBA/NCAA) — search "{c['question'][:50].replace(chr(39), '')} injury report back-to-back":
-- Current season standings & win %
-- Last 5 games form
-- Back-to-back schedule? (fatigue = upset risk)
-- NBA injury report (check for star players out)
-- Pace match-up (fast vs slow team)
-- Home/away record
+Search 2: "{c['question'][:50].replace(chr(39), '')} prediction site:sofascore.com OR site:flashscore.com"
+→ Get ratings, form, H2H
 
-🥊 UFC/MMA — search "{c['question'][:50].replace(chr(39), '')} fight prediction record":
-- Fighter records & recent wins/losses
-- Fighting style match-up (wrestler vs striker)
-- Weight class change?
-- Camp/training news
-- Last fight performance
+Search 3: "{c['question'][:50].replace(chr(39), '')} prediction site:reddit.com"
+→ Get community sentiment (r/soccer, r/nba, r/sportsbook etc.)
 
-🎾 TENNIS — search "{c['question'][:50].replace(chr(39), '')} h2h surface":
-- Surface (clay/hard/grass) — who performs better?
-- Head-to-head on this surface
-- Recent tournament results
-- Injury/fatigue from previous rounds
+Search 4: "{c['question'][:50].replace(chr(39), '')} preview espn OR sportsline OR covers.com"
+→ Get expert picks and reasoning
 
-🎮 ESPORTS — search "{c['question'][:50].replace(chr(39), '')} recent results roster":
-- Recent match results
-- Roster changes/stand-ins
-- Tournament stage (group vs playoffs → motivation)
-- Head-to-head
+Search 5: "{c['question'][:50].replace(chr(39), '')} lineup injury news today"
+→ Last-minute team news, missing players
 
-📊 OTHER — search "{c['question'][:50].replace(chr(39), '')} prediction analysis":
-- Any relevant recent data
-- Historical base rate for this type of market
+Collect from all searches:
+- Predicted winner and confidence %
+- Key reasons (form, injuries, home advantage)
+- Any red flags (star player missing, bad form, nothing to play for)
 
 STEP 2 — DECISION:
-Based on the research, decide:
-- Does the Polymarket price ({c.get('amm_mid', c.get('yes_price', '?'))}) reflect the actual strength of the favorite?
-- Is there a clear favorite supported by form/standings/data?
-- Any red flags (injury, fatigue, rotation, bad form)? → SKIP
-- If research is inconclusive or both sides seem equal → SKIP, do not trade
+- If majority of sources agree on a winner AND Polymarket price ({c.get('amm_mid', c.get('yes_price', '?'))}) is on that side → TRADE
+- If sources are split or unclear → SKIP
+- If any red flag found (key injury, rotation expected, derby unpredictability) → SKIP
+- When in doubt → SKIP
 
 STEP 3 — IF TRADING:
 Run: bash /home/node/.openclaw/workspace/trading/market_watcher.sh '{c['condition_id']}' '{yes_token}' '{c['end_datetime']}' '{c['question'][:60].replace(chr(39), '')}'
