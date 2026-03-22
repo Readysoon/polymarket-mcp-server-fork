@@ -586,7 +586,9 @@ if result.get('success') or result.get('order_id'):
         'end_datetime': END_DATETIME,
         'order_id': result.get('order_id'),
         'status': 'open',
-        'pnl': None
+        'pnl': None,
+        'resolved_at': None,
+        'outcome': None
     }
     prod_journal.setdefault('trades', []).append(trade)
     with open(f'{TRADING_DIR}/journal.json', 'w') as f:
