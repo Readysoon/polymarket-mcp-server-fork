@@ -172,54 +172,7 @@ for c in candidates:
         "schedule": {"kind": "at", "at": fire_iso},
         "payload": {
             "kind": "agentTurn",
-            "message": f"""BEFORE running the market watcher script, do the following research steps to find an information edge:
-
-MARKET: {c['question'][:80].replace(chr(39), '')}
-END TIME: {c['end_datetime']}
-POLYMARKET MID PRICE: {c.get('amm_mid', c.get('yes_price', '?'))}
-
-STEP 1 — WEB SEARCH FOR ODDS:
-Use web_search to search: "{c['question'][:60].replace(chr(39), '')} odds prediction"
-Also search: "{c['question'][:60].replace(chr(39), '')} pinnacle betway site:oddschecker.com OR site:pinnacle.com OR site:covers.com"
-Goal: Find what sharp bookmakers (Pinnacle, Betway, Bet365) price this at.
-
-STEP 2 — RECENT NEWS:
-Use web_search to search: "{c['question'][:50].replace(chr(39), '')} news today"
-Look for: injuries, lineup changes, recent form, head-to-head
-
-STEP 3 — EDGE CALCULATION:
-- Convert bookmaker odds to implied probability
-- Compare to Polymarket mid ({c.get('amm_mid', c.get('yes_price', '?'))})
-- If Polymarket price is LOWER than sharp bookmaker → potential value (underpriced)
-- If Polymarket price is HIGHER than sharp bookmaker → overpriced, SKIP
-- Minimum edge required: Polymarket must be at least 3% cheaper than sharp odds
-
-STEP 4 — DECISION:
-- If clear edge found AND news is positive → proceed with trade
-- If no edge OR bad news → DO NOT run the script, log NO_TRADE
-- If undecided → DO NOT trade (when in doubt, skip)
-
-STEP 5 — IF TRADING:
-Run: bash /home/node/.openclaw/workspace/trading/market_watcher.sh '{c['condition_id']}' '{yes_token}' '{c['end_datetime']}' '{c['question'][:60].replace(chr(39), '')}'
-
-Only notify Philipp on Telegram if a trade was placed (TRADED) or a technical error occurred. Do NOT notify for NO_TRADE.
-
-If a trade WAS placed: use the cron tool to register an outcome-checker job:
-- name: 'outcome:{c['condition_id'][:20]}'
-- schedule: at '{(datetime.fromisoformat(c["end_datetime"].replace("Z","+00:00")) + timedelta(hours=3)).strftime("%Y-%m-%dT%H:%M:%SZ")}'
-- sessionTarget: isolated
-- timeoutSeconds: 120
-- delivery: announce to Philipp 866661912 on telegram
-- message: 'Check outcome for market: {c['question'][:60].replace(chr(39), '')} (condition_id: {c['condition_id']}, yes_token: {yes_token}, end: {c['end_datetime']})
-
-IMPORTANT: Markets take 2-4h to resolve after end time.
-1. Run bash /home/node/.openclaw/workspace/trading/redeem.sh
-2. If REDEEMED with amount > 0 → WON, notify Philipp
-3. If REDEEM_ZERO → not resolved yet, schedule retry in 2h silently
-4. If SKIP value $0 → LOST, notify Philipp
-5. Notification: WON or LOST — {c['question'][:50].replace(chr(39), '')} | P&L: +/- $X.XX | Portfolio: $XX.XX'
-
-On technical error: debug, fix, git push, notify Philipp.""",
+            "message": f"Run market watcher:\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{c['condition_id']}' '{yes_token}' '{c['end_datetime']}' '{c['question'][:60].replace(chr(39), '')}'\n\nOnly notify Philipp on Telegram if a trade was placed (TRADED) or a technical error occurred. Do NOT notify for NO_TRADE.\n\nIf a trade WAS placed: use the cron tool to register an outcome-checker job with these parameters:\n- name: 'outcome:{c['condition_id'][:20]}'\n- schedule: at '{(datetime.fromisoformat(c[\"end_datetime\"].replace(\"Z\",\"+00:00\")) + timedelta(hours=3)).strftime(\"%Y-%m-%dT%H:%M:%SZ\")}'\n- sessionTarget: isolated\n- timeoutSeconds: 120\n- delivery: announce to Philipp 866661912 on telegram\n- message: 'Check outcome for market: {c['question'][:60].replace(chr(39), '')} (condition_id: {c['condition_id']}, yes_token: {yes_token}, end: {c['end_datetime']})\\n\\nIMPORTANT: Markets take 2-4h to resolve after end time.\\n1. Run bash /home/node/.openclaw/workspace/trading/redeem.sh\\n2. If REDEEMED with amount > 0 → WON, notify Philipp\\n3. If REDEEM_ZERO → not resolved yet, schedule retry in 2h silently\\n4. If SKIP value $0 → LOST, notify Philipp\\n5. Notification: WON or LOST — {c['question'][:50].replace(chr(39), '')} | P&L: +/- $X.XX | Portfolio: $XX.XX'\n\nOn technical error: debug, fix, git push, notify Philipp.",
             "timeoutSeconds": 120
         },
         "sessionTarget": "isolated",
