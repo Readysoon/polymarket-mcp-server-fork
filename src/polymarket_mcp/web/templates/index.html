@@ -580,10 +580,12 @@
             </div>
         </div>
 
-        <!-- Positions Treemap -->
+        <!-- Positions Grid -->
         <div id="positions-tab">
-            <div class="treemap-wrap" id="treemap-container">
-                <div class="loading-skeleton" style="height: 300px;"></div>
+            <div id="positions-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;padding:8px 0;">
+                <div class="loading-skeleton" style="height:80px;border-radius:8px;"></div>
+                <div class="loading-skeleton" style="height:80px;border-radius:8px;"></div>
+                <div class="loading-skeleton" style="height:80px;border-radius:8px;"></div>
             </div>
         </div>
 
@@ -742,11 +744,10 @@
         }
 
         function renderTreemap() {
-            const container = document.getElementById('treemap-container');
+            const container = document.getElementById('positions-grid');
             let filtered = allPositions.filter(p =>
                 currentFilter === 'active' ? !p.realized : p.realized
             );
-            // Apply date filter for closed positions
             if (currentFilter === 'closed' && closedDateFilter) {
                 filtered = filtered.filter(p => p.last_trade_date === closedDateFilter);
             }
@@ -755,30 +756,16 @@
                 const msg = currentFilter === 'active'
                     ? 'No active positions.<br><span style="font-size:0.85rem">Place trades via the MCP server to see them here.</span>'
                     : 'No closed/resolved positions.';
-                container.innerHTML = `<div class="empty-state">${msg}</div>`;
-                container.style.height = 'auto';
+                container.innerHTML = `<div class="empty-state" style="grid-column:1/-1">${msg}</div>`;
                 return;
             }
 
-            // Calculate area values based on sizeBy mode
-            const items = filtered.map(p => ({
-                ...p,
-                _area: currentSizeBy === 'pnl'
-                    ? Math.max(Math.abs(p.pnl), 0.01)
-                    : Math.max(p.value, 0.01)
-            }));
+            // Sort: won first, then by value desc
+            filtered.sort((a, b) => b.value - a.value);
 
-            const containerWidth = container.offsetWidth || 800;
-            // Scale height based on number of positions
-            const baseHeight = Math.min(800, Math.max(300, filtered.length * 25));
-            container.style.height = baseHeight + 'px';
-
-            const GAP = 3;
-            const rects = squarify(items, 0, 0, containerWidth, baseHeight);
             const maxAbsPnl = Math.max(...filtered.map(p => Math.abs(p.pnl)), 0.01);
 
-            container.innerHTML = rects.map(r => {
-                const pos = r;
+            container.innerHTML = filtered.map(pos => {
                 const { bg, border } = getItemStyle(pos, maxAbsPnl);
                 const isRealized = pos.realized || false;
                 const pnlCls = pos.pnl >= 0 ? 'positive' : 'negative';
@@ -786,25 +773,16 @@
                 const badge = isRealized
                     ? '<span class="status-badge-pos settled">RESOLVED</span>'
                     : '<span class="status-badge-pos live">LIVE</span>';
-
-                // Size class based on area
-                const area = r.w * r.h;
-                const sizeClass = area < 3000 ? 'tm-tiny' : area < 8000 ? 'tm-small' : '';
-
-                const tileUrl = pos.market_url || (pos.tx ? `https://polygonscan.com/tx/${pos.tx}` : '');
-                return `<div class="treemap-item ${isRealized ? 'realized' : ''} ${sizeClass}"
-                    style="left:${r.x + GAP/2}px; top:${r.y + GAP/2}px; width:${r.w - GAP}px; height:${r.h - GAP}px; background:${bg}; border:${border};"
+                const tileUrl = pos.market_url || '';
+                return `<div style="background:${bg};border:${border};border-radius:8px;padding:10px;cursor:${tileUrl?'pointer':'default'};min-height:80px;display:flex;flex-direction:column;justify-content:space-between;"
                     ${tileUrl ? `onclick="window.open('${tileUrl}','_blank')"` : ''}>
                     <div>
-                        <div class="treemap-title">${pos.market}</div>
-                        <div class="treemap-outcome ${pos.outcome.toLowerCase()}">${pos.outcome}${badge}</div>
+                        <div style="font-size:0.78rem;font-weight:600;color:#e5e7eb;line-height:1.2;margin-bottom:4px;">${pos.market}</div>
+                        <div style="font-size:0.65rem;color:#9ca3af;">${pos.outcome} ${badge}</div>
                     </div>
-                    <div class="treemap-bottom">
-                        <div>
-                            <div class="treemap-price">${pos.shares} @ $${pos.current_price.toFixed(2)}</div>
-                            ${pos.tx && area >= 5000 ? `<a class="tx-link" href="https://polygonscan.com/tx/${pos.tx}" target="_blank" onclick="event.stopPropagation()">${pos.tx.substring(0,10)}...</a>` : ''}
-                        </div>
-                        <div class="treemap-pnl ${pnlCls}">${pnlStr}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:6px;">
+                        <div style="font-size:0.65rem;color:#6b7280;">${pos.shares.toFixed(1)} @ $${pos.current_price.toFixed(2)}</div>
+                        <div style="font-size:0.85rem;font-weight:700;" class="${pnlCls}">${pnlStr}</div>
                     </div>
                 </div>`;
             }).join('');
@@ -838,8 +816,8 @@
                 renderTreemap();
 
             } catch (error) {
-                document.getElementById('treemap-container').innerHTML =
-                    `<div class="empty-state">Failed to load: ${error.message}</div>`;
+                document.getElementById('positions-grid').innerHTML =
+                    `<div class="empty-state" style="grid-column:1/-1">Failed to load: ${error.message}</div>`;
             }
         }
 
