@@ -254,13 +254,28 @@ IMPORTANT: Markets take 2-4h to resolve after end time.
    - REDEEM_ZERO -> not resolved yet, schedule retry in 2h silently (no notification)
    - SKIP value $0 -> LOST
 3. Update /home/node/.openclaw/workspace/trading/journal.json:
-   Find the entry with condition_id={cond} and update:
+   Find the entry with condition_id={cond} and update ALL of these fields:
    - status: "won" or "lost"
-   - pnl: +X.XX (won amount - bet size) or -(bet size) for loss
+   - outcome: "won" or "lost"
+   - pnl: redeem_amount - size_usd (positive if won, negative if lost)
+   - pnl_pct: (pnl / size_usd) * 100
+   - redeem_amount: actual USDC received (0 if lost)
    - resolved_at: current ISO timestamp
 4. Also append to /home/node/.openclaw/workspace/trading/log.json:
-   {{"timestamp": "<now>", "question": "{q_50}", "condition_id": "{cond}", "result": "WON" or "LOST", "pnl": X.XX, "action": "Journal updated"}}
-5. Notify Philipp: WON or LOST -- {q_50} | P&L: +/- $X.XX | Portfolio: $XX.XX
+   {{
+     "timestamp": "<now>",
+     "question": "{q_50}",
+     "condition_id": "{cond}",
+     "result": "WON" or "LOST",
+     "size_usd": <original bet>,
+     "redeem_amount": <usdc received>,
+     "pnl": <redeem - bet>,
+     "pnl_pct": <pnl %>",
+     "confidence_pct": <from journal entry>,
+     "research_summary": <from journal entry>,
+     "action": "Outcome recorded"
+   }}
+5. Notify Philipp: WON ✅ or LOST ❌ -- {q_50} | Bet: $X.XX | Return: $X.XX | P&L: +/-$X.XX (+/-X%) | Portfolio: $XX.XX
 
 2. Also check the cron job list using the cron tool (action=list) and find the NEXT upcoming watcher job after this one. Include it in the trade notification to Philipp:
 
