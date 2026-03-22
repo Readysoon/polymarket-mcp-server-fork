@@ -85,6 +85,114 @@ def mcporter(tool, **kwargs):
     except:
         return {'error': r.stdout.strip() + r.stderr.strip()}
 
+# ── Auto-Research via web_fetch ──────────────────────────────────────────────
+python3 << RESEARCH_EOF
+import json, httpx
+from datetime import datetime, timezone
+
+CONDITION_ID = "$CONDITION_ID"
+QUESTION = "$QUESTION"
+TRADING_DIR = "$TRADING_DIR"
+RESEARCH_FILE = f"{TRADING_DIR}/research.json"
+
+# Load existing research
+try:
+    with open(RESEARCH_FILE) as f:
+        research = json.load(f)
+except:
+    research = {}
+
+# Skip if already researched today
+existing = research.get(CONDITION_ID, {})
+if existing.get('decision') and existing.get('researched_at', '')[:10] == datetime.now(timezone.utc).isoformat()[:10]:
+    print(f"Research already done today: {existing.get('decision')} ({existing.get('confidence_pct')}%)")
+    exit(0)
+
+# Detect market type
+q = QUESTION.lower()
+if any(x in q for x in ['nba', 'lakers', 'celtics', 'warriors', 'raptors', 'suns', 'cavaliers', 'pelicans', 'bucks', 'jazz', '76ers', 'nets', 'knicks', 'heat', 'bulls', 'pistons', 'magic', 'spurs', 'rockets', 'kings', 'pacers', 'clippers']):
+    market_type = 'nba'
+    urls = ['https://www.covers.com/picks/nba']
+elif any(x in q for x in ['nhl', 'hurricanes', 'penguins', 'avalanche', 'capitals', 'rangers', 'bruins', 'sabres', 'ducks', 'predators', 'blackhawks', 'jets', 'oilers', 'flames', 'canucks', 'stars', 'wild', 'blues', 'lightning', 'senators', 'leafs']):
+    market_type = 'nhl'
+    urls = ['https://www.covers.com/picks/nhl']
+elif any(x in q for x in ['o/u', 'over', 'under', 'total', 'spread', '-1.5', '-2.5', '-3.5', '-4.5', '-5.5', '-6.5', '-7.5', '-8.5', '-9.5', '-10.5', '-12.5']):
+    market_type = 'ncaab_total'
+    urls = ['https://www.covers.com/picks/ncaab']
+elif any(x in q for x in ['ncaab', 'cbb', 'college', 'wildcats', 'jayhawks', 'volunteers', 'cavaliers', 'red storm', 'billikens', 'cyclones', 'wolverines', 'huskies', 'boilermakers', 'hurricanes', 'tech', 'alabama']):
+    market_type = 'ncaab'
+    urls = ['https://www.covers.com/picks/ncaab']
+elif any(x in q for x in ['bitcoin', 'btc', 'ethereum', 'crypto']):
+    market_type = 'crypto'
+    urls = ['https://coinmarketcap.com/currencies/bitcoin/']
+elif any(x in q for x in ['esport', 'cs:', 'counter-strike', 'nip', 'liquid', 'blg', 'g2', 'navi', 'falcons', 'faze']):
+    market_type = 'esports'
+    urls = ['https://www.hltv.org/matches']
+else:
+    # Soccer / other
+    market_type = 'soccer'
+    urls = ['https://www.covers.com/picks/soccer', 'https://www.bbc.com/sport/football']
+
+print(f"Market type: {market_type}")
+
+# Fetch and find relevant pick
+content = ""
+for url in urls[:2]:
+    try:
+        r = httpx.get(url, timeout=10, follow_redirects=True, headers={'User-Agent': 'Mozilla/5.0'})
+        content += r.text[:8000]
+    except Exception as e:
+        print(f"Fetch failed {url}: {e}")
+
+# Find relevant section for this matchup
+confidence = 50
+sources_summary = "No specific expert pick found"
+red_flags = "none"
+
+# Look for team names in content
+teams = [w for w in QUESTION.split() if len(w) > 3 and w[0].isupper()]
+found_picks = []
+for team in teams[:3]:
+    idx = content.lower().find(team.lower())
+    if idx > 0:
+        snippet = content[max(0,idx-100):idx+300].replace('\n', ' ').strip()
+        found_picks.append(snippet)
+
+if found_picks:
+    confidence = 70
+    sources_summary = f"Found relevant content for {teams[0] if teams else QUESTION[:30]}"
+    # Check for negative signals
+    neg_words = ['injury', 'out', 'questionable', 'doubtful', 'suspend', 'illness', 'miss']
+    pos_words = ['favorite', 'pick', 'cover', 'win', 'strong', 'dominant']
+    text_lower = ' '.join(found_picks).lower()
+    if any(w in text_lower for w in neg_words):
+        red_flags = "Possible injury/suspension mentioned"
+        confidence = 60
+    if any(w in text_lower for w in pos_words):
+        confidence = min(confidence + 5, 85)
+    sources_summary = ' '.join(found_picks[0][:150].split())[:120]
+else:
+    confidence = 45
+    sources_summary = f"No data found for this market on {market_type} sources"
+
+decision = "TRADE" if confidence >= 65 and red_flags == "none" else "SKIP"
+
+research[CONDITION_ID] = {
+    "question": QUESTION,
+    "market_type": market_type,
+    "confidence_pct": confidence,
+    "sources_summary": sources_summary,
+    "red_flags": red_flags,
+    "decision": decision,
+    "researched_at": datetime.now(timezone.utc).isoformat()
+}
+
+with open(RESEARCH_FILE, 'w') as f:
+    json.dump(research, f, indent=2)
+
+print(f"Research complete: {decision} ({confidence}%) — {sources_summary[:60]}")
+RESEARCH_EOF
+
 # ── Research Gate ────────────────────────────────────────────────────────────
 RESEARCH_FILE="$TRADING_DIR/research.json"
 if [ -f "$RESEARCH_FILE" ]; then
