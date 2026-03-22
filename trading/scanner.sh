@@ -186,27 +186,45 @@ for c in candidates:
 
 MARKET: {q_80}
 
-STEP 1 — RESEARCH using web_search on these specific sources:
+STEP 1 — DETECT MARKET TYPE, then use the right sources:
 
+--- IF WIN/MONEYLINE market (e.g. "Will X win", "X vs Y") ---
 Search 1: site:forebet.com "{q_50}"
--> Get mathematical win probability and prediction
+Search 2: "{q_50} prediction" site:sofascore.com OR site:flashscore.com OR site:espn.com
+Search 3: "{q_50} prediction" site:reddit.com
+Search 4: "{q_50} picks preview" site:covers.com OR site:sportsline.com
+Search 5: "{q_50} injury lineup news today"
 
-Search 2: "{q_50} prediction site:sofascore.com OR site:flashscore.com"
--> Get ratings, form, H2H
+--- IF OVER/UNDER market (e.g. "O/U 147.5", "Total points") ---
+Search 1: "{q_50} over under prediction total points"
+Search 2: "{q_50} pace scoring average" site:espn.com OR site:basketball-reference.com OR site:hockey-reference.com
+Search 3: "{q_50} over under pick" site:covers.com OR site:sportsline.com OR site:oddsshopper.com
+Search 4: "{q_50} total bet reddit"
+Search 5: "{q_50} injury report today" (missing scorers push total lower)
 
-Search 3: "{q_50} prediction site:reddit.com"
--> Get community sentiment (r/soccer, r/nba, r/sportsbook etc.)
+--- IF SPREAD market (e.g. "Spread: X -7.5") ---
+Search 1: "{q_50} spread prediction ATS"
+Search 2: "{q_50} against the spread pick" site:covers.com OR site:sportsline.com
+Search 3: "{q_50} ATS record this season"
+Search 4: "{q_50} spread reddit"
+Search 5: "{q_50} injury news today"
 
-Search 4: "{q_50} preview espn OR sportsline OR covers.com"
--> Get expert picks and reasoning
+--- IF ESPORTS market (e.g. "BLG vs G2", "NIP vs Liquid") ---
+Search 1: "{q_50} prediction" site:liquipedia.net
+Search 2: "{q_50} match prediction esports" site:reddit.com
+Search 3: "{q_50} head to head recent results esports"
+Search 4: "{q_50} roster lineup today"
+Search 5: "{q_50} betting odds esports"
 
-Search 5: "{q_50} lineup injury news today"
--> Last-minute team news, missing players
+--- IF CRYPTO market (e.g. "Bitcoin above $X") ---
+Search 1: "bitcoin price prediction today {end_dt_str[:10]}"
+Search 2: "BTC price forecast analyst {end_dt_str[:10]}"
+Search 3: "bitcoin technical analysis support resistance today"
 
 Collect from all searches:
-- Predicted winner and confidence %
-- Key reasons (form, injuries, home advantage)
-- Any red flags (star player missing, bad form, nothing to play for)
+- Predicted winner/outcome and confidence %
+- Key reasons (form, pace, injuries, roster, price level)
+- Any red flags (missing key player/scorer, bad form, high variance event)
 
 STEP 2 — CONFIDENCE SCORE:
 Based on all research, calculate a confidence score (0-100%):
