@@ -85,6 +85,39 @@ def mcporter(tool, **kwargs):
     except:
         return {'error': r.stdout.strip() + r.stderr.strip()}
 
+# ── Research Gate ────────────────────────────────────────────────────────────
+RESEARCH_FILE="$TRADING_DIR/research.json"
+if [ -f "$RESEARCH_FILE" ]; then
+    RESEARCH_DECISION=$(python3 -c "
+import json, sys
+with open('$RESEARCH_FILE') as f:
+    r = json.load(f)
+entry = r.get('$CONDITION_ID', {})
+decision = entry.get('decision', 'SKIP')
+confidence = entry.get('confidence_pct', 0)
+reason = entry.get('sources_summary', 'no research')
+print(f'{decision}|{confidence}|{reason[:80]}')
+" 2>/dev/null)
+    DECISION=$(echo "$RESEARCH_DECISION" | cut -d'|' -f1)
+    CONFIDENCE=$(echo "$RESEARCH_DECISION" | cut -d'|' -f2)
+    REASON=$(echo "$RESEARCH_DECISION" | cut -d'|' -f3)
+
+    if [ "$DECISION" != "TRADE" ] || [ "${CONFIDENCE:-0}" -lt 65 ] 2>/dev/null; then
+        echo "NO_TRADE (research gate): decision=$DECISION confidence=$CONFIDENCE% reason=$REASON"
+        python3 -c "
+import json
+from datetime import datetime, timezone
+with open('$TRADING_DIR/log.json') as f: log = json.load(f)
+log.append({'timestamp': datetime.now(timezone.utc).isoformat(), 'question': '$QUESTION', 'condition_id': '$CONDITION_ID', 'result': 'NO_TRADE', 'reason': 'Research gate: decision=$DECISION confidence=$CONFIDENCE', 'action': 'Skipped'})
+with open('$TRADING_DIR/log.json', 'w') as f: json.dump(log, f, indent=2)
+" 2>/dev/null
+        exit 0
+    fi
+    echo "Research gate passed: $DECISION $CONFIDENCE% — $REASON"
+else
+    echo "WARNING: research.json not found — proceeding without research gate"
+fi
+
 # ── Parse end time ───────────────────────────────────────────────────────────
 try:
     end_dt = datetime.fromisoformat(END_DATETIME.replace('Z', '+00:00'))
