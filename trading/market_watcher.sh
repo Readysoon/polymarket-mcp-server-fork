@@ -177,7 +177,28 @@ if best_bid > best_ask:
 spread = best_ask - best_bid
 mid = (best_bid + best_ask) / 2
 
-MAX_SPREAD = 0.10  # AMM spreads are naturally wider than CLOB
+# Load config early for filter values
+with open(f'{TRADING_DIR}/config.json') as _cf:
+    _early_config = json.load(_cf)
+MAX_SPREAD = float(_early_config.get('max_spread', 0.05))
+MIN_HOURS = float(_early_config.get('min_hours_before_close', 3.0))
+
+# Minimum hours before close check
+if hours_left < MIN_HOURS:
+    entry = {
+        "timestamp": now.isoformat(),
+        "question": QUESTION,
+        "condition_id": CONDITION_ID,
+        "end_datetime": END_DATETIME,
+        "hours_left": round(hours_left, 2),
+        "result": "NO_TRADE",
+        "reason": f"Only {hours_left:.1f}h left, minimum is {MIN_HOURS}h",
+        "action": "Skipped — too close to close"
+    }
+    write_log(entry)
+    print(json.dumps(entry))
+    sys.exit(0)
+
 if spread > MAX_SPREAD:
     if hours_left > 0.5:
         retry_mins = 15
@@ -242,7 +263,7 @@ if spread > MAX_SPREAD:
 with open(f'{TRADING_DIR}/config.json') as f:
     prod_config = json.load(f)
 
-min_p = prod_config.get('min_yes_price', 0.55)
+min_p = prod_config.get('min_yes_price', 0.50)
 max_p = prod_config.get('max_yes_price', 0.80)
 max_s = prod_config.get('max_spread', 0.10)  # AMM: wider spread acceptable
 balance_threshold = prod_config.get('balance_threshold', 50)
