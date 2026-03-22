@@ -592,6 +592,20 @@ if result.get('success') or result.get('order_id'):
     with open(f'{TRADING_DIR}/journal.json', 'w') as f:
         json.dump(prod_journal, f, indent=2)
 
+    # Try to read confidence from research log entry if present
+    research_confidence = None
+    research_summary = None
+    try:
+        with open(LOG_FILE) as _lf:
+            _all_logs = json.load(_lf)
+        for _entry in reversed(_all_logs):
+            if _entry.get('condition_id') == CONDITION_ID and _entry.get('result') == 'RESEARCH':
+                research_confidence = _entry.get('confidence_pct')
+                research_summary = _entry.get('sources_summary')
+                break
+    except:
+        pass
+
     entry = {
         "timestamp": now.isoformat(),
         "question": QUESTION,
@@ -606,6 +620,8 @@ if result.get('success') or result.get('order_id'):
         "bet_size_usd": bet_size,
         "shares": round(bet_size / best_ask, 2),
         "order_id": result.get('order_id'),
+        "confidence_pct": research_confidence,
+        "research_summary": research_summary,
         "result": "TRADED",
         "reason": "All conditions met — order placed",
         "action": f"BUY {round(bet_size/best_ask,2)} shares @ {best_ask:.2f} = ${bet_size:.2f}"

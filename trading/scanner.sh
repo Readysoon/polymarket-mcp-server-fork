@@ -198,11 +198,32 @@ Collect from all searches:
 - Key reasons (form, injuries, home advantage)
 - Any red flags (star player missing, bad form, nothing to play for)
 
-STEP 2 — DECISION:
-- If majority of sources agree on a winner AND Polymarket price ({c.get('amm_mid', c.get('yes_price', '?'))}) is on that side → TRADE
-- If sources are split or unclear → SKIP
-- If any red flag found (key injury, rotation expected, derby unpredictability) → SKIP
+STEP 2 — CONFIDENCE SCORE:
+Based on all research, calculate a confidence score (0-100%):
+- 80-100%: Strong consensus across sources, clear favorite, no red flags
+- 60-79%: Most sources agree, minor concerns
+- 40-59%: Mixed signals, split opinions
+- 0-39%: Unclear, major red flags, skip
+
+STEP 3 — DECISION:
+- confidence >= 65% AND Polymarket price ({c.get('amm_mid', c.get('yes_price', '?'))}) on winning side → TRADE
+- confidence < 65% → SKIP
+- Any red flag (key injury, rotation, derby) → SKIP regardless of confidence
 - When in doubt → SKIP
+
+STEP 4 — LOG THE RESEARCH:
+Before running the script, append a research entry to /home/node/.openclaw/workspace/trading/log.json:
+{{
+  "timestamp": "<now ISO>",
+  "question": "{c['question'][:60].replace(chr(39), '')}",
+  "condition_id": "{c['condition_id']}",
+  "result": "RESEARCH",
+  "confidence_pct": <0-100>,
+  "sources_summary": "<1-2 sentence summary of what sources say>",
+  "red_flags": "<any concerns or 'none'>",
+  "decision": "TRADE" or "SKIP",
+  "reason": "<why>"
+}}
 
 STEP 3 — IF TRADING:
 Run: bash /home/node/.openclaw/workspace/trading/market_watcher.sh '{c['condition_id']}' '{yes_token}' '{c['end_datetime']}' '{c['question'][:60].replace(chr(39), '')}'
