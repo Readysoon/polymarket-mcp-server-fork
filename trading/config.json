@@ -1,0 +1,18 @@
+{
+  "bet_pct_small": 0.50,
+  "bet_pct_normal": 0.20,
+  "balance_threshold": 50,
+  "min_bet_usd": 0.50,
+  "max_bet_usd": 25,
+  "min_yes_price": 0.50,
+  "max_yes_price": 0.80,
+  "min_liquidity_usd": 10000,
+  "max_spread": 0.05,
+  "min_hours_before_close": 0.0,
+  "max_positions_per_sport": 2,
+  "max_open_positions": 6,
+  "min_cash_reserve": 5.0,
+  "stop_drawdown_24h_pct": 0.30,
+  "excluded_categories": [],
+  "notes": "Updated: min price 0.50 (no underdogs), max spread 5%, min 3h before close, max 2 bets per sport, max 6 open positions, $5 cash reserve"
+}
