@@ -37,8 +37,11 @@ Zwei Branches im selben Repo (`Readysoon/polymarket-mcp-server-fork`):
 3. Nach Änderungen → `git commit` + `git push` im richtigen Repo
 
 ## Geplante Features
-- **Confidence-Kalibrierung**: Wenn genug Trade-History vorhanden (>20 Trades mit Confidence), vergleiche Win Rate pro Confidence-Bucket (60-70%, 70-80%, 80%+) → prüfen ob Agent gut kalibriert ist oder über-/untertreibt
-- Daten liegen in `trading/log.json` als `RESEARCH` und `TRADED` Einträge mit `confidence_pct`
+- **Confidence vs. Return Analyse**: Wenn >20 Trades mit Confidence vorhanden, vergleiche:
+  - Vorhergesagte Confidence (z.B. 78%) vs. tatsächlicher Return (z.B. +92% oder -100%)
+  - Pro Confidence-Bucket (60-70%, 70-80%, 80%+): avg. Return, Win Rate, Expected Value
+  - Ziel: ab welcher Confidence ist EV positiv? → Schwelle anpassen
+  - Daten liegen in `trading/log.json` als `RESEARCH` (confidence_pct) und `TRADED` Einträge
 
 ## Präferenzen / Gelerntes
 - Mitternacht Innsbruck = 23:00 UTC (Winter), 22:00 UTC (Sommer)
