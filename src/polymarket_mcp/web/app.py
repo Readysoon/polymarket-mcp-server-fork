@@ -144,7 +144,7 @@ async def dashboard_home(request: Request):
         "tools_available": 45 if (client and client.has_api_credentials()) else 25,
     }
 
-    return templates.TemplateResponse("index.html", {
+    return templates.TemplateResponse("index.html", context={
         "request": request,
         "mcp_status": mcp_status,
         "stats": stats,
@@ -179,7 +179,7 @@ async def config_page(request: Request):
             "has_api_credentials": client.has_api_credentials() if client else False,
         }
 
-    return templates.TemplateResponse("config.html", {
+    return templates.TemplateResponse("config.html", context={
         "request": request,
         "config": current_config,
     })
@@ -190,7 +190,7 @@ async def markets_page(request: Request):
     """Markets discovery and analysis page"""
     stats["requests_total"] += 1
 
-    return templates.TemplateResponse("markets.html", {
+    return templates.TemplateResponse("markets.html", context={
         "request": request,
     })
 
@@ -224,7 +224,7 @@ async def monitoring_page(request: Request):
         "tools_available": 45 if (client and client.has_api_credentials()) else 25,
     }
 
-    return templates.TemplateResponse("monitoring.html", {
+    return templates.TemplateResponse("monitoring.html", context={
         "request": request,
         "stats": stats,
         "rate_status": rate_status,
