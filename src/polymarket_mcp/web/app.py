@@ -278,12 +278,21 @@ async def get_portfolio():
         positions = []
         async with httpx.AsyncClient() as http_client:
             try:
-                r = await http_client.get(
-                    "https://data-api.polymarket.com/positions",
-                    params={"user": address.lower(), "sizeThreshold": "0.01"},
-                    timeout=10.0
-                )
-                raw_positions = r.json() if r.status_code == 200 else []
+                raw_positions = []
+                offset = 0
+                while True:
+                    r = await http_client.get(
+                        "https://data-api.polymarket.com/positions",
+                        params={"user": address.lower(), "sizeThreshold": "0.01", "limit": "50", "offset": str(offset)},
+                        timeout=10.0
+                    )
+                    page = r.json() if r.status_code == 200 else []
+                    if not page:
+                        break
+                    raw_positions.extend(page)
+                    if len(page) < 50:
+                        break
+                    offset += 50
             except Exception:
                 raw_positions = []
 
