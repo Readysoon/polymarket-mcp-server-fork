@@ -18,10 +18,11 @@
 - Dashboard auf Fly.io
 
 ## Trading System
-- **Scanner** (täglich 23:00 UTC = 00:00 Innsbruck): filtert Märkte >$50k Volumen, Spread <10%, YES 40-85¢
-- **Market Watcher**: 4h vor Schluss, AI-Analyse, Confidence <55% = Skip
+- **Scanner** (täglich 11:00 Innsbruck): filtert Märkte >$100k Volumen, Spread <5%, YES 50-80¢
+- **Market Watcher**: 4h vor Schluss, Web Research (Forebet/Sofascore/Reddit/ESPN), Confidence <65% = Skip
 - **Position Sizing**: Bankroll <$50 → 50% | ≥$50 → 20% | Min $0.50 | Max $25
-- **Redeem**: automatisch vor jedem Trade
+- **Redeem**: Auto-Redeemer alle 2h (Cron b883aced)
+- **Auto-Redeemer**: `b883aced` — alle 2h, nur Nachricht wenn echtes USDC reingekommen
 
 ## Aktive Cron Jobs
 - `9dc6664a` — Daily Market Scanner, täglich 11:00 Innsbruck-Zeit (Europe/Vienna Timezone, passt sich Sommerzeit an), Timeout 300s
