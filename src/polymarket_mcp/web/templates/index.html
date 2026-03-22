@@ -135,9 +135,16 @@
         .treemap-wrap {
             position: relative;
             width: 100%;
+            max-width: 100%;
             margin-bottom: 2rem;
             overflow: hidden;
             box-sizing: border-box;
+        }
+        @media (max-width: 768px) {
+            .treemap-wrap {
+                width: calc(100vw - 2rem);
+                max-width: calc(100vw - 2rem);
+            }
         }
         .treemap-item {
             position: absolute;
@@ -745,7 +752,10 @@
                     : Math.max(p.value, 0.01)
             }));
 
-            const containerWidth = (container.getBoundingClientRect().width || container.offsetWidth || 800) - 4;
+            // Force layout recalc before measuring
+            container.style.display = 'block';
+            const rect = container.getBoundingClientRect();
+            const containerWidth = Math.floor(rect.width > 0 ? rect.width : (container.offsetWidth || window.innerWidth - 32)) - 2;
             // Scale height based on number of positions
             const baseHeight = Math.min(800, Math.max(300, filtered.length * 25));
             container.style.height = baseHeight + 'px';
