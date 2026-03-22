@@ -256,7 +256,7 @@ IMPORTANT: Markets take 2-4h to resolve after end time.
 5. Notification: WON or LOST -- {q_50} | P&L: +/- $X.XX | Portfolio: $XX.XX
 
 On technical error: debug, fix, git push, notify Philipp.""",
-            "timeoutSeconds": 120
+            "timeoutSeconds": 300
         },
         "sessionTarget": "isolated",
         "delivery": {"mode": "none"}
