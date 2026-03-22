@@ -177,28 +177,7 @@ if best_bid > best_ask:
 spread = best_ask - best_bid
 mid = (best_bid + best_ask) / 2
 
-# Load config early for filter values
-with open(f'{TRADING_DIR}/config.json') as _cf:
-    _early_config = json.load(_cf)
-MAX_SPREAD = float(_early_config.get('max_spread', 0.05))
-MIN_HOURS = float(_early_config.get('min_hours_before_close', 3.0))
-
-# Minimum hours before close check
-if hours_left < MIN_HOURS:
-    entry = {
-        "timestamp": now.isoformat(),
-        "question": QUESTION,
-        "condition_id": CONDITION_ID,
-        "end_datetime": END_DATETIME,
-        "hours_left": round(hours_left, 2),
-        "result": "NO_TRADE",
-        "reason": f"Only {hours_left:.1f}h left, minimum is {MIN_HOURS}h",
-        "action": "Skipped — too close to close"
-    }
-    write_log(entry)
-    print(json.dumps(entry))
-    sys.exit(0)
-
+MAX_SPREAD = 0.10  # AMM spreads are naturally wider than CLOB
 if spread > MAX_SPREAD:
     if hours_left > 0.5:
         retry_mins = 15
@@ -263,7 +242,7 @@ if spread > MAX_SPREAD:
 with open(f'{TRADING_DIR}/config.json') as f:
     prod_config = json.load(f)
 
-min_p = prod_config.get('min_yes_price', 0.50)
+min_p = prod_config.get('min_yes_price', 0.55)
 max_p = prod_config.get('max_yes_price', 0.80)
 max_s = prod_config.get('max_spread', 0.10)  # AMM: wider spread acceptable
 balance_threshold = prod_config.get('balance_threshold', 50)
@@ -386,40 +365,7 @@ for _token in _tokens:
         except: continue
 print(f"Balance: ${total_balance:.2f} USDC")
 
-# ── Auto-approve USDC.e to NegRisk CTF Exchange if needed ────────────────────
-try:
-    import httpx as _ha
-    from eth_account import Account as _EthAcct
-    _PRIV = os.environ.get('POLYGON_PRIVATE_KEY', '')
-    _ADDR = os.environ.get('POLYGON_ADDRESS', '')
-    _USDC_E = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
-    _NEGRISK = "0xC5d563A36AE78145C45a50134d48A1215220f80a"
-    _RPC2 = 'https://polygon-bor-rpc.publicnode.com'
-    # Check current allowance
-    _al_sel = '0xdd62ed3e' + _ADDR.lower()[2:].zfill(64) + _NEGRISK.lower()[2:].zfill(64)
-    _ar = _ha.post(_RPC2, json={'jsonrpc':'2.0','method':'eth_call','params':[{'to':_USDC_E,'data':_al_sel},'latest'],'id':1}, timeout=5.0)
-    _al_raw = _ar.json().get('result','0x0')
-    _al_val = int(_al_raw, 16) / 1e6 if _al_raw not in ('0x', '0x0', None) else 0.0
-    MIN_ALLOWANCE = 50.0  # Keep at least $50 approved
-    if _al_val < MIN_ALLOWANCE and _PRIV:
-        print(f"AUTO-APPROVE: USDC.e allowance ${_al_val:.4f} < ${MIN_ALLOWANCE} — approving MAX...")
-        _a_sel = bytes.fromhex('095ea7b3')
-        _a_data = _a_sel + bytes.fromhex(_NEGRISK[2:].zfill(64)) + (2**256 - 1).to_bytes(32, 'big')
-        _ng = _ha.post(_RPC2, json={'jsonrpc':'2.0','method':'eth_getTransactionCount','params':[_ADDR,'latest'],'id':2}, timeout=5.0)
-        _nonce = int(_ng.json()['result'], 16)
-        _gp = _ha.post(_RPC2, json={'jsonrpc':'2.0','method':'eth_gasPrice','params':[],'id':3}, timeout=5.0)
-        _gas_price = int(_gp.json()['result'], 16)
-        _atx = {'to': _USDC_E,'from':_ADDR,'nonce':_nonce,'gas':100000,'gasPrice':_gas_price,'data':'0x'+_a_data.hex(),'chainId':137,'value':0}
-        _acct2 = _EthAcct.from_key(_PRIV)
-        _signed2 = _acct2.sign_transaction(_atx)
-        _sr = _ha.post(_RPC2, json={'jsonrpc':'2.0','method':'eth_sendRawTransaction','params':['0x'+_signed2.raw_transaction.hex()],'id':4}, timeout=10.0)
-        _tx_hash = _sr.json().get('result','')
-        print(f"AUTO-APPROVE TX: {_tx_hash}")
-        import time as _t2; _t2.sleep(12)  # wait for approval to mine
-    else:
-        print(f"Allowance OK: USDC.e NegRisk allowance ${_al_val:.2f}")
-except Exception as _ae:
-    print(f"AUTO-APPROVE ERROR (non-fatal): {_ae}")
+
 
 if total_balance < 1.0:
     entry = {
@@ -565,20 +511,6 @@ if projected_shares < MIN_SHARES:
         print(json.dumps(entry))
         sys.exit(0)
 
-# Try to read confidence from research.json (pre-trade research)
-research_confidence = None
-research_summary = None
-try:
-    import json as _json2
-    with open(f'{TRADING_DIR}/research.json') as _rf:
-        _research = _json2.load(_rf)
-    _r_entry = _research.get(CONDITION_ID)
-    if _r_entry:
-        research_confidence = _r_entry.get('confidence_pct')
-        research_summary = _r_entry.get('sources_summary')
-except:
-    pass
-
 # Place market order (AMM)
 result = mcporter('create_market_order',
     market_id=CONDITION_ID,
@@ -592,44 +524,19 @@ if result.get('success') or result.get('order_id'):
         'timestamp': now.isoformat(),
         'question': QUESTION,
         'condition_id': CONDITION_ID,
-        # Entry data
-        'entry_price': best_ask,
+        'price': best_ask,
         'spread_at_entry': round(spread, 4),
-        'mid_at_entry': round(mid, 4),
         'hours_before_close': round(hours_left, 2),
         'size_usd': bet_size,
         'shares': round(bet_size / best_ask, 2),
-        'max_payout': round(bet_size / best_ask, 2),  # shares * $1.00
-        'max_return_pct': round((1.0 - best_ask) / best_ask * 100, 1),  # % gain if won
         'end_datetime': END_DATETIME,
         'order_id': result.get('order_id'),
-        # Research data
-        'confidence_pct': research_confidence,
-        'research_summary': research_summary,
-        # Outcome (filled later)
         'status': 'open',
-        'outcome': None,
-        'pnl': None,
-        'pnl_pct': None,
-        'resolved_at': None,
-        'redeem_amount': None
+        'pnl': None
     }
     prod_journal.setdefault('trades', []).append(trade)
     with open(f'{TRADING_DIR}/journal.json', 'w') as f:
         json.dump(prod_journal, f, indent=2)
-
-    # (legacy log-based confidence fallback — kept for compatibility)
-    if research_confidence is None:
-        try:
-            with open(LOG_FILE) as _lf:
-                _all_logs = _json2.load(_lf)
-            for _entry in reversed(_all_logs):
-                if _entry.get('condition_id') == CONDITION_ID and _entry.get('result') == 'RESEARCH':
-                    research_confidence = _entry.get('confidence_pct')
-                    research_summary = _entry.get('sources_summary')
-                    break
-        except:
-            pass
 
     entry = {
         "timestamp": now.isoformat(),
@@ -645,8 +552,6 @@ if result.get('success') or result.get('order_id'):
         "bet_size_usd": bet_size,
         "shares": round(bet_size / best_ask, 2),
         "order_id": result.get('order_id'),
-        "confidence_pct": research_confidence,
-        "research_summary": research_summary,
         "result": "TRADED",
         "reason": "All conditions met — order placed",
         "action": f"BUY {round(bet_size/best_ask,2)} shares @ {best_ask:.2f} = ${bet_size:.2f}"
