@@ -233,50 +233,5 @@
     "red_flags": "none",
     "decision": "TRADE",
     "researched_at": "2026-03-23T13:01:35.883678+00:00"
-  },
-  "0x2442fd430fecccb337e64263589d16597d1a6098a3848cba9ff3bc382a1b16f9": {
-    "question": "Lakers vs. Pistons",
-    "market_type": "nba",
-    "confidence_pct": 72,
-    "sources_summary": "Covers: Cade Cunningham (Pistons star) sidelined, Lakers high-octane offense. Detroit on minutes restriction for key players. Lakers clear favorite.",
-    "red_flags": "none",
-    "decision": "TRADE",
-    "researched_at": "2026-03-23T14:52:18.194797+00:00"
-  },
-  "0x1745319c9ef1e4c73b9c942fbb615990d05dfd9972b987419add5983dab62dc2": {
-    "question": "Spurs vs. Heat",
-    "market_type": "nba",
-    "confidence_pct": 58,
-    "sources_summary": "Covers: No expert moneyline pick. Heat 2nd worst 3PT% last 5 games. Spurs home at 68.5c but no clear expert consensus.",
-    "red_flags": "no expert moneyline pick found",
-    "decision": "SKIP",
-    "researched_at": "2026-03-23T14:52:18.194797+00:00"
-  },
-  "0x96f0f7a2f19a5f1a65bd07ca31404c885c19cd7fc43fe0b148ff9363b50abaa9": {
-    "question": "Senators vs. Rangers",
-    "market_type": "nhl",
-    "confidence_pct": 68,
-    "sources_summary": "Covers: Rangers 9-17-7 at home (terrible), Senators strong form. Senators favored at 64.5c. Expert: cant pick either straight-up but Senators better value.",
-    "red_flags": "none",
-    "decision": "TRADE",
-    "researched_at": "2026-03-23T14:52:18.194797+00:00"
-  },
-  "0xd9f690b3c207424d78fa8dec4d230a37715c811521cd3b07e36a7d2b38fe75bb": {
-    "question": "Rockets vs. Bulls",
-    "market_type": "nba",
-    "confidence_pct": 72,
-    "sources_summary": "No expert moneyline pick on Covers. Rockets 76.5c favorite \u2014 very high price suggests strong favorite. Houston on solid run.",
-    "red_flags": "none",
-    "decision": "TRADE",
-    "researched_at": "2026-03-23T14:52:18.194797+00:00"
-  },
-  "0xd08e40d297d7e2dce848b962fed6b8d48e70be315f88a937ea0f6ca3515ff86c": {
-    "question": "Warriors vs. Mavericks",
-    "market_type": "nba",
-    "confidence_pct": 55,
-    "sources_summary": "No expert moneyline pick for Warriors vs Mavericks on Covers today. Even matchup at 54.5c.",
-    "red_flags": "no expert consensus",
-    "decision": "SKIP",
-    "researched_at": "2026-03-23T14:52:18.194797+00:00"
   }
 }
