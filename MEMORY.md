@@ -44,9 +44,10 @@ Ein einziges Repo (`Readysoon/polymarket-mcp-server-fork`, Branch `main`):
 - NIEMALS den Prompt so ändern dass das Script das Research übernimmt
 - Das Python httpx Research im Script ist ein Fallback, aber der Agent soll primär forschen
 
-## Ideen für demnächst
-- **Take-Profit / Swing Trading:** YES-Positionen nicht bis zur Resolution halten, sondern bei +20-30% Preisanstieg automatisch verkaufen (SELL Order). Sofortiger USDC-Rückfluss ohne 72h Oracle-Wait. Implementierung: 30-60 Min nach Trade einen Preis-Check-Cron registrieren → wenn Preis ≥ Einkauf + 25% → automatisch verkaufen via `create_market_order side=SELL`.
-- **Confidence-basierte Kapitalallokation:** Scanner macht erst Research für ALLE Kandidaten des Tages → dann verfügbares Kapital nach Confidence einteilen. Beispiel: 80%+ bekommt 30% des Kapitals, 70-79% bekommt 20%, 65-69% bekommt 10%. So geht das meiste Geld in die besten Picks statt gleichmäßig verteilt.
+## Umgesetzte Features (branch: high-speed-trading)
+- **Take-Profit Sell:** sell_winner.sh läuft alle 5 Min, verkauft bei Preis ≥ 0.95 sofort
+- **Confidence-basierte Kapitalallokation:** Scanner allokiert Budget nach Confidence (80%+=30%, 70-79%=20%, 65-69%=10%), 20% Reserve immer geschützt
+- **Outcome-Checker:** 30 Min nach Event-Ende, nur Preis-Check, kein Redeem
 
 ## Präferenzen / Gelerntes
 - Mitternacht Innsbruck = 23:00 UTC (Winter), 22:00 UTC (Sommer)
