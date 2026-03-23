@@ -44,6 +44,9 @@ Zwei Branches im selben Repo (`Readysoon/polymarket-mcp-server-fork`):
 - NIEMALS den Prompt so ändern dass das Script das Research übernimmt
 - Das Python httpx Research im Script ist ein Fallback, aber der Agent soll primär forschen
 
+## Ideen für demnächst
+- **Take-Profit / Swing Trading:** YES-Positionen nicht bis zur Resolution halten, sondern bei +20-30% Preisanstieg automatisch verkaufen (SELL Order). Sofortiger USDC-Rückfluss ohne 72h Oracle-Wait. Implementierung: 30-60 Min nach Trade einen Preis-Check-Cron registrieren → wenn Preis ≥ Einkauf + 25% → automatisch verkaufen via `create_market_order side=SELL`.
+
 ## Präferenzen / Gelerntes
 - Mitternacht Innsbruck = 23:00 UTC (Winter), 22:00 UTC (Sommer)
 - Chat-Logging: Sessions-History auf Abruf (kein Cron-Job)
