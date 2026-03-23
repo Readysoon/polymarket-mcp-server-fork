@@ -18,7 +18,7 @@ export MW_WORKSPACE="$WORKSPACE"
 export MW_SWARM_DIR="$SWARM_DIR"
 export MW_TRADING_DIR="$TRADING_DIR"
 
-python3 << PYEOF
+python3 << 'PYEOF'
 import json, subprocess, sys, os
 from datetime import datetime, timezone, timedelta
 
