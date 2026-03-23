@@ -180,105 +180,70 @@ for c in candidates:
     amm_mid = c.get('amm_mid', c.get('yes_price', '?'))
     outcome_check_iso = (datetime.fromisoformat(end_dt_str.replace('Z', '+00:00')) + timedelta(hours=3)).strftime('%Y-%m-%dT%H:%M:%SZ')
 
+    # Read research for this candidate if available
+    research_file = f"{WORKSPACE}/trading/research.json"
+    research_entry = {}
+    try:
+        with open(research_file) as rf:
+            all_research = json.load(rf)
+            research_entry = all_research.get(cond, {})
+    except:
+        pass
+
+    allocated_usd = research_entry.get('allocated_usd', 3.0)
+    confidence = research_entry.get('confidence_pct', 0)
+    sources_summary = research_entry.get('sources_summary', 'No research available')
+    red_flags = research_entry.get('red_flags', 'unknown')
+
     job = {
         "name": f"watch:{cond20}",
         "schedule": {"kind": "at", "at": fire_iso},
         "payload": {
             "kind": "agentTurn",
-            "message": f"""Du bist ein Trading-Research-Agent. Führe folgende Schritte aus:
+            "message": f"""Du bist ein Watcher-Agent. Der Scanner hat bereits Research für diesen Markt durchgeführt.
 
 MARKT: {q_80}
 CONDITION_ID: {cond}
-POLYMARKET PREIS: {amm_mid}
+YES_TOKEN: {yes_token}
 MARKTSCHLUSS: {end_dt_str}
+AKTUELLER_POLYMARKET_PREIS: {amm_mid}
+RESEARCH_SUMMARY: {sources_summary}
+CONFIDENCE: {confidence}%
+ALLOKIERTES_BUDGET: ${allocated_usd:.2f}
+RED_FLAGS: {red_flags}
 
-SCHRITT 1 — WEB RESEARCH mit web_fetch:
-Erkenne den Markttyp und fetch die passenden Quellen:
-- NCAA/NBA Basketball → web_fetch('https://www.covers.com/picks/ncaab') oder web_fetch('https://www.covers.com/picks/nba')
-- NHL → web_fetch('https://www.covers.com/picks/nhl')
-- Fußball → web_fetch('https://www.bbc.com/sport/football') oder web_fetch('https://www.soccerway.com')
-- Esports (CS, LoL) → web_fetch('https://www.hltv.org/matches') oder web_fetch('https://liquipedia.net/counterstrike/Main_Page')
-- Crypto → web_fetch('https://coinmarketcap.com/currencies/bitcoin/')
+DEINE AUFGABE:
 
-Fetch 1-2 relevante Seiten. Suche nach Expert-Picks, Verletzungen, Form für diesen Markt.
+1. Prüfe den AKTUELLEN Marktpreis:
+   mcporter call polymarket.get_current_price token_id={yes_token} side=BOTH
 
-SCHRITT 2 — CONFIDENCE SCORE (0-100%):
-Basierend auf dem was du gefunden hast:
-- Klarer Expert-Pick für eine Seite + keine Red Flags → 70-85%
-- Teilweise Hinweise, unsicher → 50-65%
-- Keine Daten / widersprüchlich → unter 50%
-Red Flags: Verletzung Stammkraft, Rotation, sehr ausgeglichenes Duell
+2. Entscheide ob der ZEITPUNKT gut ist:
+   - Preis noch in vernünftigem Bereich (0.50-0.80)?
+   - Confidence >= 65% und keine Red Flags?
+   - Falls Markt fast geschlossen (< 30 Min) → SKIP
+   - Falls alles passt → TRADE
 
-SCHRITT 3 — ENTSCHEIDUNG:
-- confidence >= 65% UND kein Red Flag → TRADE
-- confidence < 65% ODER Red Flag → SKIP
+3. Entscheide wie viel du einsetzt:
+   - Max: ${allocated_usd:.2f} (vom Scanner allokiert)
+   - Min: $2.50
+   - Skaliere nach aktuellem Preis und Confidence
 
-SCHRITT 4 — Research in research.json speichern:
-Schreibe mit python3 in /home/node/.openclaw/workspace/trading/research.json:
-{{"{cond}": {{"question": "{q_60}", "confidence_pct": X, "sources_summary": "...", "red_flags": "...", "decision": "TRADE/SKIP", "researched_at": "<ISO>"}}}}
+4. NUR WENN TRADE:
+   bash /home/node/.openclaw/workspace/trading/market_watcher.sh '{cond}' '{yes_token}' '{end_dt_str}' '{q_60}'
 
-SCHRITT 5 — NUR WENN TRADE:
-bash /home/node/.openclaw/workspace/trading/market_watcher.sh '{cond}' '{yes_token}' '{end_dt_str}' '{q_60}'
+5. Falls Trade platziert — Outcome-Checker registrieren:
+   - name: outcome:{cond20}
+   - schedule: at {outcome_check_iso}
+   - sessionTarget: isolated, timeoutSeconds: 120
+   - delivery: announce to 866661912 telegram
+   - message: Prüfe Ergebnis für {q_50} (condition_id: {cond}). Run redeem.sh. WON/REDEEM_ZERO/LOST → journal+log updaten, Philipp benachrichtigen mit P&L.
 
-Nur Philipp benachrichtigen wenn TRADED oder technischer Fehler. Kein NO_TRADE Nachricht.
+6. Trade-Nachricht an Philipp:
+   ✅ TRADED: {q_50} | ${allocated_usd:.2f} @ [preis]¢
+   📅 Next bet: [nächster Watcher aus Cron-Liste] @ [HH:MM Innsbruck]
 
-Falls Trade platziert: Cron-Tool nutzen um Outcome-Checker zu registrieren:
-- name: outcome:{cond20}
-- schedule: at {outcome_check_iso}
-- sessionTarget: isolated, timeoutSeconds: 120, delivery: announce to 866661912 telegram
-- message: Prüfe Ergebnis für {q_50}. Run redeem.sh. WON → journal+log updaten, Philipp benachrichtigen. REDEEM_ZERO → retry in 2h. LOST → journal+log updaten, Philipp benachrichtigen.
-
-Nächste Wette aus Cron-Liste holen und in Trade-Nachricht einbauen: 📅 Next bet: [Markt] @ [HH:MM Innsbruck]
-
-Bei technischem Fehler: debuggen, fixen, git push, Philipp benachrichtigen.""",
-
-Only notify Philipp on Telegram if a trade was placed (TRADED) or a technical error occurred. Do NOT notify for NO_TRADE.
-
-If a trade WAS placed:
-1. Use the cron tool to register an outcome-checker job:
-- name: outcome:{cond20}
-- schedule: at {outcome_check_iso}
-- sessionTarget: isolated
-- timeoutSeconds: 120
-- delivery: announce to Philipp 866661912 on telegram
-- message: Check outcome for market: {q_60} (condition_id: {cond}, yes_token: {yes_token}, end: {end_dt_str})
-
-IMPORTANT: Markets take 2-4h to resolve after end time.
-1. Run bash /home/node/.openclaw/workspace/trading/redeem.sh and capture output
-2. Check result:
-   - REDEEMED with amount > 0 -> WON
-   - REDEEM_ZERO -> not resolved yet, schedule retry in 2h silently (no notification)
-   - SKIP value $0 -> LOST
-3. Update /home/node/.openclaw/workspace/trading/journal.json:
-   Find the entry with condition_id={cond} and update ALL of these fields:
-   - status: "won" or "lost"
-   - outcome: "won" or "lost"
-   - pnl: redeem_amount - size_usd (positive if won, negative if lost)
-   - pnl_pct: (pnl / size_usd) * 100
-   - redeem_amount: actual USDC received (0 if lost)
-   - resolved_at: current ISO timestamp
-4. Also append to /home/node/.openclaw/workspace/trading/log.json:
-   {{
-     "timestamp": "<now>",
-     "question": "{q_50}",
-     "condition_id": "{cond}",
-     "result": "WON" or "LOST",
-     "size_usd": <original bet>,
-     "redeem_amount": <usdc received>,
-     "pnl": <redeem - bet>,
-     "pnl_pct": <pnl %>",
-     "confidence_pct": <from journal entry>,
-     "research_summary": <from journal entry>,
-     "action": "Outcome recorded"
-   }}
-5. Notify Philipp: WON ✅ or LOST ❌ -- {q_50} | Bet: $X.XX | Return: $X.XX | P&L: +/-$X.XX (+/-X%) | Portfolio: $XX.XX
-
-2. Also check the cron job list using the cron tool (action=list) and find the NEXT upcoming watcher job after this one. Include it in the trade notification to Philipp:
-
-✅ TRADED: [market] [side] [shares] @ [price]¢ = $[total]
-📅 Next bet: [next market name] @ [HH:MM Innsbruck time]
-
-On technical error: debug, fix, git push, notify Philipp.""",
+7. Bei SKIP → keine Nachricht an Philipp.
+8. Bei technischem Fehler → debuggen, fixen, git push, Philipp benachrichtigen.""",
             "timeoutSeconds": 300
         },
         "sessionTarget": "isolated",
