@@ -15,7 +15,7 @@ with open(f'{WORKSPACE}/trading/config.json') as f:
 
 min_price = config['min_yes_price']
 max_price = config['max_yes_price']
-min_vol = 100000  # min 24h volume — real activity signal
+min_vol = 50000  # min 24h volume — real activity signal
 
 now = datetime.now(timezone.utc)
 cutoff = datetime.fromtimestamp(now.timestamp() + 28*3600, tz=timezone.utc)
