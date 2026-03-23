@@ -313,8 +313,8 @@ async def get_portfolio():
                 cur_price = float(pos.get("curPrice", avg_price))
                 current_value = float(pos.get("currentValue", size * cur_price))
                 initial_value = float(pos.get("initialValue", size * avg_price))
-                pnl = float(pos.get("cashPnl", current_value - initial_value))
-                pnl_pct = float(pos.get("percentPnl", (pnl / initial_value * 100) if initial_value > 0 else 0))
+                pnl = round(current_value - initial_value, 4)  # calculate directly, don't trust API cashPnl
+                pnl_pct = round((pnl / initial_value * 100) if initial_value > 0 else 0, 1)
 
                 positions.append({
                     "market": pos.get("title", pos.get("conditionId", "")[:20]),
