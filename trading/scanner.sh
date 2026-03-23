@@ -185,44 +185,9 @@ for c in candidates:
         "schedule": {"kind": "at", "at": fire_iso},
         "payload": {
             "kind": "agentTurn",
-            "message": f"""BEFORE running the market watcher script, research the following:
+            "message": f"""Run the market watcher script — it handles research and trade decision internally:
 
-MARKET: {q_80}
-
-STEP 1 — READ RESEARCH FILE (already done by market_watcher.sh):
-The market_watcher.sh script has already performed web research and written results to /home/node/.openclaw/workspace/trading/research.json.
-DO NOT use web_search or web_fetch for research — it is already done.
-Simply read the research.json file to get confidence_pct, decision, sources_summary.
-
-STEP 2 — CONFIDENCE SCORE:
-Based on all research, calculate a confidence score (0-100%):
-- 80-100%: Strong consensus across sources, clear favorite, no red flags
-- 60-79%: Most sources agree, minor concerns
-- 40-59%: Mixed signals, split opinions
-- 0-39%: Unclear, major red flags, skip
-
-STEP 3 — DECISION:
-- confidence >= 65% AND Polymarket price ({amm_mid}) on winning side -> TRADE
-- confidence < 65% -> SKIP
-- Any red flag (key injury, rotation, derby) -> SKIP regardless of confidence
-- When in doubt -> SKIP
-
-STEP 4 — LOG THE RESEARCH:
-Before running the script, append a research entry to /home/node/.openclaw/workspace/trading/log.json:
-{{
-  "timestamp": "<now ISO>",
-  "question": "{q_60}",
-  "condition_id": "{cond}",
-  "result": "RESEARCH",
-  "confidence_pct": 0,
-  "sources_summary": "<1-2 sentence summary of what sources say>",
-  "red_flags": "<any concerns or none>",
-  "decision": "TRADE or SKIP",
-  "reason": "<why>"
-}}
-
-STEP 5 — IF TRADING:
-Run: bash /home/node/.openclaw/workspace/trading/market_watcher.sh '{cond}' '{yes_token}' '{end_dt_str}' '{q_60}'
+bash /home/node/.openclaw/workspace/trading/market_watcher.sh '{cond}' '{yes_token}' '{end_dt_str}' '{q_60}'
 
 Only notify Philipp on Telegram if a trade was placed (TRADED) or a technical error occurred. Do NOT notify for NO_TRADE.
 
