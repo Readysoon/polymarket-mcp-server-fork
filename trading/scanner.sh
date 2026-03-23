@@ -178,7 +178,7 @@ for c in candidates:
     cond20 = c['condition_id'][:20]
     end_dt_str = c['end_datetime']
     amm_mid = c.get('amm_mid', c.get('yes_price', '?'))
-    outcome_check_iso = (datetime.fromisoformat(end_dt_str.replace('Z', '+00:00')) + timedelta(hours=3)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    outcome_check_iso = (datetime.fromisoformat(end_dt_str.replace('Z', '+00:00')) + timedelta(minutes=30)).strftime('%Y-%m-%dT%H:%M:%SZ')
 
     # Read research for this candidate if available
     research_file = f"{WORKSPACE}/trading/research.json"
@@ -236,7 +236,7 @@ DEINE AUFGABE:
    - schedule: at {outcome_check_iso}
    - sessionTarget: isolated, timeoutSeconds: 120
    - delivery: announce to 866661912 telegram
-   - message: Prüfe Ergebnis für {q_50} (condition_id: {cond}). Run redeem.sh. WON/REDEEM_ZERO/LOST → journal+log updaten, Philipp benachrichtigen mit P&L.
+   - message: Prüfe Ergebnis für {q_50} (condition_id: {cond}, yes_token: {yes_token}). KEIN redeem.sh! Stattdessen: mcporter call polymarket.get_current_price token_id={yes_token} side=BOTH. Wenn Preis >= 0.95 → WON (Take-Profit Monitor hat wahrscheinlich schon verkauft). Wenn Preis <= 0.05 → LOST. Sonst → noch offen, retry in 30 Min. Journal+log updaten, Philipp benachrichtigen mit WON/LOST + P&L.
 
 6. Trade-Nachricht an Philipp:
    ✅ TRADED: {q_50} | ${allocated_usd:.2f} @ [preis]¢
