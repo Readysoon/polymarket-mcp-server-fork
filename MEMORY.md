@@ -46,6 +46,7 @@ Zwei Branches im selben Repo (`Readysoon/polymarket-mcp-server-fork`):
 
 ## Ideen für demnächst
 - **Take-Profit / Swing Trading:** YES-Positionen nicht bis zur Resolution halten, sondern bei +20-30% Preisanstieg automatisch verkaufen (SELL Order). Sofortiger USDC-Rückfluss ohne 72h Oracle-Wait. Implementierung: 30-60 Min nach Trade einen Preis-Check-Cron registrieren → wenn Preis ≥ Einkauf + 25% → automatisch verkaufen via `create_market_order side=SELL`.
+- **Confidence-basierte Kapitalallokation:** Scanner macht erst Research für ALLE Kandidaten des Tages → dann verfügbares Kapital nach Confidence einteilen. Beispiel: 80%+ bekommt 30% des Kapitals, 70-79% bekommt 20%, 65-69% bekommt 10%. So geht das meiste Geld in die besten Picks statt gleichmäßig verteilt.
 
 ## Präferenzen / Gelerntes
 - Mitternacht Innsbruck = 23:00 UTC (Winter), 22:00 UTC (Sommer)
