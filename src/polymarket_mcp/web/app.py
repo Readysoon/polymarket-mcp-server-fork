@@ -303,8 +303,11 @@ async def get_portfolio():
 
                 market_url = ""
                 slug = pos.get("slug", "")
+                condition_id_url = pos.get("conditionId", "")
                 if slug:
                     market_url = f"https://polymarket.com/event/{slug}"
+                elif condition_id_url:
+                    market_url = f"https://polymarket.com/markets/{condition_id_url}"
 
                 avg_price = float(pos.get("avgPrice", 0))
                 cur_price = float(pos.get("curPrice", avg_price))
