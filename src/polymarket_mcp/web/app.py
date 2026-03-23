@@ -323,7 +323,7 @@ async def get_portfolio():
                     "value": round(current_value, 2),
                     "pnl": round(pnl, 2),
                     "pnl_pct": round(pnl_pct, 1),
-                    "realized": cur_price >= 0.95 and bool(pos.get("redeemable", False)),
+                    "realized": cur_price <= 0.05 or (cur_price >= 0.95 and bool(pos.get("redeemable", False))),
                     "market_active": True,
                     "tx": "",
                     "market_url": market_url,
