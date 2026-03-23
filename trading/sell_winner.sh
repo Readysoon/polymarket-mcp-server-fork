@@ -95,8 +95,21 @@ for trade in open_trades:
 
     print(f"  {question[:45]} | current={current_price:.3f} | entry={entry_price:.3f}")
 
-    # TAKE PROFIT: price >= 0.95 → sell now
-    if current_price >= 0.95:
+    # TAKE PROFIT — zwei Schwellen:
+    # 1. Preis >= 0.95 → immer sofort verkaufen
+    # 2. Preis >= 0.90 UND Markt schließt in < 2h → verkaufen
+    end_datetime = trade.get('end_datetime', '')
+    hours_to_close = 99.0
+    if end_datetime:
+        try:
+            end_dt = datetime.fromisoformat(end_datetime.replace('Z', '+00:00'))
+            hours_to_close = (end_dt - now).total_seconds() / 3600
+        except:
+            pass
+
+    should_sell = (current_price >= 0.95) or (current_price >= 0.90 and hours_to_close < 2.0)
+
+    if should_sell:
         print(f"  → SELLING (price {current_price:.3f} >= 0.95)")
         result = mcporter('create_market_order',
             market_id=condition_id,
@@ -107,21 +120,23 @@ for trade in open_trades:
             sell_value = shares * bid  # approximate
             pnl = sell_value - size_usd
             pnl_pct = (pnl / size_usd * 100) if size_usd > 0 else 0
+            trigger = "≥0.95" if current_price >= 0.95 else "≥0.90 (<2h)"
             update_journal(condition_id, 'won', pnl, pnl_pct, sell_price=current_price)
             write_log({
                 'timestamp': now.isoformat(),
                 'question': question,
                 'condition_id': condition_id,
-                'result': 'SOLD',
+                'result': 'WON',
                 'sell_price': round(current_price, 4),
                 'entry_price': entry_price,
                 'shares': shares,
                 'pnl': round(pnl, 4),
                 'pnl_pct': round(pnl_pct, 1),
-                'action': f'Take-profit sell @ {current_price:.3f}'
+                'trigger': trigger,
+                'action': f'Take-profit sell @ {current_price:.3f} (trigger: {trigger})'
             })
-            sold.append({'question': question, 'pnl': pnl, 'pnl_pct': pnl_pct, 'sell_price': current_price})
-            print(f"  ✅ SOLD: {question} | P&L: +${pnl:.2f} (+{pnl_pct:.1f}%)")
+            sold.append({'question': question, 'pnl': pnl, 'pnl_pct': pnl_pct, 'sell_price': current_price, 'trigger': trigger})
+            print(f"  ✅ WON (sold): {question} | P&L: +${pnl:.2f} (+{pnl_pct:.1f}%) @ {current_price:.3f}")
         else:
             print(f"  ❌ SELL FAILED: {result}")
 
@@ -147,7 +162,7 @@ for trade in open_trades:
 if sold or lost:
     print("NOTIFY_NEEDED")
     for s in sold:
-        print(f"SOLD|{s['question']}|{s['pnl']:.2f}|{s['pnl_pct']:.1f}|{s['sell_price']:.3f}")
+        print(f"WON|{s['question']}|{s['pnl']:.2f}|{s['pnl_pct']:.1f}|{s['sell_price']:.3f}|{s['trigger']}")
     for l in lost:
         print(f"LOST|{l['question']}|{l['pnl']:.2f}")
 else:

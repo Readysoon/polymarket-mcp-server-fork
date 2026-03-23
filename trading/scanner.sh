@@ -231,12 +231,9 @@ DEINE AUFGABE:
 4. NUR WENN TRADE:
    bash /home/node/.openclaw/workspace/trading/market_watcher.sh '{cond}' '{yes_token}' '{end_dt_str}' '{q_60}'
 
-5. Falls Trade platziert — Outcome-Checker registrieren:
-   - name: outcome:{cond20}
-   - schedule: at {outcome_check_iso}
-   - sessionTarget: isolated, timeoutSeconds: 120
-   - delivery: announce to 866661912 telegram
-   - message: Prüfe Ergebnis für {q_50} (condition_id: {cond}, yes_token: {yes_token}). KEIN redeem.sh! Stattdessen: mcporter call polymarket.get_current_price token_id={yes_token} side=BOTH. Wenn Preis >= 0.95 → WON (Take-Profit Monitor hat wahrscheinlich schon verkauft). Wenn Preis <= 0.05 → LOST. Sonst → noch offen, retry in 30 Min. Journal+log updaten, Philipp benachrichtigen mit WON/LOST + P&L.
+5. Falls Trade platziert — kein separater Outcome-Checker nötig.
+   Der Take-Profit Monitor (alle 5 Min) übernimmt das automatisch.
+   Der Auto-Redeemer (alle 2h) greift als Fallback falls Position nicht verkauft wurde.
 
 6. Trade-Nachricht an Philipp:
    ✅ TRADED: {q_50} | ${allocated_usd:.2f} @ [preis]¢
