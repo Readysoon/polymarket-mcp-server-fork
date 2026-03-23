@@ -28,13 +28,13 @@
 - `7cb15a18` — Outcome Checker, täglich 08:00 UTC (= 09:00 Innsbruck)
 
 ## Git Workflow (PFLICHT)
-Zwei Branches im selben Repo (`Readysoon/polymarket-mcp-server-fork`):
-- **`workspace`** → Agent-Dateien (MEMORY, SOUL, USER, memory/, trading/) — Repo: `/home/node/.openclaw/workspace`
-- **`main`** → MCP Server Code, Trading Scripts — Repo: `/data/openclaw/workspace/repo/`
+Ein einziges Repo (`Readysoon/polymarket-mcp-server-fork`, Branch `main`):
+- **`/home/node/.openclaw/workspace`** → alles: Agent-Dateien, Trading Scripts, Dashboard Code (src/)
+- `/data/openclaw/workspace/repo` existiert NICHT mehr — wurde konsolidiert
 
-1. Session-Start → `git pull` in beiden Repos
+1. Session-Start → `git pull` in `/home/node/.openclaw/workspace`
 2. Vor jeder Änderung → `git pull`
-3. Nach Änderungen → `git commit` + `git push` im richtigen Repo
+3. Nach Änderungen → `git commit` + `git push`
 
 ## Watcher-Agent Design (NICHT ÄNDERN!)
 - Der Watcher-Job ist ein **Claude-Agent** mit web_fetch Tool
