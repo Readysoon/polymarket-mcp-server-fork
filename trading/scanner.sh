@@ -185,9 +185,52 @@ for c in candidates:
         "schedule": {"kind": "at", "at": fire_iso},
         "payload": {
             "kind": "agentTurn",
-            "message": f"""Run the market watcher script — it handles research and trade decision internally:
+            "message": f"""Du bist ein Trading-Research-Agent. Führe folgende Schritte aus:
 
+MARKT: {q_80}
+CONDITION_ID: {cond}
+POLYMARKET PREIS: {amm_mid}
+MARKTSCHLUSS: {end_dt_str}
+
+SCHRITT 1 — WEB RESEARCH mit web_fetch:
+Erkenne den Markttyp und fetch die passenden Quellen:
+- NCAA/NBA Basketball → web_fetch('https://www.covers.com/picks/ncaab') oder web_fetch('https://www.covers.com/picks/nba')
+- NHL → web_fetch('https://www.covers.com/picks/nhl')
+- Fußball → web_fetch('https://www.bbc.com/sport/football') oder web_fetch('https://www.soccerway.com')
+- Esports (CS, LoL) → web_fetch('https://www.hltv.org/matches') oder web_fetch('https://liquipedia.net/counterstrike/Main_Page')
+- Crypto → web_fetch('https://coinmarketcap.com/currencies/bitcoin/')
+
+Fetch 1-2 relevante Seiten. Suche nach Expert-Picks, Verletzungen, Form für diesen Markt.
+
+SCHRITT 2 — CONFIDENCE SCORE (0-100%):
+Basierend auf dem was du gefunden hast:
+- Klarer Expert-Pick für eine Seite + keine Red Flags → 70-85%
+- Teilweise Hinweise, unsicher → 50-65%
+- Keine Daten / widersprüchlich → unter 50%
+Red Flags: Verletzung Stammkraft, Rotation, sehr ausgeglichenes Duell
+
+SCHRITT 3 — ENTSCHEIDUNG:
+- confidence >= 65% UND kein Red Flag → TRADE
+- confidence < 65% ODER Red Flag → SKIP
+
+SCHRITT 4 — Research in research.json speichern:
+Schreibe mit python3 in /home/node/.openclaw/workspace/trading/research.json:
+{{"{cond}": {{"question": "{q_60}", "confidence_pct": X, "sources_summary": "...", "red_flags": "...", "decision": "TRADE/SKIP", "researched_at": "<ISO>"}}}}
+
+SCHRITT 5 — NUR WENN TRADE:
 bash /home/node/.openclaw/workspace/trading/market_watcher.sh '{cond}' '{yes_token}' '{end_dt_str}' '{q_60}'
+
+Nur Philipp benachrichtigen wenn TRADED oder technischer Fehler. Kein NO_TRADE Nachricht.
+
+Falls Trade platziert: Cron-Tool nutzen um Outcome-Checker zu registrieren:
+- name: outcome:{cond20}
+- schedule: at {outcome_check_iso}
+- sessionTarget: isolated, timeoutSeconds: 120, delivery: announce to 866661912 telegram
+- message: Prüfe Ergebnis für {q_50}. Run redeem.sh. WON → journal+log updaten, Philipp benachrichtigen. REDEEM_ZERO → retry in 2h. LOST → journal+log updaten, Philipp benachrichtigen.
+
+Nächste Wette aus Cron-Liste holen und in Trade-Nachricht einbauen: 📅 Next bet: [Markt] @ [HH:MM Innsbruck]
+
+Bei technischem Fehler: debuggen, fixen, git push, Philipp benachrichtigen.""",
 
 Only notify Philipp on Telegram if a trade was placed (TRADED) or a technical error occurred. Do NOT notify for NO_TRADE.
 
