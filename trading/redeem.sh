@@ -154,32 +154,42 @@ if redeemed:
     for r in redeemed:
         print(f"NOTIFY: Redeemed '{r['title']}' — ${r['value']:.2f} USDC.e back in wallet")
 
-# Auto-swap USDC.e → USDC via Uniswap V3
+# Auto-swap USDC (native) → USDC.e via Uniswap V3
+# (py-clob-client needs USDC.e for trading; native USDC can't be used directly)
 UNISWAP_ROUTER = "0xE592427A0AEce92De3Edee1F18E0157C05861564"
 USDC_NATIVE = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
 
 try:
+    usdc_native_abi = [
+        {'name':'balanceOf','type':'function','inputs':[{'name':'a','type':'address'}],'outputs':[{'type':'uint256'}],'stateMutability':'view'},
+        {'name':'approve','type':'function','inputs':[{'name':'spender','type':'address'},{'name':'amount','type':'uint256'}],'outputs':[{'type':'bool'}],'stateMutability':'nonpayable'},
+        {'name':'allowance','type':'function','inputs':[{'name':'owner','type':'address'},{'name':'spender','type':'address'}],'outputs':[{'type':'uint256'}],'stateMutability':'view'},
+    ]
     usdce_abi_full = [
         {'name':'balanceOf','type':'function','inputs':[{'name':'a','type':'address'}],'outputs':[{'type':'uint256'}],'stateMutability':'view'},
-        {'name':'approve','type':'function','inputs':[{'name':'spender','type':'address'},{'name':'amount','type':'uint256'}],'outputs':[{'type':'bool'}],'stateMutability':'nonpayable'}
     ]
-    usdce_c = w3.eth.contract(address=w3.to_checksum_address(USDC_E), abi=usdce_abi_full)
-    usdce_bal = usdce_c.functions.balanceOf(account.address).call()
+    usdc_native_c = w3.eth.contract(address=w3.to_checksum_address(USDC_NATIVE), abi=usdc_native_abi)
+    # Keep $2 USDC native for gas costs; swap the rest to USDC.e
+    usdc_native_bal = usdc_native_c.functions.balanceOf(account.address).call()
+    GAS_RESERVE = 2_000_000  # keep $2 native USDC for gas
+    usdce_bal = max(0, usdc_native_bal - GAS_RESERVE)
 
     if usdce_bal > 0:
-        print(f"Auto-swapping ${usdce_bal/1e6:.2f} USDC.e → USDC...")
+        print(f"Auto-swapping ${usdce_bal/1e6:.2f} USDC → USDC.e...")
 
-        # Approve router
-        nonce = nonce_counter[0]; nonce_counter[0] += 1
+        # Approve router to spend USDC native
         gas_price = int(w3.eth.gas_price * 1.5)
-        approve_tx = usdce_c.functions.approve(
-            w3.to_checksum_address(UNISWAP_ROUTER), usdce_bal
-        ).build_transaction({'from': account.address, 'nonce': nonce, 'gas': 100000, 'gasPrice': gas_price, 'chainId': 137})
-        signed_approve = account.sign_transaction(approve_tx)
-        w3.eth.send_raw_transaction(signed_approve.raw_transaction)
-        time.sleep(8)
+        cur_allowance = usdc_native_c.functions.allowance(account.address, w3.to_checksum_address(UNISWAP_ROUTER)).call()
+        if cur_allowance < usdce_bal:
+            nonce = nonce_counter[0]; nonce_counter[0] += 1
+            approve_tx = usdc_native_c.functions.approve(
+                w3.to_checksum_address(UNISWAP_ROUTER), 2**256 - 1
+            ).build_transaction({'from': account.address, 'nonce': nonce, 'gas': 100000, 'gasPrice': gas_price, 'chainId': 137})
+            signed_approve = account.sign_transaction(approve_tx)
+            w3.eth.send_raw_transaction(signed_approve.raw_transaction)
+            time.sleep(8)
 
-        # Swap USDC.e → USDC via Uniswap V3 exactInputSingle
+        # Swap USDC native → USDC.e via Uniswap V3 exactInputSingle
         ROUTER_ABI = [{'name':'exactInputSingle','type':'function','inputs':[{'name':'params','type':'tuple','components':[
             {'name':'tokenIn','type':'address'},{'name':'tokenOut','type':'address'},
             {'name':'fee','type':'uint24'},{'name':'recipient','type':'address'},
@@ -188,16 +198,16 @@ try:
         ]}],'outputs':[{'type':'uint256'}],'stateMutability':'payable'}]
 
         router = w3.eth.contract(address=w3.to_checksum_address(UNISWAP_ROUTER), abi=ROUTER_ABI)
-        usdc_native_c = w3.eth.contract(address=w3.to_checksum_address(USDC_NATIVE), abi=[{'name':'balanceOf','type':'function','inputs':[{'name':'a','type':'address'}],'outputs':[{'type':'uint256'}],'stateMutability':'view'}])
-        usdc_before = usdc_native_c.functions.balanceOf(account.address).call()
+        usdce_c2 = w3.eth.contract(address=w3.to_checksum_address(USDC_E), abi=[{'name':'balanceOf','type':'function','inputs':[{'name':'a','type':'address'}],'outputs':[{'type':'uint256'}],'stateMutability':'view'}])
+        usdce_before = usdce_c2.functions.balanceOf(account.address).call()
 
         min_out = int(usdce_bal * 0.995)  # 0.5% slippage tolerance
         deadline = int(time.time()) + 300
 
         nonce = nonce_counter[0]; nonce_counter[0] += 1
         swap_tx = router.functions.exactInputSingle((
-            w3.to_checksum_address(USDC_E),
             w3.to_checksum_address(USDC_NATIVE),
+            w3.to_checksum_address(USDC_E),
             100,  # 0.01% fee pool
             account.address,
             deadline,
@@ -210,14 +220,14 @@ try:
         print(f"Swap TX: {swap_hash.hex()[:16]}...")
         time.sleep(15)
         receipt = w3.eth.get_transaction_receipt(swap_hash)
-        usdc_after = usdc_native_c.functions.balanceOf(account.address).call()
-        swapped = (usdc_after - usdc_before) / 1e6
+        usdce_after = usdce_c2.functions.balanceOf(account.address).call()
+        swapped = (usdce_after - usdce_before) / 1e6
         if receipt and receipt.status == 1 and swapped > 0:
-            print(f"SWAP_DONE: ${usdce_bal/1e6:.2f} USDC.e → ${swapped:.2f} USDC ✅")
+            print(f"SWAP_DONE: ${usdce_bal/1e6:.2f} USDC → ${swapped:.2f} USDC.e ✅")
         else:
             print(f"SWAP_FAILED or PENDING: status={receipt.status if receipt else 'pending'}")
     else:
-        print("No USDC.e to swap.")
+        print("No USDC native to swap (or balance at $2 reserve).")
 except Exception as e:
     print(f"SWAP_ERROR (non-fatal): {e}")
 
