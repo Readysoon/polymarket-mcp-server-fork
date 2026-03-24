@@ -85,30 +85,27 @@ flyctl secrets set KEY=VALUE --app polymarket-mcp-dashboard
 - Verwaltet Scanner-Crons, Watcher-Jobs, antwortet auf Fragen
 - Memory in `/home/node/.openclaw/workspace/MEMORY.md`
 
-### Scanner
-- Läuft täglich um **00:00 Innsbrucker Zeit** (23:00 UTC Winter, 22:00 UTC Sommer)
-- Scannt die nächsten **28 Stunden** nach handelbaren Märkten
-- Filtert: Volumen >$50k, Spread <10%, YES-Preis 40-85¢
-- Registriert Watcher-Jobs automatisch in OpenClaw Cron
-- Sendet Zusammenfassung per Telegram (Innsbruck-Zeit)
-- Bei Fehlern: **Auto-Fix** → git push → Telegram-Meldung
+### Polymarket Runner (aktives System)
+Läuft alle **2 Stunden** (Europe/Vienna). Führt folgende Schritte aus:
 
-### Watcher
-- Startet **4 Stunden vor Marktschluss**
-- Retries alle **15 Minuten**
-- Auto-Redeem gewonnener Positionen vor jedem Trade
-- **AI-Analyse** vor jedem Trade — BUY/SELL/SKIP
-- Confidence < 55% → kein Trade
-- Benachrichtigt **nur bei TRADED oder Fehler** (kein Spam für NO_TRADE)
-- Bei Fehlern: sofortiger Auto-Fix → git push → Telegram-Meldung
+1. 💰 **Redeem** — löst gewonnene Positionen automatisch ein
+2. 🔍 **Scanner** — scannt Märkte (Volumen >$50k, Spread <10%, YES 40-85¢)
+3. 📰 **Research** — AI analysiert jeden Kandidaten (covers.com, hltv.org, etc.)
+4. 💵 **Kapital aufteilen** — nach Confidence gewichtet (80%+ → 30%, 70-79% → 20%, 65-69% → 10%)
+5. ⚡ **Sofort kaufen** — wenn EV positiv (confidence ≥ preis + 8%)
+6. 📱 **Pflichtbericht** — sendet nach jedem Run eine Zusammenfassung per Telegram
 
-### Position Sizing
-| Bankroll | Bet-Größe |
-|----------|-----------|
-| < $50 | 50% pro Trade |
-| ≥ $50 | 20% pro Trade |
-| Min | $0.50 |
-| Max | $25.00 |
+**EV-Formel:** `confidence/100 >= current_price + 0.08`
+
+**Position Sizing:**
+| Confidence | Gewicht | Max pro Trade |
+|------------|---------|--------------|
+| 80-100% | 30 | $10.00 |
+| 70-79% | 20 | $10.00 |
+| 65-69% | 10 | $10.00 |
+| Min | — | $2.50 |
+
+**Bankroll:** Wallet USDC.e Balance via Polygon RPC (nicht Polymarket-internes Cash)
 
 ### Web Dashboard
 - Läuft auf Fly.io: `polymarket-mcp-dashboard.fly.dev`
