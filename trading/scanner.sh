@@ -48,6 +48,9 @@ with httpx.Client(timeout=15) as client:
             # Skip social media / tweet count markets
             if any(x in q.lower() for x in ['tweet', 'post ', 'elon musk', 'twitter', 'x.com']):
                 continue
+            # Skip neg-risk markets (can't redeem programmatically)
+            if m.get('negRisk', False):
+                continue
             prices = m.get('outcomePrices', '[0,0]')
             if isinstance(prices, str):
                 prices = json.loads(prices)
