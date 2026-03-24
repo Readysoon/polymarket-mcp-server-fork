@@ -219,17 +219,22 @@ DEINE AUFGABE:
 
 1. Prüfe den AKTUELLEN Marktpreis:
    mcporter call polymarket.get_current_price token_id={yes_token} side=BOTH
+   Verwende den mid-Preis (bid+ask)/2
 
-2. Entscheide ob der ZEITPUNKT gut ist:
-   - Preis noch in vernünftigem Bereich (0.50-0.80)?
-   - Confidence >= 65% und keine Red Flags?
-   - Falls Markt fast geschlossen (< 30 Min) → SKIP
-   - Falls alles passt → TRADE
+2. EV-CHECK — Lohnt sich der Trade noch?
+   Regel: confidence_pct/100 muss >= aktueller_preis + 0.08
+   Beispiel: 72% Confidence @ 0.62¢ → 0.72 >= 0.62 + 0.08 = 0.70 ✅ TRADE
+   Beispiel: 72% Confidence @ 0.68¢ → 0.72 >= 0.68 + 0.08 = 0.76 ❌ SKIP
+   
+   Falls confidence/100 < aktueller_preis + 0.08 → SKIP (Kurs zu hoch für die Confidence)
 
-3. Entscheide wie viel du einsetzt:
+3. Falls Markt fast geschlossen (< 30 Min) → SKIP
+
+4. Entscheide wie viel du einsetzt:
    - Max: ${allocated_usd:.2f} (vom Scanner allokiert)
    - Min: $2.50
-   - Skaliere nach aktuellem Preis und Confidence
+   - Bei gutem EV (confidence/100 - preis > 0.15) → volles Budget
+   - Bei knappem EV (confidence/100 - preis = 0.08-0.15) → halbes Budget
 
 4. NUR WENN TRADE:
    bash /home/node/.openclaw/workspace/trading/market_watcher.sh '{cond}' '{yes_token}' '{end_dt_str}' '{q_60}'
