@@ -1,1 +1,22 @@
 .openclaw/
+
+# Agent persona & personal files
+MEMORY.md
+USER.md
+SOUL.md
+IDENTITY.md
+AGENTS.md
+TOOLS.md
+HEARTBEAT.md
+BOOTSTRAP.md
+memory/
+
+# Trading runtime data (contains trade details, personal data)
+trading/journal.json
+trading/research.json
+trading/balance_history.json
+trading/balance_history.backup.json
+trading/cron_queue.json
+trading/error_queue.json
+trading/log.json
+trading/watchlist.json
