@@ -150,9 +150,75 @@ for p in redeemable:
 
 if redeemed:
     total = sum(r['value'] for r in redeemed)
-    print(f"REDEEM_DONE: {len(redeemed)} positions redeemed, ~${total:.2f} USDC freed")
-    # Notify
+    print(f"REDEEM_DONE: {len(redeemed)} positions redeemed, ~${total:.2f} USDC.e freed")
     for r in redeemed:
-        print(f"NOTIFY: Redeemed '{r['title']}' — ${r['value']:.2f} USDC back in wallet")
+        print(f"NOTIFY: Redeemed '{r['title']}' — ${r['value']:.2f} USDC.e back in wallet")
+
+# Auto-swap USDC.e → USDC via Uniswap V3
+UNISWAP_ROUTER = "0xE592427A0AEce92De3Edee1F18E0157C05861564"
+USDC_NATIVE = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+
+try:
+    usdce_abi_full = [
+        {'name':'balanceOf','type':'function','inputs':[{'name':'a','type':'address'}],'outputs':[{'type':'uint256'}],'stateMutability':'view'},
+        {'name':'approve','type':'function','inputs':[{'name':'spender','type':'address'},{'name':'amount','type':'uint256'}],'outputs':[{'type':'bool'}],'stateMutability':'nonpayable'}
+    ]
+    usdce_c = w3.eth.contract(address=w3.to_checksum_address(USDC_E), abi=usdce_abi_full)
+    usdce_bal = usdce_c.functions.balanceOf(account.address).call()
+
+    if usdce_bal > 0:
+        print(f"Auto-swapping ${usdce_bal/1e6:.2f} USDC.e → USDC...")
+
+        # Approve router
+        nonce = nonce_counter[0]; nonce_counter[0] += 1
+        gas_price = int(w3.eth.gas_price * 1.5)
+        approve_tx = usdce_c.functions.approve(
+            w3.to_checksum_address(UNISWAP_ROUTER), usdce_bal
+        ).build_transaction({'from': account.address, 'nonce': nonce, 'gas': 100000, 'gasPrice': gas_price, 'chainId': 137})
+        signed_approve = account.sign_transaction(approve_tx)
+        w3.eth.send_raw_transaction(signed_approve.raw_transaction)
+        time.sleep(8)
+
+        # Swap USDC.e → USDC via Uniswap V3 exactInputSingle
+        ROUTER_ABI = [{'name':'exactInputSingle','type':'function','inputs':[{'name':'params','type':'tuple','components':[
+            {'name':'tokenIn','type':'address'},{'name':'tokenOut','type':'address'},
+            {'name':'fee','type':'uint24'},{'name':'recipient','type':'address'},
+            {'name':'deadline','type':'uint256'},{'name':'amountIn','type':'uint256'},
+            {'name':'amountOutMinimum','type':'uint256'},{'name':'sqrtPriceLimitX96','type':'uint160'}
+        ]}],'outputs':[{'type':'uint256'}],'stateMutability':'payable'}]
+
+        router = w3.eth.contract(address=w3.to_checksum_address(UNISWAP_ROUTER), abi=ROUTER_ABI)
+        usdc_native_c = w3.eth.contract(address=w3.to_checksum_address(USDC_NATIVE), abi=[{'name':'balanceOf','type':'function','inputs':[{'name':'a','type':'address'}],'outputs':[{'type':'uint256'}],'stateMutability':'view'}])
+        usdc_before = usdc_native_c.functions.balanceOf(account.address).call()
+
+        min_out = int(usdce_bal * 0.995)  # 0.5% slippage tolerance
+        deadline = int(time.time()) + 300
+
+        nonce = nonce_counter[0]; nonce_counter[0] += 1
+        swap_tx = router.functions.exactInputSingle((
+            w3.to_checksum_address(USDC_E),
+            w3.to_checksum_address(USDC_NATIVE),
+            100,  # 0.01% fee pool
+            account.address,
+            deadline,
+            usdce_bal,
+            min_out,
+            0
+        )).build_transaction({'from': account.address, 'nonce': nonce, 'gas': 300000, 'gasPrice': gas_price, 'chainId': 137, 'value': 0})
+        signed_swap = account.sign_transaction(swap_tx)
+        swap_hash = w3.eth.send_raw_transaction(signed_swap.raw_transaction)
+        print(f"Swap TX: {swap_hash.hex()[:16]}...")
+        time.sleep(15)
+        receipt = w3.eth.get_transaction_receipt(swap_hash)
+        usdc_after = usdc_native_c.functions.balanceOf(account.address).call()
+        swapped = (usdc_after - usdc_before) / 1e6
+        if receipt and receipt.status == 1 and swapped > 0:
+            print(f"SWAP_DONE: ${usdce_bal/1e6:.2f} USDC.e → ${swapped:.2f} USDC ✅")
+        else:
+            print(f"SWAP_FAILED or PENDING: status={receipt.status if receipt else 'pending'}")
+    else:
+        print("No USDC.e to swap.")
+except Exception as e:
+    print(f"SWAP_ERROR (non-fatal): {e}")
 
 PYEOF
