@@ -333,8 +333,8 @@ async def get_portfolio():
                     "last_trade_date": "",
                 })
 
-        total_value = usdc_balance + sum(p["value"] for p in positions)  # exclude USDC.e (not tradable)
-        total_value_display = usdc_balance + usdce_balance + sum(p["value"] for p in positions)  # for wallet display
+        total_value = usdc_balance + usdce_balance + sum(p["value"] for p in positions)  # include USDC.e (primary trading token)
+        total_value_display = total_value  # same
 
         # Save balance snapshot for history chart
         _save_balance_snapshot(
