@@ -51,6 +51,19 @@ with httpx.Client(timeout=15) as client:
             # Skip neg-risk markets (can't redeem programmatically)
             if m.get('negRisk', False):
                 continue
+            # Skip markets already actively traded (status=open)
+            cid = m.get('conditionId', m.get('condition_id', ''))
+            try:
+                with open(f'{WORKSPACE}/trading/journal.json') as jf:
+                    journal = json.load(jf)
+                already_open = any(
+                    t.get('condition_id') == cid and t.get('status') == 'open'
+                    for t in journal.get('trades', [])
+                )
+                if already_open:
+                    continue
+            except:
+                pass
             prices = m.get('outcomePrices', '[0,0]')
             if isinstance(prices, str):
                 prices = json.loads(prices)
