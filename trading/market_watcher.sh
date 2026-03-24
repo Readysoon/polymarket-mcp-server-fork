@@ -1,10 +1,11 @@
 #!/bin/bash
 # Market Watcher — single market, single run
-# Args: <condition_id> <yes_token_id> <end_datetime> <question>
+# Args: <condition_id> <yes_token_id> <end_datetime> <question> [allocated_usd]
 CONDITION_ID="${1}"
 YES_TOKEN="${2}"
 END_DATETIME="${3}"
 QUESTION="${4}"
+ALLOCATED_USD="${5:-}"
 
 WORKSPACE="/home/node/.openclaw/workspace"
 SWARM_DIR="$WORKSPACE/swarm"
@@ -17,6 +18,7 @@ export MW_QUESTION="$QUESTION"
 export MW_WORKSPACE="$WORKSPACE"
 export MW_SWARM_DIR="$SWARM_DIR"
 export MW_TRADING_DIR="$TRADING_DIR"
+export MW_ALLOCATED_USD="$ALLOCATED_USD"
 
 python3 << 'PYEOF'
 import json, subprocess, sys, os
@@ -28,6 +30,7 @@ END_DATETIME = os.environ['MW_END_DATETIME']
 QUESTION = os.environ['MW_QUESTION']
 WORKSPACE = os.environ['MW_WORKSPACE']
 SWARM_DIR = os.environ['MW_SWARM_DIR']
+ALLOCATED_USD = float(os.environ.get('MW_ALLOCATED_USD', '0') or '0')  # 0 = use internal sizing
 TRADING_DIR = os.environ['MW_TRADING_DIR']
 LOG_FILE = f"{TRADING_DIR}/log.json"
 
@@ -507,12 +510,17 @@ else:
     trade_side = 'BUY'
     confidence = 0  # will use base bet size
 
-# Dynamic bet sizing: scale within configured range based on confidence
-bet_base = float(prod_config.get('bet_base', 2.00))
-bet_range = float(prod_config.get('bet_range', 1.00))
-# confidence 0.55=min, 1.0=max → linear scale within range
-conf_norm = max(0.0, min(1.0, (confidence - 0.55) / 0.45)) if confidence >= 0.55 else 0.5
-bet_size = round(max(1.0, bet_base - bet_range + conf_norm * 2 * bet_range), 2)
+# Bet sizing: use allocated_usd from Runner if provided, otherwise fall back to dynamic sizing
+if ALLOCATED_USD >= 2.50:
+    bet_size = round(min(ALLOCATED_USD, float(prod_config.get('max_bet_usd', 10.0))), 2)
+    print(f"Bet size from Runner allocation: ${bet_size:.2f}")
+else:
+    # Fallback: dynamic sizing based on confidence
+    bet_base = float(prod_config.get('bet_base', 2.00))
+    bet_range = float(prod_config.get('bet_range', 1.00))
+    conf_norm = max(0.0, min(1.0, (confidence - 0.55) / 0.45)) if confidence >= 0.55 else 0.5
+    bet_size = round(max(1.0, bet_base - bet_range + conf_norm * 2 * bet_range), 2)
+    print(f"Bet size (dynamic fallback): ${bet_size:.2f}")
 print(f"Analysis: trade={should_trade} side={trade_side} confidence={confidence:.0%} bet=${bet_size:.2f} reason={analysis_reason[:60]}")
 
 if not should_trade:
