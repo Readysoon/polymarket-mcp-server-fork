@@ -595,6 +595,56 @@ result = mcporter('create_market_order',
 )
 
 if result.get('success') or result.get('order_id'):
+    # ── ON-CHAIN CONFIRMATION CHECK ──────────────────────────────────────────
+    # Poll Polymarket activity API until trade appears on-chain (max 3 min)
+    _onchain_confirmed = False
+    _onchain_tx = None
+    _onchain_size = None
+    print(f"Waiting for on-chain confirmation (condition: {CONDITION_ID[:20]}...)...")
+    for _attempt in range(18):  # 18 x 10s = 3 minutes
+        import time as _time
+        _time.sleep(10)
+        try:
+            _act_r = _httpx.get(
+                f"https://data-api.polymarket.com/activity?user={_ADDR}&limit=20",
+                timeout=10
+            )
+            _activities = _act_r.json()
+            for _act in _activities:
+                if _act.get('conditionId') == CONDITION_ID and _act.get('type') == 'TRADE' and float(_act.get('usdcSize', 0)) > 0:
+                    _onchain_confirmed = True
+                    _onchain_tx = _act.get('transactionHash')
+                    _onchain_size = float(_act.get('usdcSize', 0))
+                    print(f"ON-CHAIN CONFIRMED: tx={_onchain_tx[:20]}... size=${_onchain_size:.2f}")
+                    break
+        except Exception as _ce:
+            print(f"On-chain check attempt {_attempt+1} error: {_ce}")
+        if _onchain_confirmed:
+            break
+        print(f"On-chain check {_attempt+1}/18 — not yet confirmed, retrying...")
+
+    if not _onchain_confirmed:
+        print(f"WARNING: Trade not confirmed on-chain after 3 minutes — order may be pending/unmatched. NOT writing to journal.")
+        # Write to error queue for manual review
+        _eq_path = f"{TRADING_DIR}/error_queue.json"
+        try:
+            _eq = json.load(open(_eq_path)) if __import__('os').path.exists(_eq_path) else []
+        except:
+            _eq = []
+        _eq.append({
+            "timestamp": now.isoformat(),
+            "type": "UNCONFIRMED_TRADE",
+            "question": QUESTION,
+            "condition_id": CONDITION_ID,
+            "order_id": result.get('order_id'),
+            "bet_size": bet_size,
+            "note": "Order placed but not confirmed on-chain within 3 minutes"
+        })
+        json.dump(_eq, open(_eq_path, 'w'), indent=2)
+        print(f"ERROR_QUEUE: Unconfirmed trade logged to error_queue.json")
+        sys.exit(1)
+    # ─────────────────────────────────────────────────────────────────────────
+
     trade = {
         'bot_id': 'prod',
         'timestamp': now.isoformat(),
@@ -605,8 +655,8 @@ if result.get('success') or result.get('order_id'):
         'spread_at_entry': round(spread, 4),
         'mid_at_entry': round(mid, 4),
         'hours_before_close': round(hours_left, 2),
-        'size_usd': bet_size,
-        'shares': round(bet_size / best_ask, 2),
+        'size_usd': _onchain_size or bet_size,  # use actual on-chain size
+        'shares': round((_onchain_size or bet_size) / best_ask, 2),
         'max_payout': round(bet_size / best_ask, 2),  # shares * $1.00
         'max_return_pct': round((1.0 - best_ask) / best_ask * 100, 1),  # % gain if won
         'end_datetime': END_DATETIME,
