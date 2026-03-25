@@ -424,6 +424,21 @@ try:
 except Exception as _ae:
     print(f"AUTO-APPROVE ERROR (non-fatal): {_ae}")
 
+# ── DUPLICATE TRADE CHECK ────────────────────────────────────────────────────
+try:
+    _journal_path = f"{TRADING_DIR}/journal.json"
+    if __import__('os').path.exists(_journal_path):
+        _jdata = json.load(open(_journal_path))
+        _existing = [t for t in _jdata.get('trades', [])
+                     if t.get('condition_id') == CONDITION_ID
+                     and t.get('status') in ('open', 'OPEN')]
+        if _existing:
+            print(f"DUPLICATE SKIP: {QUESTION[:50]} already open in journal (condition_id={CONDITION_ID[:20]})")
+            sys.exit(0)
+except Exception as _de:
+    print(f"Duplicate check error (non-fatal): {_de}")
+# ─────────────────────────────────────────────────────────────────────────────
+
 if total_balance < 1.0:
     entry = {
         "timestamp": now.isoformat(),
