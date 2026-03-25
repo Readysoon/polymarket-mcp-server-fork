@@ -277,13 +277,13 @@ class TradingTools:
                 f"Executing market order: {side} ${size} @ AMM price {best_price}"
             )
 
-            # Use GTC limit order at AMM price (FOK fails on low-liquidity CLOB books)
+            # Use FOK (Fill-or-Kill): immediately filled by MM or instantly rejected — no hanging orders
             result = await self.create_limit_order(
                 market_id=market_id,
                 side=side,
                 price=best_price,
                 size=size,
-                order_type='GTC'
+                order_type='FOK'
             )
 
             result['execution_type'] = 'market_order'
