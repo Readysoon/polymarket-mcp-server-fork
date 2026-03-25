@@ -624,25 +624,86 @@ if result.get('success') or result.get('order_id'):
         print(f"On-chain check {_attempt+1}/18 — not yet confirmed, retrying...")
 
     if not _onchain_confirmed:
-        print(f"WARNING: Trade not confirmed on-chain after 3 minutes — order may be pending/unmatched. NOT writing to journal.")
-        # Write to error queue for manual review
-        _eq_path = f"{TRADING_DIR}/error_queue.json"
-        try:
-            _eq = json.load(open(_eq_path)) if __import__('os').path.exists(_eq_path) else []
-        except:
-            _eq = []
-        _eq.append({
-            "timestamp": now.isoformat(),
-            "type": "UNCONFIRMED_TRADE",
-            "question": QUESTION,
-            "condition_id": CONDITION_ID,
-            "order_id": result.get('order_id'),
-            "bet_size": bet_size,
-            "note": "Order placed but not confirmed on-chain within 3 minutes"
-        })
-        json.dump(_eq, open(_eq_path, 'w'), indent=2)
-        print(f"ERROR_QUEUE: Unconfirmed trade logged to error_queue.json")
-        sys.exit(1)
+        print(f"WARNING: Trade not confirmed on-chain after 3 minutes — retrying with +5¢ higher price...")
+
+        # ── RETRY WITH +5¢ ───────────────────────────────────────────────────
+        _retry_price = round(best_ask + 0.05, 3)
+        _confidence_ratio = confidence  # already float 0..1
+
+        # Re-evaluate EV with new price
+        _ev_ok = _confidence_ratio >= _retry_price + 0.08
+        print(f"EV re-check at +5¢: confidence={_confidence_ratio:.2f} >= {_retry_price:.3f} + 0.08 = {_retry_price+0.08:.3f} → {'✅ TRADE' if _ev_ok else '❌ SKIP'}")
+
+        if not _ev_ok:
+            print(f"SKIP: EV insufficient at +5¢ price ({_retry_price:.3f}). Aborting.")
+            _eq_path = f"{TRADING_DIR}/error_queue.json"
+            try:
+                _eq = json.load(open(_eq_path)) if __import__('os').path.exists(_eq_path) else []
+            except:
+                _eq = []
+            _eq.append({
+                "timestamp": now.isoformat(),
+                "type": "UNCONFIRMED_SKIP",
+                "question": QUESTION,
+                "condition_id": CONDITION_ID,
+                "original_price": best_ask,
+                "retry_price": _retry_price,
+                "confidence": _confidence_ratio,
+                "note": f"Unmatched at {best_ask}, EV insufficient at +5¢ retry ({_retry_price})"
+            })
+            json.dump(_eq, open(_eq_path, 'w'), indent=2)
+            sys.exit(1)
+
+        # Retry order at higher price
+        print(f"Placing retry order at {_retry_price:.3f}...")
+        result = mcporter('create_market_order',
+            market_id=CONDITION_ID,
+            side=trade_side,
+            size=float(bet_size)
+        )
+        best_ask = _retry_price  # update price for journal
+
+        # Poll again for on-chain confirmation (3 more minutes)
+        for _attempt2 in range(18):
+            _time.sleep(10)
+            try:
+                _act_r2 = _httpx.get(
+                    f"https://data-api.polymarket.com/activity?user={_ADDR}&limit=20",
+                    timeout=10
+                )
+                _acts2 = _act_r2.json()
+                for _act2 in _acts2:
+                    if _act2.get('conditionId') == CONDITION_ID and _act2.get('type') == 'TRADE' and float(_act2.get('usdcSize', 0)) > 0:
+                        _onchain_confirmed = True
+                        _onchain_tx = _act2.get('transactionHash')
+                        _onchain_size = float(_act2.get('usdcSize', 0))
+                        print(f"RETRY ON-CHAIN CONFIRMED: tx={_onchain_tx[:20]}... size=${_onchain_size:.2f}")
+                        break
+            except Exception as _ce2:
+                print(f"Retry on-chain check {_attempt2+1} error: {_ce2}")
+            if _onchain_confirmed:
+                break
+            print(f"Retry on-chain check {_attempt2+1}/18...")
+
+        if not _onchain_confirmed:
+            print(f"FAILED: Trade still not confirmed after retry. Logging to error_queue.")
+            _eq_path = f"{TRADING_DIR}/error_queue.json"
+            try:
+                _eq = json.load(open(_eq_path)) if __import__('os').path.exists(_eq_path) else []
+            except:
+                _eq = []
+            _eq.append({
+                "timestamp": now.isoformat(),
+                "type": "UNCONFIRMED_TRADE",
+                "question": QUESTION,
+                "condition_id": CONDITION_ID,
+                "order_id": result.get('order_id'),
+                "bet_size": bet_size,
+                "note": f"Order placed at {best_ask} and retry at {_retry_price} — both unconfirmed on-chain"
+            })
+            json.dump(_eq, open(_eq_path, 'w'), indent=2)
+            sys.exit(1)
+        # ─────────────────────────────────────────────────────────────────────
     # ─────────────────────────────────────────────────────────────────────────
 
     trade = {
