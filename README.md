@@ -212,6 +212,31 @@ f = (p × b - (1-p)) / b
 
 > ⚠️ Prognosen basieren auf historischen Win-Rates. Für valide Statistiken brauchen wir 50+ abgeschlossene Trades.
 
+### Dynamische Kapitalallokation nach Kelly
+
+Je größer der Bankroll, desto größer sollte der Max-Trade sein (konstant ~3-4% des Kapitals):
+
+| Bankroll | Max/Trade (4%) | Min/Trade | Trades gleichzeitig |
+|----------|---------------|-----------|---------------------|
+| $60-100 | $4-10 (Cap $10) | $2.50 | 3-6 |
+| $100-300 | $10-12 | $3.00 | 6-10 |
+| $300-600 | $12-20 | $4.00 | 8-12 |
+| $600-1.000 | $20-30 | $5.00 | 10-15 |
+| $1.000+ | $30-40 | $5.00 | 10-20 |
+
+**Wann den Cap erhöhen:**
+- Bei $300 → Max auf $15 setzen
+- Bei $600 → Max auf $25 setzen
+- Bei $1.000 → Max auf $40 setzen
+
+**Config anpassen:**
+```bash
+# In /home/node/.openclaw/workspace/trading/config.json
+"max_bet_usd": 15  # bei $300 Bankroll
+```
+
+> Halbes Kelly (f/2) ist oft sicherer in der Praxis — weniger Volatilität, ~75% der Rendite.
+
 ---
 
 ## 🚀 Deployment
