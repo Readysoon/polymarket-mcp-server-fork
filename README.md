@@ -90,7 +90,7 @@ Läuft alle **2 Stunden** (Europe/Vienna). Führt folgende Schritte aus:
 
 1. 💰 **Redeem** — löst gewonnene Positionen automatisch ein
 2. 🔍 **Scanner** — scannt Märkte (Volumen >$50k, Spread <10%, YES 40-85¢)
-3. 📰 **Research** — AI analysiert jeden Kandidaten (covers.com, hltv.org, etc.)
+3. 📰 **Research** — Gezielte **Brave API Suche** pro Spiel (`"[Team A] vs [Team B] picks expert [datum]"`), Fallback auf covers.com/bbc bei Limit (2.000 Suchen/Monat Free Tier, Warnung bei 1.800)
 4. 💵 **Kapital aufteilen** — nach Confidence gewichtet (80%+ → 30%, 70-79% → 20%, 65-69% → 10%)
 5. ⚡ **Sofort kaufen** — wenn EV positiv (confidence ≥ preis + 8%)
 6. 📱 **Pflichtbericht** — sendet nach jedem Run eine Zusammenfassung per Telegram
