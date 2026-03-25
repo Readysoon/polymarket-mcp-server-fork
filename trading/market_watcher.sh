@@ -601,9 +601,9 @@ if result.get('success') or result.get('order_id'):
     _onchain_tx = None
     _onchain_size = None
     print(f"Waiting for on-chain confirmation (condition: {CONDITION_ID[:20]}...)...")
-    for _attempt in range(18):  # 18 x 10s = 3 minutes
-        import time as _time
-        _time.sleep(10)
+    import time as _time
+    for _attempt in range(6):  # 6 x 5s = 30 seconds (FOK fills instantly or rejects)
+        _time.sleep(5)
         try:
             _act_r = _httpx.get(
                 f"https://data-api.polymarket.com/activity?user={_ADDR}&limit=20",
@@ -621,7 +621,7 @@ if result.get('success') or result.get('order_id'):
             print(f"On-chain check attempt {_attempt+1} error: {_ce}")
         if _onchain_confirmed:
             break
-        print(f"On-chain check {_attempt+1}/18 — not yet confirmed, retrying...")
+        print(f"On-chain check {_attempt+1}/6 — not yet confirmed...")
 
     if not _onchain_confirmed:
         print(f"WARNING: Trade not confirmed on-chain after 3 minutes — retrying with +5¢ higher price...")
@@ -654,7 +654,7 @@ if result.get('success') or result.get('order_id'):
             json.dump(_eq, open(_eq_path, 'w'), indent=2)
             sys.exit(1)
 
-        # Retry order at higher price
+        # Retry order at higher price (FOK — instant fill or reject)
         print(f"Placing retry order at {_retry_price:.3f}...")
         result = mcporter('create_market_order',
             market_id=CONDITION_ID,
@@ -663,9 +663,9 @@ if result.get('success') or result.get('order_id'):
         )
         best_ask = _retry_price  # update price for journal
 
-        # Poll again for on-chain confirmation (3 more minutes)
-        for _attempt2 in range(18):
-            _time.sleep(10)
+        # Poll 30s for on-chain confirmation
+        for _attempt2 in range(6):
+            _time.sleep(5)
             try:
                 _act_r2 = _httpx.get(
                     f"https://data-api.polymarket.com/activity?user={_ADDR}&limit=20",
@@ -683,7 +683,7 @@ if result.get('success') or result.get('order_id'):
                 print(f"Retry on-chain check {_attempt2+1} error: {_ce2}")
             if _onchain_confirmed:
                 break
-            print(f"Retry on-chain check {_attempt2+1}/18...")
+            print(f"Retry on-chain check {_attempt2+1}/6...")
 
         if not _onchain_confirmed:
             print(f"FAILED: Trade still not confirmed after retry. Logging to error_queue.")
