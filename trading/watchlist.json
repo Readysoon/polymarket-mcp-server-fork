@@ -1,0 +1,62 @@
+{
+  "markets": [
+    {
+      "question": "Thunder vs. Celtics",
+      "condition_id": "0xae0bacd8397c67269daea66181ae83fdb39c522616db9d93f69e63eadc975daa",
+      "slug": "nba-okc-bos-2026-03-25",
+      "yes_price": 0.585,
+      "liquidity": 391438.9387,
+      "end_date": "2026-03-25",
+      "end_datetime": "2026-03-25T23:30:00Z",
+      "clob_token_ids": [
+        "107873275012767872940089881195560536670209084976663788557868940051552278053349",
+        "12160776981609763533501553797509574492383854838127183751971345302533107597107"
+      ],
+      "volume_24h": 213108.51227099996,
+      "status": "watching",
+      "amm_bid": 0.58,
+      "amm_ask": 0.59,
+      "amm_spread": 0.01,
+      "amm_mid": 0.585
+    },
+    {
+      "question": "Rockets vs. Timberwolves",
+      "condition_id": "0x9b51d021c60ec92110e2af1a7970923aa1c2ff5dc2baaff0ea11766f427b2797",
+      "slug": "nba-hou-min-2026-03-25",
+      "yes_price": 0.525,
+      "liquidity": 136530.1179,
+      "end_date": "2026-03-26",
+      "end_datetime": "2026-03-26T01:30:00Z",
+      "clob_token_ids": [
+        "92478388793162701688228117655170187221557905686840754078187669782700067722048",
+        "111191110166685402703345809072251891917258815235664098103848966919430435408957"
+      ],
+      "volume_24h": 86090.59820699996,
+      "status": "watching",
+      "amm_bid": 0.52,
+      "amm_ask": 0.53,
+      "amm_spread": 0.01,
+      "amm_mid": 0.525
+    },
+    {
+      "question": "Nebraska Cornhuskers vs. Iowa Hawkeyes",
+      "condition_id": "0xe96bab86f43e9ae8647eedb5ed680747a8875571c027d11f1f2bae39867d4209",
+      "slug": "cbb-nebr-iowa-2026-03-26",
+      "yes_price": 0.535,
+      "liquidity": 5192086.607,
+      "end_date": "2026-03-26",
+      "end_datetime": "2026-03-26T04:00:00Z",
+      "clob_token_ids": [
+        "6143758395191852229197516807548968371194839168426806816072019634277215860097",
+        "8407769013236185519523211059555999620435865750175863777492373951715898856141"
+      ],
+      "volume_24h": 77448.11545299998,
+      "status": "watching",
+      "amm_bid": 0.53,
+      "amm_ask": 0.54,
+      "amm_spread": 0.01,
+      "amm_mid": 0.535
+    }
+  ],
+  "last_scanned": "2026-03-25T05:04:44.304735+00:00"
+}
