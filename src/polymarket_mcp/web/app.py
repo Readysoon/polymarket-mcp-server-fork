@@ -303,8 +303,13 @@ async def get_portfolio():
 
                 market_url = ""
                 slug = pos.get("slug", "")
+                event_slug = pos.get("eventSlug", "")
                 condition_id_url = pos.get("conditionId", "")
-                if slug:
+                if event_slug and slug:
+                    market_url = f"https://polymarket.com/event/{event_slug}/{slug}"
+                elif event_slug:
+                    market_url = f"https://polymarket.com/event/{event_slug}"
+                elif slug:
                     market_url = f"https://polymarket.com/event/{slug}"
                 elif condition_id_url:
                     market_url = f"https://polymarket.com/markets/{condition_id_url}"
