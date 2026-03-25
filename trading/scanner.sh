@@ -71,10 +71,16 @@ with httpx.Client(timeout=15) as client:
                 yes = float(prices[0])
             except:
                 continue
-            if yes < 0.50 or yes > 0.80:  # hard filter: no underdogs, no near-certain
+            if yes < min_price:  # no underdogs
                 continue
-            if not (min_price <= yes <= max_price):
+            # Normal cap: max_yes_price (0.75)
+            # High-confidence exception: allow up to 0.90 (runner EV-check decides)
+            HIGH_CONF_MAX = 0.90
+            if yes > HIGH_CONF_MAX:  # above 90% = near-certain, skip always
                 continue
+            if yes > max_price:  # between 0.75-0.90: pass through, runner will filter by confidence
+                pass  # allow through for research
+            
             token_ids = json.loads(m['clobTokenIds']) if isinstance(m.get('clobTokenIds'), str) else m.get('clobTokenIds', [])
             liq = float(m.get('liquidityClob') or m.get('liquidityNum') or m.get('liquidity') or 0)
             candidates.append({
@@ -107,7 +113,7 @@ MIN_REAL_BID = 0.05   # ignore bids below this (placeholders)
 MAX_REAL_ASK = 0.95   # ignore asks above this (placeholders)
 MAX_SPREAD   = 0.10   # max allowed spread on real orders
 MIN_MID      = 0.15   # drop if market is already near-certain (YES < 15%)
-MAX_MID      = 0.85   # drop if market is already near-certain (YES > 85%)
+MAX_MID      = 0.90   # drop if market is already near-certain (YES > 90%)
 
 real_candidates = []
 candidates = candidates[:30]  # max 30 for orderbook check
