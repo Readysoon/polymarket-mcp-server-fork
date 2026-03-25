@@ -4,7 +4,7 @@
   "balance_threshold": 50,
   "min_bet_usd": 0.50,
   "max_bet_usd": 25,
-  "min_yes_price": 0.50,
+  "min_yes_price": 0.35,
   "max_yes_price": 0.75,
   "min_liquidity_usd": 10000,
   "max_spread": 0.05,

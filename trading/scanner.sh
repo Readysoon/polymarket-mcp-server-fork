@@ -71,7 +71,7 @@ with httpx.Client(timeout=15) as client:
                 yes = float(prices[0])
             except:
                 continue
-            if yes < min_price:  # no underdogs
+            if yes < min_price:  # below 35¢ = too speculative
                 continue
             # Normal cap: max_yes_price (0.75)
             # High-confidence exception: allow up to 0.90 (runner EV-check decides)
