@@ -326,7 +326,7 @@ async def get_portfolio():
                     "value": round(current_value, 2),
                     "pnl": round(pnl, 2),
                     "pnl_pct": round(pnl_pct, 1),
-                    "realized": cur_price <= 0.05 or cur_price >= 0.95,
+                    "realized": cur_price <= 0.05,  # only mark as settled if lost (price near 0); winners stay active until redeemed
                     "market_active": True,
                     "tx": "",
                     "market_url": market_url,
