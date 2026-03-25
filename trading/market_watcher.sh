@@ -606,7 +606,7 @@ except:
 result = mcporter('create_market_order',
     market_id=CONDITION_ID,
     side=trade_side,
-    size=float(bet_size)
+    size=round(float(bet_size), 2)
 )
 
 if result.get('success') or result.get('order_id'):
@@ -674,7 +674,7 @@ if result.get('success') or result.get('order_id'):
         result = mcporter('create_market_order',
             market_id=CONDITION_ID,
             side=trade_side,
-            size=float(bet_size)
+            size=round(float(bet_size), 2)
         )
         best_ask = _retry_price  # update price for journal
 
