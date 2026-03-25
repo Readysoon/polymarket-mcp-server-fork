@@ -168,6 +168,52 @@ cd /data/openclaw/workspace/repo && git add -A && git commit -m "..." && git pus
 
 ---
 
+## 📊 Strategie & Kelly Kriterium
+
+### Optimales Trade-Verhältnis
+
+Das **Kelly Kriterium** gibt den optimalen Kapitaleinsatz pro Trade:
+
+```
+f = (p × b - (1-p)) / b
+```
+
+- `p` = Win-Rate (z.B. 0.70 = 70%)
+- `b` = Gewinn pro Dollar Einsatz (z.B. bei 65¢ Preis: b = 0.54)
+- `f` = optimaler % des Bankrolls pro Trade
+
+**Beispiel bei 65¢ Marktpreis:**
+| Win-Rate | Kelly % | Empfehlung |
+|----------|---------|------------|
+| 75% | ~19% | Guter Edge |
+| 70% | ~9% | Moderater Edge |
+| 65% | ~0% | Break-even — kein Trade! |
+
+→ Deshalb unser **+8% EV-Buffer**: bei 65¢ brauchst du ≥73% Confidence für positiven EV.
+
+### Qualität vs. Quantität
+
+| Strategie | Trades/Tag | Min. Confidence | Monatl. Wachstum |
+|-----------|------------|-----------------|-----------------|
+| Sehr selektiv | 1-2 | ≥80% | ~25% |
+| **Moderat (aktuell)** | 3-4 | ≥65% | ~20% |
+| Aggressiv | 8-10 | ≥55% | riskant |
+
+**Fazit:** Weniger, aber bessere Trades schlagen mehr schlechtere Trades fast immer. Optimum: **2-4 Trades/Tag mit ≥70% Confidence**.
+
+### Wachstumsprognose (ab $210 Startkapital)
+
+| Monat | 20%/Monat | 30%/Monat |
+|-------|-----------|-----------|
+| Start | $210 | $210 |
+| +3 | $363 | $461 |
+| +6 | $627 | $1.014 |
+| +9 | $1.082 | $2.228 |
+
+> ⚠️ Prognosen basieren auf historischen Win-Rates. Für valide Statistiken brauchen wir 50+ abgeschlossene Trades.
+
+---
+
 ## 🚀 Deployment
 
 ```bash
