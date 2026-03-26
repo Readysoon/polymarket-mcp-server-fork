@@ -602,13 +602,12 @@ try:
 except:
     pass
 
-# Round bet_size so that resulting shares have max 4 decimal places
-# Polymarket requires: maker amount max 2 decimals, taker amount max 4 decimals
+# Round shares to 2 decimal places (Polymarket: maker amount max 2 decimals)
 _raw_shares = float(bet_size) / best_ask
-_rounded_shares = round(_raw_shares, 4)
+_rounded_shares = round(_raw_shares, 2)
 _adjusted_bet = round(_rounded_shares * best_ask, 2)
 bet_size = _adjusted_bet
-print(f"Adjusted bet_size to ${bet_size:.2f} ({_rounded_shares:.4f} shares @ {best_ask:.4f})")
+print(f"Adjusted bet_size to ${bet_size:.2f} ({_rounded_shares:.2f} shares @ {best_ask:.4f})")
 
 # Place market order (AMM)
 result = mcporter('create_market_order',
