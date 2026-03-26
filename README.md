@@ -97,13 +97,24 @@ Läuft alle **2 Stunden** (Europe/Vienna). Führt folgende Schritte aus:
 
 **EV-Formel:** `confidence/100 >= current_price + 0.08`
 
-**Position Sizing:**
-| Confidence | Gewicht | Max pro Trade |
-|------------|---------|--------------|
-| 80-100% | 30 | $10.00 |
-| 70-79% | 20 | $10.00 |
-| 65-69% | 10 | $10.00 |
-| Min | — | $2.50 |
+**Position Sizing (Half Kelly):**
+```python
+def kelly_bet(confidence_pct, price, bankroll, min_bet=2.50):
+    p = confidence_pct / 100
+    b = (1 - price) / price  # net odds
+    kelly_pct = max(0, (p * b - (1-p)) / b)
+    half_kelly = kelly_pct * 0.5
+    return round(max(min_bet, half_kelly * bankroll), 2)
+```
+
+Beispiele bei $30 Bankroll:
+| Confidence | Preis | Kelly Bet |
+|------------|-------|-----------|
+| 65% | 52¢ | ~$4.00 |
+| 72% | 55¢ | ~$5.50 |
+| 88% | 52¢ | ~$11.60 |
+
+**Kein fixer Cap** — Kelly skaliert automatisch mit dem Bankroll. Min: $2.50.
 
 **Bankroll:** Wallet USDC.e Balance via Polygon RPC (nicht Polymarket-internes Cash)
 
@@ -254,28 +265,18 @@ f = (p × b - (1-p)) / b
 
 ### Dynamische Kapitalallokation nach Kelly
 
-Je größer der Bankroll, desto größer sollte der Max-Trade sein (konstant ~3-4% des Kapitals):
+Das System verwendet **Half Kelly** ohne fixen Cap — der Betrag skaliert automatisch mit Bankroll und Confidence:
 
-| Bankroll | Max/Trade (4%) | Min/Trade | Trades gleichzeitig |
-|----------|---------------|-----------|---------------------|
-| $60-100 | $4-10 (Cap $10) | $2.50 | 3-6 |
-| $100-300 | $10-12 | $3.00 | 6-10 |
-| $300-600 | $12-20 | $4.00 | 8-12 |
-| $600-1.000 | $20-30 | $5.00 | 10-15 |
-| $1.000+ | $30-40 | $5.00 | 10-20 |
+| Bankroll | 65% conf, 52¢ | 72% conf, 55¢ | 88% conf, 52¢ |
+|----------|--------------|--------------|--------------|
+| $30 | $4.00 | $5.50 | $11.60 |
+| $60 | $7.90 | $10.80 | $23.20 |
+| $100 | $13.20 | $18.00 | $38.70 |
+| $200 | $26.40 | $36.00 | $77.40 |
 
-**Wann den Cap erhöhen:**
-- Bei $300 → Max auf $15 setzen
-- Bei $600 → Max auf $25 setzen
-- Bei $1.000 → Max auf $40 setzen
+**Kein manueller Cap nötig** — Kelly % × 50% × Bankroll. Min Bet: $2.50.
 
-**Config anpassen:**
-```bash
-# In /home/node/.openclaw/workspace/trading/config.json
-"max_bet_usd": 15  # bei $300 Bankroll
-```
-
-> Halbes Kelly (f/2) ist oft sicherer in der Praxis — weniger Volatilität, ~75% der Rendite.
+> Halbes Kelly (f/2): ~75% der theoretischen Rendite bei deutlich weniger Volatilität.
 
 ---
 
