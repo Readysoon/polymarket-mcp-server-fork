@@ -183,42 +183,53 @@ cd /data/openclaw/workspace/repo && git add -A && git commit -m "..." && git pus
 
 ### Monatliche Rendite-Herleitung
 
-**Annahmen (konservativ):**
-- 3-4 Trades/Tag = ~100 Trades/Monat
-- Ø Einsatz: $8
-- Ø Gewinn bei WIN: +30% (+$2.40)
-- Verlust bei LOST: -100% (-$8.00)
-- Win-Rate: 65%
+**Wie funktioniert der EV-Check?**
 
-**Erwartungswert pro Trade:**
-```
-EV = 0.65 × $2.40 + 0.35 × (-$8.00)
-EV = $1.56 - $2.80 = -$1.24  ← kein Edge!
-```
+Du kaufst einen YES-Share für z.B. **55¢**. Wenn du gewinnst bekommst du **$1.00** zurück.
 
-→ Deshalb brauchen wir den **EV-Filter (+8%)** — wir traden nur wenn die Odds besser sind:
+- Gewinn bei WIN: `$1.00 - $0.55 = +$0.45` (auf $0.55 Einsatz = +82% return)
+- Verlust bei LOSE: `-$0.55`
 
-**Mit EV-Filter (nur Trades bei ≥73% Confidence auf 65¢-Märkte):**
+Der **Erwartungswert (EV)** sagt dir ob ein Trade langfristig profitabel ist:
 ```
-EV = 0.73 × $2.40 + 0.27 × (-$8.00)
-EV = $1.75 - $2.16 = -$0.41  ← immer noch knapp
+EV = Win-Rate × Gewinn + (1 - Win-Rate) × Verlust
 ```
 
-**Erst bei echter 70% Win-Rate:**
+**Beispiel: 55¢ Markt, $10 Einsatz**
 ```
-EV = 0.70 × $2.40 + 0.30 × (-$8.00)
-EV = $1.68 - $2.40 = -$0.72  ← Spread-Märkte schwierig
+Gewinn bei WIN:  $10 × (1/0.55 - 1) = +$8.18
+Verlust bei LOSE: -$10.00
+
+Bei 65% Win-Rate:
+EV = 0.65 × $8.18 + 0.35 × (-$10) = $5.32 - $3.50 = +$1.82 ✅
+
+Bei 60% Win-Rate:
+EV = 0.60 × $8.18 + 0.40 × (-$10) = $4.91 - $4.00 = +$0.91 ✅
+
+Bei 55% Win-Rate (Marktpreis = wahre Chance):
+EV = 0.55 × $8.18 + 0.45 × (-$10) = $4.50 - $4.50 = $0.00 ← Break-even
 ```
 
-**Auf günstigeren Märkten (50¢ Preis, b=1.0):**
+→ Ohne Edge (Confidence = Marktpreis) ist der EV **immer $0**. Wir brauchen echten Informationsvorsprung.
+
+**Unser EV-Filter: `confidence/100 >= price + 0.08`**
+
+Das bedeutet: wir traden nur wenn unsere geschätzte Win-Wahrscheinlichkeit mindestens **8 Prozentpunkte über dem Marktpreis** liegt.
+
+Beispiel bei 55¢ Markt: wir brauchen ≥63% Confidence
 ```
-EV = 0.70 × $10 + 0.30 × (-$10) = +$4.00 pro Trade
-100 Trades × $4 = +$400/Monat auf $2.000 Bankroll = +20%
+EV = 0.63 × $8.18 + 0.37 × (-$10) = $5.15 - $3.70 = +$1.45 ✅
 ```
 
-**Fazit:** 15-20% monatlich ist realistisch wenn:
-- Win-Rate ≥ 68-70%
-- Märkte mit gutem Preis (50-65¢) bevorzugt
+**Hochrechnung auf einen Monat (~100 Trades, Ø $7 Einsatz, 55¢-Märkte):**
+```
+EV pro Trade: +$1.45 × ($7/$10) = +$1.02
+100 Trades × $1.02 = +$102/Monat auf $400 Bankroll = +25%
+```
+
+**Fazit:** 15-25% monatlich ist realistisch wenn:
+- Win-Rate ≥ 65% (konsistent durch gutes Research)
+- Märkte mit Preis 50-65¢ bevorzugt (gutes Gewinn/Verlust-Verhältnis)
 - EV-Filter konsequent eingehalten
 
 ### Optimales Trade-Verhältnis
