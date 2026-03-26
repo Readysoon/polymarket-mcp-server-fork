@@ -527,7 +527,7 @@ else:
 
 # Bet sizing: use allocated_usd from Runner if provided, otherwise fall back to dynamic sizing
 if ALLOCATED_USD >= 2.50:
-    bet_size = round(min(ALLOCATED_USD, float(prod_config.get('max_bet_usd', 10.0))), 2)
+    bet_size = round(float(ALLOCATED_USD), 2)  # Kelly handles sizing, no hard cap
     print(f"Bet size from Runner allocation: ${bet_size:.2f}")
 else:
     # Fallback: dynamic sizing based on confidence
