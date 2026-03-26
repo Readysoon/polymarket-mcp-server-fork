@@ -1,6 +1,7 @@
 #!/bin/bash
-# Market Watcher — single market, single run
+# market_watcher.sh — single market, single run
 # Args: <condition_id> <yes_token_id> <end_datetime> <question> [allocated_usd]
+
 CONDITION_ID="${1}"
 YES_TOKEN="${2}"
 END_DATETIME="${3}"
@@ -8,7 +9,6 @@ QUESTION="${4}"
 ALLOCATED_USD="${5:-}"
 
 WORKSPACE="/home/node/.openclaw/workspace"
-SWARM_DIR="$WORKSPACE/swarm"
 TRADING_DIR="$WORKSPACE/trading"
 
 export MW_CONDITION_ID="$CONDITION_ID"
@@ -16,39 +16,37 @@ export MW_YES_TOKEN="$YES_TOKEN"
 export MW_END_DATETIME="$END_DATETIME"
 export MW_QUESTION="$QUESTION"
 export MW_WORKSPACE="$WORKSPACE"
-export MW_SWARM_DIR="$SWARM_DIR"
 export MW_TRADING_DIR="$TRADING_DIR"
 export MW_ALLOCATED_USD="$ALLOCATED_USD"
 
 python3 << 'PYEOF'
-import json, subprocess, sys, os
+import json, subprocess, sys, os, httpx
 from datetime import datetime, timezone, timedelta
 
-CONDITION_ID = os.environ['MW_CONDITION_ID']
-YES_TOKEN = os.environ['MW_YES_TOKEN']
-END_DATETIME = os.environ['MW_END_DATETIME']
-QUESTION = os.environ['MW_QUESTION']
-WORKSPACE = os.environ['MW_WORKSPACE']
-SWARM_DIR = os.environ['MW_SWARM_DIR']
-ALLOCATED_USD = float(os.environ.get('MW_ALLOCATED_USD', '0') or '0')  # 0 = use internal sizing
-TRADING_DIR = os.environ['MW_TRADING_DIR']
-LOG_FILE = f"{TRADING_DIR}/log.json"
+CONDITION_ID  = os.environ['MW_CONDITION_ID']
+YES_TOKEN     = os.environ['MW_YES_TOKEN']
+END_DATETIME  = os.environ['MW_END_DATETIME']
+QUESTION      = os.environ['MW_QUESTION']
+WORKSPACE     = os.environ['MW_WORKSPACE']
+TRADING_DIR   = os.environ['MW_TRADING_DIR']
+ALLOCATED_USD = float(os.environ.get('MW_ALLOCATED_USD', '0') or '0')
 
 now = datetime.now(timezone.utc)
 
-# ── Telegram helper ─────────────────────────────────────────────────────────
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
+
 def send_telegram(msg):
     try:
-        import subprocess as _sp
-        _sp.run([
+        subprocess.run([
             'curl', '-s', '-X', 'POST',
             'https://api.telegram.org/bot8599638540:AAFVTzaLBWQmStBfdd3xSlPEJJQuMH4cEBI/sendMessage',
             '-d', f'chat_id=866661912&text={msg[:1000]}'
         ], capture_output=True, timeout=10)
-    except: pass
+    except:
+        pass
 
 def queue_error(error_msg, context=""):
-    """Write error to queue for Sonnet to auto-fix via heartbeat."""
     try:
         eq_path = f"{TRADING_DIR}/error_queue.json"
         try:
@@ -66,21 +64,10 @@ def queue_error(error_msg, context=""):
         })
         with open(eq_path, 'w') as f:
             json.dump(queue, f, indent=2)
-    except: pass
-
-# ── Log helper ──────────────────────────────────────────────────────────────
-def write_log(entry):
-    try:
-        with open(LOG_FILE) as f:
-            log = json.load(f)
     except:
-        log = []
-    log.append(entry)
-    with open(LOG_FILE, 'w') as f:
-        json.dump(log, f, indent=2)
+        pass
 
 def mcporter(tool, **kwargs):
-    # Use --args JSON to ensure correct types (numbers stay numbers, not strings)
     args = ['mcporter', 'call', f'polymarket.{tool}', '--args', json.dumps(kwargs)]
     r = subprocess.run(args, capture_output=True, text=True, timeout=30)
     try:
@@ -88,270 +75,142 @@ def mcporter(tool, **kwargs):
     except:
         return {'error': r.stdout.strip() + r.stderr.strip()}
 
-# ── Parse end time ───────────────────────────────────────────────────────────
+def schedule_retry(minutes, label="retry"):
+    fire_at = (now + timedelta(minutes=minutes)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    job = {
+        "name": f"watch:{CONDITION_ID[:16]}",
+        "schedule": {"kind": "at", "at": fire_at},
+        "payload": {
+            "kind": "agentTurn",
+            "message": (
+                f"Run market watcher for: {QUESTION[:60]}\n\n"
+                f"bash /home/node/.openclaw/workspace/trading/market_watcher.sh "
+                f"'{CONDITION_ID}' '{YES_TOKEN}' '{END_DATETIME}' '{QUESTION[:60]}'\n\n"
+                "After running, always notify Philipp on Telegram with the result: "
+                "TRADED (what was bought + price), NO_TRADE (reason), or error. "
+                "If there is a technical error: debug it, fix the code, git push, then notify Philipp."
+            ),
+            "timeoutSeconds": 120
+        },
+        "sessionTarget": "isolated",
+        "delivery": {"mode": "none"}
+    }
+    cron_queue_path = f"{TRADING_DIR}/cron_queue.json"
+    try:
+        with open(cron_queue_path) as f:
+            queue = json.load(f)
+    except:
+        queue = []
+    queue.append(job)
+    with open(cron_queue_path, 'w') as f:
+        json.dump(queue, f, indent=2)
+    print(f"Rescheduled {label} in {minutes}min at {fire_at}")
+
+
+# ── Load config ───────────────────────────────────────────────────────────────
+
+with open(f'{TRADING_DIR}/config.json') as f:
+    config = json.load(f)
+
+MIN_P             = float(config.get('min_yes_price', 0.50))
+MAX_P             = float(config.get('max_yes_price', 0.80))
+MAX_SPREAD        = float(config.get('max_spread', 0.05))
+MIN_HOURS         = float(config.get('min_hours_before_close', 3.0))
+MAX_SPREAD_TRADE  = float(config.get('max_spread', 0.10))
+MAX_BET           = float(config.get('max_bet_usd', 25))
+BET_BASE          = float(config.get('bet_base', 2.00))
+BET_RANGE         = float(config.get('bet_range', 1.00))
+
+
+# ── Parse end time ────────────────────────────────────────────────────────────
+
 try:
     end_dt = datetime.fromisoformat(END_DATETIME.replace('Z', '+00:00'))
-except:
-    entry = {
-        "timestamp": now.isoformat(),
-        "question": QUESTION,
-        "condition_id": CONDITION_ID,
-        "result": "ERROR",
-        "reason": f"bad end_datetime: {END_DATETIME}"
-    }
-    write_log(entry)
+except Exception:
     print(f"ERROR: bad end_datetime {END_DATETIME}")
     sys.exit(1)
 
 hours_left = (end_dt - now).total_seconds() / 3600
 
 if hours_left < 0.1:
-    entry = {
-        "timestamp": now.isoformat(),
-        "question": QUESTION,
-        "condition_id": CONDITION_ID,
-        "end_datetime": END_DATETIME,
-        "hours_left": round(hours_left, 2),
-        "result": "EXPIRED",
-        "reason": "Market already closed"
-    }
-    write_log(entry)
     print(f"EXPIRED: {QUESTION[:50]}")
     sys.exit(0)
 
-# ── Check AMM price ──────────────────────────────────────────────────────────
+
+# ── AMM price check ───────────────────────────────────────────────────────────
+
 price_data = mcporter('get_current_price', token_id=YES_TOKEN, side='BOTH')
 
 if 'error' in price_data or price_data.get('bid') is None or price_data.get('ask') is None:
     error_detail = price_data.get('error', 'no price available')
     if hours_left > 1:
-        fire_at = (now + timedelta(minutes=30)).strftime('%Y-%m-%dT%H:%M:%SZ')
-        job = {
-            "name": f"watch:{CONDITION_ID[:16]}",
-            "schedule": {"kind": "at", "at": fire_at},
-            "payload": {
-                "kind": "agentTurn",
-                "message": f"Run market watcher for: {QUESTION[:60]}\n\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{CONDITION_ID}' '{YES_TOKEN}' '{END_DATETIME}' '{QUESTION[:60]}'\n\nAfter running, always notify Philipp on Telegram with the result: TRADED (what was bought + price), NO_TRADE (reason), or error. If there is a technical error in the script: debug it, fix the code in /home/node/.openclaw/workspace/trading/market_watcher.sh, run the fix, git push to the fork, then notify Philipp on Telegram what was fixed. Never give up silently.",
-                "timeoutSeconds": 120
-            },
-            "sessionTarget": "isolated",
-            "delivery": {"mode": "none"}
-        }
-        cron_queue_path = f"{TRADING_DIR}/cron_queue.json"
-        try:
-            with open(cron_queue_path) as f:
-                queue = json.load(f)
-        except:
-            queue = []
-        queue.append(job)
-        with open(cron_queue_path, 'w') as f:
-            json.dump(queue, f, indent=2)
-        entry = {
-            "timestamp": now.isoformat(),
-            "question": QUESTION,
-            "condition_id": CONDITION_ID,
-            "end_datetime": END_DATETIME,
-            "hours_left": round(hours_left, 2),
-            "result": "NOT_READY",
-            "reason": f"No AMM price available: {error_detail}",
-            "action": "Rescheduled retry in 30min"
-        }
+        schedule_retry(30, "no-price")
+        print(json.dumps({"result": "NOT_READY", "reason": f"No AMM price: {error_detail}", "action": "Retry in 30min"}))
     else:
-        entry = {
-            "timestamp": now.isoformat(),
-            "question": QUESTION,
-            "condition_id": CONDITION_ID,
-            "end_datetime": END_DATETIME,
-            "hours_left": round(hours_left, 2),
-            "result": "TIMEOUT",
-            "reason": f"No AMM price and <1h left: {error_detail}",
-            "action": "Abandoned"
-        }
-    write_log(entry)
-    print(json.dumps(entry))
-    send_telegram(f"⏰ TIMEOUT: {QUESTION[:50]}\nMarket closed before tradeable — abandoned.")
+        print(json.dumps({"result": "TIMEOUT", "reason": f"No AMM price and <1h left: {error_detail}", "action": "Abandoned"}))
+        send_telegram(f"⏰ TIMEOUT: {QUESTION[:50]}\nMarket closed before tradeable — abandoned.")
     sys.exit(0)
 
 best_bid = float(price_data['bid'])
 best_ask = float(price_data['ask'])
-# AMM can return bid > ask — normalize
 if best_bid > best_ask:
     best_bid, best_ask = best_ask, best_bid
 spread = best_ask - best_bid
-mid = (best_bid + best_ask) / 2
+mid    = (best_bid + best_ask) / 2
 
-# Load config early for filter values
-with open(f'{TRADING_DIR}/config.json') as _cf:
-    _early_config = json.load(_cf)
-MAX_SPREAD = float(_early_config.get('max_spread', 0.05))
-MIN_HOURS = float(_early_config.get('min_hours_before_close', 3.0))
 
-# Minimum hours before close check
+# ── Pre-trade filters ─────────────────────────────────────────────────────────
+
 if hours_left < MIN_HOURS:
-    entry = {
-        "timestamp": now.isoformat(),
-        "question": QUESTION,
-        "condition_id": CONDITION_ID,
-        "end_datetime": END_DATETIME,
-        "hours_left": round(hours_left, 2),
-        "result": "NO_TRADE",
-        "reason": f"Only {hours_left:.1f}h left, minimum is {MIN_HOURS}h",
-        "action": "Skipped — too close to close"
-    }
-    write_log(entry)
-    print(json.dumps(entry))
+    print(json.dumps({"result": "NO_TRADE", "reason": f"Only {hours_left:.1f}h left (min {MIN_HOURS}h)", "action": "Skipped"}))
     sys.exit(0)
 
 if spread > MAX_SPREAD:
     if hours_left > 0.5:
-        retry_mins = 15
-        fire_at = (now + timedelta(minutes=retry_mins)).strftime('%Y-%m-%dT%H:%M:%SZ')
-        job = {
-            "name": f"watch:{CONDITION_ID[:16]}",
-            "schedule": {"kind": "at", "at": fire_at},
-            "payload": {
-                "kind": "agentTurn",
-                "message": f"Run market watcher for: {QUESTION[:60]}\n\nbash /home/node/.openclaw/workspace/trading/market_watcher.sh '{CONDITION_ID}' '{YES_TOKEN}' '{END_DATETIME}' '{QUESTION[:60]}'\n\nAfter running, always notify Philipp on Telegram with the result: TRADED (what was bought + price), NO_TRADE (reason), or error. If there is a technical error in the script: debug it, fix the code in /home/node/.openclaw/workspace/trading/market_watcher.sh, run the fix, git push to the fork, then notify Philipp on Telegram what was fixed. Never give up silently.",
-                "timeoutSeconds": 120
-            },
-            "sessionTarget": "isolated",
-            "delivery": {"mode": "none"}
-        }
-        cron_queue_path = f"{TRADING_DIR}/cron_queue.json"
-        try:
-            with open(cron_queue_path) as f:
-                queue = json.load(f)
-        except:
-            queue = []
-        queue.append(job)
-        with open(cron_queue_path, 'w') as f:
-            json.dump(queue, f, indent=2)
-        entry = {
-            "timestamp": now.isoformat(),
-            "question": QUESTION,
-            "condition_id": CONDITION_ID,
-            "end_datetime": END_DATETIME,
-            "hours_left": round(hours_left, 2),
-            "best_bid": best_bid,
-            "best_ask": best_ask,
-            "spread": round(spread, 4),
-            "mid": round(mid, 4),
-            "max_spread_allowed": MAX_SPREAD,
-            "result": "NOT_READY",
-            "reason": f"Spread {spread:.4f} > max {MAX_SPREAD}",
-            "action": f"Rescheduled retry in {retry_mins}min"
-        }
+        schedule_retry(15, "wide-spread")
+        print(json.dumps({"result": "NOT_READY", "reason": f"Spread {spread:.4f} > max {MAX_SPREAD}", "action": "Retry in 15min"}))
     else:
-        entry = {
-            "timestamp": now.isoformat(),
-            "question": QUESTION,
-            "condition_id": CONDITION_ID,
-            "end_datetime": END_DATETIME,
-            "hours_left": round(hours_left, 2),
-            "best_bid": best_bid,
-            "best_ask": best_ask,
-            "spread": round(spread, 4),
-            "mid": round(mid, 4),
-            "result": "TIMEOUT",
-            "reason": f"Spread {spread:.4f} still too wide and <30min left",
-            "action": "Abandoned"
-        }
-    write_log(entry)
-    print(json.dumps(entry))
-    send_telegram(f"⏰ TIMEOUT: {QUESTION[:50]}\nSpread too wide until close — abandoned.")
+        print(json.dumps({"result": "TIMEOUT", "reason": "Spread too wide until close", "action": "Abandoned"}))
+        send_telegram(f"⏰ TIMEOUT: {QUESTION[:50]}\nSpread too wide until close — abandoned.")
     sys.exit(0)
 
-# ── Spread OK — attempt trade ────────────────────────────────────────────────
-# Load config
-with open(f'{TRADING_DIR}/config.json') as f:
-    prod_config = json.load(f)
-
-min_p = prod_config.get('min_yes_price', 0.50)
-max_p = prod_config.get('max_yes_price', 0.80)
-max_s = prod_config.get('max_spread', 0.10)  # AMM: wider spread acceptable
-balance_threshold = prod_config.get('balance_threshold', 50)
-bet_pct_small = prod_config.get('bet_pct_small', 0.50)
-bet_pct_normal = prod_config.get('bet_pct_normal', 0.20)
-min_bet = prod_config.get('min_bet_usd', 0.50)
-max_bet = prod_config.get('max_bet_usd', 25)
-
-# Price range check
-if not (min_p <= mid <= max_p):
-    entry = {
-        "timestamp": now.isoformat(),
-        "question": QUESTION,
-        "condition_id": CONDITION_ID,
-        "end_datetime": END_DATETIME,
-        "hours_left": round(hours_left, 2),
-        "best_bid": best_bid,
-        "best_ask": best_ask,
-        "spread": round(spread, 4),
-        "mid": round(mid, 4),
-        "price_range_allowed": f"{min_p} - {max_p}",
-        "result": "NO_TRADE",
-        "reason": f"Mid price {mid:.3f} outside allowed range {min_p}-{max_p}",
-        "action": "Skipped"
-    }
-    write_log(entry)
-    print(json.dumps(entry))
+if not (MIN_P <= mid <= MAX_P):
+    print(json.dumps({"result": "NO_TRADE", "reason": f"Mid {mid:.3f} outside range {MIN_P}-{MAX_P}", "action": "Skipped"}))
     sys.exit(0)
 
-# Spread config check
-if spread > max_s:
-    entry = {
-        "timestamp": now.isoformat(),
-        "question": QUESTION,
-        "condition_id": CONDITION_ID,
-        "end_datetime": END_DATETIME,
-        "hours_left": round(hours_left, 2),
-        "best_bid": best_bid,
-        "best_ask": best_ask,
-        "spread": round(spread, 4),
-        "mid": round(mid, 4),
-        "max_spread_config": max_s,
-        "result": "NO_TRADE",
-        "reason": f"Spread {spread:.4f} > config max {max_s}",
-        "action": "Skipped"
-    }
-    write_log(entry)
-    print(json.dumps(entry))
-    sys.exit(0)
 
-# Auto-redeem any winning positions before checking balance
+# ── Auto-redeem winning positions ─────────────────────────────────────────────
+
 try:
-    import httpx as _httpx
     from eth_account import Account as _Account
     from web3 import Web3 as _Web3
 
-    _PRIVATE_KEY = os.environ.get('POLYGON_PRIVATE_KEY', '')
-    _ADDRESS = os.environ.get('POLYGON_ADDRESS', '')
+    _PRIV = os.environ.get('POLYGON_PRIVATE_KEY', '')
+    _ADDR = os.environ.get('POLYGON_ADDRESS', '')
     _USDC = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
     _CTF  = "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
     _RPC  = "https://polygon-bor-rpc.publicnode.com"
-    _CTF_ABI = [{"name":"redeemPositions","type":"function","inputs":[
-        {"name":"collateralToken","type":"address"},
-        {"name":"parentCollectionId","type":"bytes32"},
-        {"name":"conditionId","type":"bytes32"},
-        {"name":"indexSets","type":"uint256[]"}
-    ],"outputs":[]}]
+    _CTF_ABI = [{"name": "redeemPositions", "type": "function", "inputs": [
+        {"name": "collateralToken", "type": "address"},
+        {"name": "parentCollectionId", "type": "bytes32"},
+        {"name": "conditionId", "type": "bytes32"},
+        {"name": "indexSets", "type": "uint256[]"}
+    ], "outputs": []}]
 
-    _r = _httpx.get(f"https://data-api.polymarket.com/positions?user={_ADDRESS}&sizeThreshold=0.01", timeout=15)
+    _r = httpx.get(f"https://data-api.polymarket.com/positions?user={_ADDR}&sizeThreshold=0.01", timeout=15)
     _positions = _r.json() if _r.status_code == 200 else []
     _redeemable = [p for p in _positions if p.get('redeemable')]
 
-    if _redeemable and _PRIVATE_KEY:
+    if _redeemable and _PRIV:
         _w3 = _Web3(_Web3.HTTPProvider(_RPC))
         _ctf = _w3.eth.contract(address=_w3.to_checksum_address(_CTF), abi=_CTF_ABI)
-        _acct = _Account.from_key(_PRIVATE_KEY)
-        _redeemed_value = 0.0
+        _acct = _Account.from_key(_PRIV)
         for _p in _redeemable:
             try:
                 _index_set = 1 << _p.get('outcomeIndex', 0)
                 _tx = _ctf.functions.redeemPositions(
-                    _w3.to_checksum_address(_USDC),
-                    b'\x00' * 32,
-                    bytes.fromhex(_p['conditionId'][2:]),
-                    [_index_set]
+                    _w3.to_checksum_address(_USDC), b'\x00' * 32,
+                    bytes.fromhex(_p['conditionId'][2:]), [_index_set]
                 ).build_transaction({
                     'from': _acct.address,
                     'nonce': _w3.eth.get_transaction_count(_acct.address),
@@ -361,504 +220,358 @@ try:
                 })
                 _signed = _acct.sign_transaction(_tx)
                 _w3.eth.send_raw_transaction(_signed.raw_transaction)
-                _redeemed_value += float(_p.get('currentValue', 0))
-                print(f"REDEEMED: {_p.get('title','?')[:40]} ${_p.get('currentValue',0):.2f}")
+                print(f"REDEEMED: {_p.get('title', '?')[:40]} ${_p.get('currentValue', 0):.2f}")
             except Exception as _e:
                 print(f"REDEEM_ERROR: {_e}")
-        if _redeemed_value > 0:
-            import time as _time
-            _time.sleep(8)  # wait for tx to settle
+        import time as _t; _t.sleep(8)  # wait for tx to settle
 except Exception as _redeem_err:
     print(f"REDEEM_ATTEMPT_ERROR: {_redeem_err}")
 
-# Get real balance via RPC
-import httpx as _httpx
+
+# ── Get USDC balance (native + bridged) ───────────────────────────────────────
+
 _address = os.environ.get('POLYGON_ADDRESS', '').lower()
 _selector = '0x70a08231' + _address[2:].zfill(64)
-_rpcs = ['https://polygon-bor-rpc.publicnode.com', 'https://polygon.llamarpc.com']
+_rpcs   = ['https://polygon-bor-rpc.publicnode.com', 'https://polygon.llamarpc.com']
 _tokens = ['0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174']
 total_balance = 0.0
 for _token in _tokens:
     for _rpc in _rpcs:
         try:
-            _r = _httpx.post(_rpc, json={'jsonrpc':'2.0','method':'eth_call','params':[{'to':_token,'data':_selector},'latest'],'id':1}, timeout=5.0)
-            _val = _r.json().get('result','0x0')
+            _resp = httpx.post(_rpc, json={
+                'jsonrpc': '2.0', 'method': 'eth_call',
+                'params': [{'to': _token, 'data': _selector}, 'latest'], 'id': 1
+            }, timeout=5.0)
+            _val = _resp.json().get('result', '0x0')
             if _val and _val != '0x':
                 total_balance += int(_val, 16) / 1e6
                 break
-        except: continue
+        except:
+            continue
 print(f"Balance: ${total_balance:.2f} USDC")
 
-# ── Auto-approve USDC.e to NegRisk CTF Exchange if needed ────────────────────
+
+# ── Auto-approve USDC.e to NegRisk CTF Exchange ───────────────────────────────
+
 try:
-    import httpx as _ha
-    from eth_account import Account as _EthAcct
-    _PRIV = os.environ.get('POLYGON_PRIVATE_KEY', '')
-    _ADDR = os.environ.get('POLYGON_ADDRESS', '')
-    _USDC_E = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+    from eth_account import Account as _EthAcct2
+    _PRIV2  = os.environ.get('POLYGON_PRIVATE_KEY', '')
+    _ADDR2  = os.environ.get('POLYGON_ADDRESS', '')
+    _USDC_E  = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
     _NEGRISK = "0xC5d563A36AE78145C45a50134d48A1215220f80a"
-    _RPC2 = 'https://polygon-bor-rpc.publicnode.com'
-    # Check current allowance
-    _al_sel = '0xdd62ed3e' + _ADDR.lower()[2:].zfill(64) + _NEGRISK.lower()[2:].zfill(64)
-    _ar = _ha.post(_RPC2, json={'jsonrpc':'2.0','method':'eth_call','params':[{'to':_USDC_E,'data':_al_sel},'latest'],'id':1}, timeout=5.0)
-    _al_raw = _ar.json().get('result','0x0')
+    _RPC2    = 'https://polygon-bor-rpc.publicnode.com'
+    _MIN_ALLOWANCE = 50.0
+
+    _al_sel = '0xdd62ed3e' + _ADDR2.lower()[2:].zfill(64) + _NEGRISK.lower()[2:].zfill(64)
+    _ar = httpx.post(_RPC2, json={'jsonrpc': '2.0', 'method': 'eth_call',
+        'params': [{'to': _USDC_E, 'data': _al_sel}, 'latest'], 'id': 1}, timeout=5.0)
+    _al_raw = _ar.json().get('result', '0x0')
     _al_val = int(_al_raw, 16) / 1e6 if _al_raw not in ('0x', '0x0', None) else 0.0
-    MIN_ALLOWANCE = 50.0  # Keep at least $50 approved
-    if _al_val < MIN_ALLOWANCE and _PRIV:
-        print(f"AUTO-APPROVE: USDC.e allowance ${_al_val:.4f} < ${MIN_ALLOWANCE} — approving MAX...")
-        _a_sel = bytes.fromhex('095ea7b3')
-        _a_data = _a_sel + bytes.fromhex(_NEGRISK[2:].zfill(64)) + (2**256 - 1).to_bytes(32, 'big')
-        _ng = _ha.post(_RPC2, json={'jsonrpc':'2.0','method':'eth_getTransactionCount','params':[_ADDR,'latest'],'id':2}, timeout=5.0)
+
+    if _al_val < _MIN_ALLOWANCE and _PRIV2:
+        print(f"AUTO-APPROVE: USDC.e allowance ${_al_val:.4f} < ${_MIN_ALLOWANCE} — approving MAX...")
+        _a_data = bytes.fromhex('095ea7b3') + bytes.fromhex(_NEGRISK[2:].zfill(64)) + (2**256 - 1).to_bytes(32, 'big')
+        _ng = httpx.post(_RPC2, json={'jsonrpc': '2.0', 'method': 'eth_getTransactionCount',
+            'params': [_ADDR2, 'latest'], 'id': 2}, timeout=5.0)
         _nonce = int(_ng.json()['result'], 16)
-        _gp = _ha.post(_RPC2, json={'jsonrpc':'2.0','method':'eth_gasPrice','params':[],'id':3}, timeout=5.0)
+        _gp = httpx.post(_RPC2, json={'jsonrpc': '2.0', 'method': 'eth_gasPrice',
+            'params': [], 'id': 3}, timeout=5.0)
         _gas_price = int(_gp.json()['result'], 16)
-        _atx = {'to': _USDC_E,'from':_ADDR,'nonce':_nonce,'gas':100000,'gasPrice':_gas_price,'data':'0x'+_a_data.hex(),'chainId':137,'value':0}
-        _acct2 = _EthAcct.from_key(_PRIV)
-        _signed2 = _acct2.sign_transaction(_atx)
-        _sr = _ha.post(_RPC2, json={'jsonrpc':'2.0','method':'eth_sendRawTransaction','params':['0x'+_signed2.raw_transaction.hex()],'id':4}, timeout=10.0)
-        _tx_hash = _sr.json().get('result','')
-        print(f"AUTO-APPROVE TX: {_tx_hash}")
-        import time as _t2; _t2.sleep(12)  # wait for approval to mine
+        _atx = {
+            'to': _USDC_E, 'from': _ADDR2, 'nonce': _nonce, 'gas': 100000,
+            'gasPrice': _gas_price, 'data': '0x' + _a_data.hex(), 'chainId': 137, 'value': 0
+        }
+        _acct3 = _EthAcct2.from_key(_PRIV2)
+        _signed3 = _acct3.sign_transaction(_atx)
+        _sr = httpx.post(_RPC2, json={'jsonrpc': '2.0', 'method': 'eth_sendRawTransaction',
+            'params': ['0x' + _signed3.raw_transaction.hex()], 'id': 4}, timeout=10.0)
+        print(f"AUTO-APPROVE TX: {_sr.json().get('result', '')}")
+        import time as _t2; _t2.sleep(12)
     else:
         print(f"Allowance OK: USDC.e NegRisk allowance ${_al_val:.2f}")
 except Exception as _ae:
     print(f"AUTO-APPROVE ERROR (non-fatal): {_ae}")
 
-# ── DUPLICATE TRADE CHECK ────────────────────────────────────────────────────
+
+# ── DUPLICATE CHECK ───────────────────────────────────────────────────────────
+
 try:
-    _journal_path = f"{TRADING_DIR}/journal.json"
-    if __import__('os').path.exists(_journal_path):
-        _jdata = json.load(open(_journal_path))
-        _existing = [t for t in _jdata.get('trades', [])
-                     if t.get('condition_id') == CONDITION_ID
-                     and t.get('status') in ('open', 'OPEN')]
-        if _existing:
-            print(f"DUPLICATE SKIP: {QUESTION[:50]} already open in journal (condition_id={CONDITION_ID[:20]})")
-            sys.exit(0)
+    with open(f"{TRADING_DIR}/journal.json") as _jf:
+        _jdata = json.load(_jf)
+    _existing = [t for t in _jdata.get('trades', [])
+                 if t.get('condition_id') == CONDITION_ID
+                 and t.get('status') in ('open', 'OPEN')]
+    if _existing:
+        print(f"DUPLICATE SKIP: {QUESTION[:50]} already open (condition_id={CONDITION_ID[:20]})")
+        sys.exit(0)
 except Exception as _de:
     print(f"Duplicate check error (non-fatal): {_de}")
-# ─────────────────────────────────────────────────────────────────────────────
 
 if total_balance < 1.0:
-    entry = {
-        "timestamp": now.isoformat(),
-        "question": QUESTION,
-        "condition_id": CONDITION_ID,
-        "end_datetime": END_DATETIME,
-        "hours_left": round(hours_left, 2),
-        "best_bid": best_bid,
-        "best_ask": best_ask,
-        "spread": round(spread, 4),
-        "mid": round(mid, 4),
-        "portfolio_value": total_balance,
+    print(json.dumps({
         "result": "NO_TRADE",
-        "reason": f"Portfolio balance ${total_balance:.2f} < $1.00 minimum — no redeemable positions",
-        "action": "Skipped — deposit more USDC"
-    }
-    write_log(entry)
-    print(json.dumps(entry))
-    print(f"ALERT: Bankroll too low (${total_balance:.2f}) — deposit more to trade!")
+        "reason": f"Balance ${total_balance:.2f} < $1.00 minimum",
+        "action": "Deposit more USDC"
+    }))
     sys.exit(0)
 
-# Bet sizing: dynamic $1-3 based on AI confidence (set after analysis)
-bet_size = 2.00  # default, overridden after AI analysis
-print(f"Bet size (default): ${bet_size:.2f}")
 
-# Already traded this market?
-try:
-    with open(f'{TRADING_DIR}/journal.json') as f:
-        prod_journal = json.load(f)
-except:
-    prod_journal = {'trades': []}
+# ── AI analysis ───────────────────────────────────────────────────────────────
 
-already = any(t['condition_id'] == CONDITION_ID for t in prod_journal.get('trades', []))
-if already:
-    entry = {
-        "timestamp": now.isoformat(),
-        "question": QUESTION,
-        "condition_id": CONDITION_ID,
-        "result": "NO_TRADE",
-        "reason": "Already traded this market",
-        "action": "Skipped"
-    }
-    write_log(entry)
-    print(json.dumps(entry))
-    sys.exit(0)
-
-# AI analysis before placing order
-# Note: the agent running this script should also search for recent news about the market
-# using web_search before making the final trade decision
-print(f"Analyzing market opportunity for: {QUESTION[:60]}")
+print(f"Analyzing: {QUESTION[:60]}")
 analysis = mcporter('analyze_market_opportunity', market_id=CONDITION_ID)
-analysis_text = str(analysis)
 
-# Extract recommendation from analysis
-should_trade = False
-trade_side = 'BUY'
+should_trade    = False
+trade_side      = 'BUY'
 analysis_reason = "No analysis available"
+confidence      = 0.0
 
 if isinstance(analysis, dict) and 'error' not in analysis:
-    rec = str(analysis.get('recommendation', '') or analysis.get('action', '') or '').upper()
+    rec        = str(analysis.get('recommendation', '') or analysis.get('action', '') or '').upper()
     confidence = float(analysis.get('confidence', 0) or analysis.get('confidence_score', 0) or 0)
-    analysis_reason = analysis.get('reasoning', '') or analysis.get('analysis', '') or analysis_text[:200]
-    
+    analysis_reason = analysis.get('reasoning', '') or analysis.get('analysis', '') or str(analysis)[:200]
+
     if 'BUY' in rec or 'YES' in rec or rec == 'LONG':
         should_trade = True
-        trade_side = 'BUY'
+        trade_side   = 'BUY'
     elif 'SELL' in rec or 'NO' in rec or rec == 'SHORT':
         should_trade = True
-        trade_side = 'SELL'
-    elif 'HOLD' in rec or 'SKIP' in rec or 'AVOID' in rec or 'PASS' in rec:
-        should_trade = False
+        trade_side   = 'SELL'
     else:
-        # No clear recommendation — skip
-        should_trade = False
-    
-    # Only trade with sufficient confidence
-    if confidence > 0 and confidence < 0.55:
-        should_trade = False
+        should_trade = False  # HOLD / SKIP / AVOID / unclear
+
+    if 0 < confidence < 0.55:
+        should_trade    = False
         analysis_reason = f"Confidence too low ({confidence:.0%}): {analysis_reason}"
 else:
-    # Analysis failed (API error etc.) — trade anyway with base bet
-    analysis_reason = f"Analysis unavailable: {analysis_text[:100]}"
-    should_trade = True
-    trade_side = 'BUY'
-    confidence = 0  # will use base bet size
+    # Analysis API unavailable — trade with base size
+    analysis_reason = f"Analysis unavailable: {str(analysis)[:100]}"
+    should_trade    = True
+    trade_side      = 'BUY'
 
-# Bet sizing: use allocated_usd from Runner if provided, otherwise fall back to dynamic sizing
+# ── Bet sizing ────────────────────────────────────────────────────────────────
+# Use Runner-allocated amount if provided; otherwise dynamic sizing from confidence.
 if ALLOCATED_USD >= 2.50:
-    bet_size = round(float(ALLOCATED_USD), 2)  # Kelly handles sizing, no hard cap
-    print(f"Bet size from Runner allocation: ${bet_size:.2f}")
+    bet_size = round(float(ALLOCATED_USD), 2)
+    print(f"Bet size (Runner allocation): ${bet_size:.2f}")
 else:
-    # Fallback: dynamic sizing based on confidence
-    bet_base = float(prod_config.get('bet_base', 2.00))
-    bet_range = float(prod_config.get('bet_range', 1.00))
     conf_norm = max(0.0, min(1.0, (confidence - 0.55) / 0.45)) if confidence >= 0.55 else 0.5
-    bet_size = round(max(1.0, bet_base - bet_range + conf_norm * 2 * bet_range), 2)
-    print(f"Bet size (dynamic fallback): ${bet_size:.2f}")
-print(f"Analysis: trade={should_trade} side={trade_side} confidence={confidence:.0%} bet=${bet_size:.2f} reason={analysis_reason[:60]}")
+    bet_size  = round(max(1.0, BET_BASE - BET_RANGE + conf_norm * 2 * BET_RANGE), 2)
+    print(f"Bet size (dynamic): ${bet_size:.2f}")
+
+print(f"Analysis: trade={should_trade} side={trade_side} confidence={confidence:.0%} bet=${bet_size:.2f}")
 
 if not should_trade:
-    entry = {
-        "timestamp": now.isoformat(),
-        "question": QUESTION,
-        "condition_id": CONDITION_ID,
-        "end_datetime": END_DATETIME,
-        "hours_left": round(hours_left, 2),
-        "best_bid": best_bid,
-        "best_ask": best_ask,
-        "spread": round(spread, 4),
-        "mid": round(mid, 4),
+    print(json.dumps({
         "result": "NO_TRADE",
         "reason": f"AI skip: {analysis_reason[:120]}",
         "action": "Skipped by AI analysis"
-    }
-    write_log(entry)
-    print(json.dumps(entry))
+    }))
     sys.exit(0)
 
-# Enforce minimum share size (Polymarket requires >= 5 shares per order)
+
+# ── Minimum share enforcement ─────────────────────────────────────────────────
+
 MIN_SHARES = 5
-trade_price = best_ask if trade_side == 'BUY' else best_bid
+trade_price      = best_ask if trade_side == 'BUY' else best_bid
 projected_shares = bet_size / trade_price if trade_price > 0 else 0
+
 if projected_shares < MIN_SHARES:
     min_usd_needed = MIN_SHARES * trade_price
-    if min_usd_needed <= max_bet:
-        print(f"Adjusting bet_size from ${bet_size:.2f} to ${min_usd_needed:.2f} to meet minimum {MIN_SHARES} shares (price={trade_price:.3f})")
+    if min_usd_needed <= MAX_BET:
+        print(f"Adjusting bet_size ${bet_size:.2f} → ${min_usd_needed:.2f} to meet {MIN_SHARES}-share minimum")
         bet_size = round(min_usd_needed, 2)
     else:
-        entry = {
-            "timestamp": now.isoformat(),
-            "question": QUESTION,
-            "condition_id": CONDITION_ID,
-            "end_datetime": END_DATETIME,
-            "hours_left": round(hours_left, 2),
-            "best_bid": best_bid,
-            "best_ask": best_ask,
-            "spread": round(spread, 4),
-            "mid": round(mid, 4),
-            "portfolio_value": total_balance,
-            "bet_size_usd": bet_size,
-            "min_usd_needed": round(min_usd_needed, 2),
+        print(json.dumps({
             "result": "NO_TRADE",
-            "reason": f"Minimum shares ({MIN_SHARES}) requires ${min_usd_needed:.2f} which exceeds max_bet (${max_bet})",
-            "action": "Skipped — min order size too large"
-        }
-        write_log(entry)
-        print(json.dumps(entry))
+            "reason": f"Min {MIN_SHARES} shares requires ${min_usd_needed:.2f} > max_bet ${MAX_BET}",
+            "action": "Skipped — min order too large"
+        }))
         sys.exit(0)
 
-# Try to read confidence from research.json (pre-trade research)
+
+# ── Share-rounding (maker/taker must have ≤ 2 decimal places) ─────────────────
+# Polymarket requires both share quantity (maker) and cost (shares×price, taker)
+# to have at most 2 decimal places. We search quarter-share increments (0.25 step)
+# which always give 2-decimal quantities, then check that shares×price also rounds cleanly.
+
+_raw_shares  = float(bet_size) / best_ask
+_best_shares = round(_raw_shares, 2)
+
+for _q in range(int(_raw_shares * 4) - 4, int(_raw_shares * 4) + 6):
+    _try_shares = round(_q / 4, 2)          # multiples of 0.25 → ≤ 2 decimal places
+    if _try_shares <= 0:
+        continue
+    _try_cost     = _try_shares * best_ask
+    _cost_str     = f'{_try_cost:.10f}'.rstrip('0')
+    _cost_decimals = len(_cost_str.split('.')[-1]) if '.' in _cost_str else 0
+    if _cost_decimals <= 2 and abs(_try_shares - _raw_shares) < abs(_best_shares - _raw_shares) + 0.5:
+        _best_shares = _try_shares
+        break
+
+bet_size = round(_best_shares * best_ask, 2)
+print(f"Rounded to ${bet_size:.2f} ({_best_shares:.2f} shares @ {best_ask:.4f})")
+
+
+# ── Load research (for confidence/summary in journal) ─────────────────────────
+
 research_confidence = None
-research_summary = None
+research_summary    = None
 try:
-    import json as _json2
     with open(f'{TRADING_DIR}/research.json') as _rf:
-        _research = _json2.load(_rf)
+        _research = json.load(_rf)
     _r_entry = _research.get(CONDITION_ID)
     if _r_entry:
         research_confidence = _r_entry.get('confidence_pct')
-        research_summary = _r_entry.get('sources_summary')
+        research_summary    = _r_entry.get('sources_summary')
 except:
     pass
 
-# Find valid share amount where both maker (shares) and taker (shares*price)
-# have max 2 decimal places — Polymarket requirement
-_raw_shares = float(bet_size) / best_ask
-_best_shares = round(_raw_shares, 2)
-_best_cost = round(_best_shares * best_ask, 10)
-# Try quarter-share increments to find valid combo
-for _q in range(int(_raw_shares * 4) - 4, int(_raw_shares * 4) + 6):
-    _try_shares = round(_q / 4, 2)  # multiples of 0.25 → guaranteed 2 decimals
-    if _try_shares <= 0:
-        continue
-    _try_cost = _try_shares * best_ask
-    _try_cost_str = f'{_try_cost:.10f}'.rstrip('0')
-    _try_decimals = len(_try_cost_str.split('.')[-1]) if '.' in _try_cost_str else 0
-    if _try_decimals <= 2 and abs(_try_shares - _raw_shares) < abs(_best_shares - _raw_shares) + 0.5:
-        _best_shares = _try_shares
-        _best_cost = round(_try_cost, 2)
-        break
-bet_size = round(_best_cost, 2)
-_rounded_shares = _best_shares
-print(f"Adjusted bet_size to ${bet_size:.2f} ({_rounded_shares:.2f} shares @ {best_ask:.4f})")
 
-# Place market order (AMM)
+# ── Place FOK order ───────────────────────────────────────────────────────────
+
 result = mcporter('create_market_order',
     market_id=CONDITION_ID,
     side=trade_side,
     size=round(float(bet_size), 2)
 )
 
-if result.get('success') or result.get('order_id'):
-    # ── ON-CHAIN CONFIRMATION CHECK ──────────────────────────────────────────
-    # Poll Polymarket activity API until trade appears on-chain (max 3 min)
-    _onchain_confirmed = False
-    _onchain_tx = None
-    _onchain_size = None
-    print(f"Waiting for on-chain confirmation (condition: {CONDITION_ID[:20]}...)...")
-    import time as _time
-    for _attempt in range(6):  # 6 x 5s = 30 seconds (FOK fills instantly or rejects)
-        _time.sleep(5)
-        try:
-            _act_r = _httpx.get(
-                f"https://data-api.polymarket.com/activity?user={_ADDR}&limit=20",
-                timeout=10
-            )
-            _activities = _act_r.json()
-            for _act in _activities:
-                if _act.get('conditionId') == CONDITION_ID and _act.get('type') == 'TRADE' and float(_act.get('usdcSize', 0)) > 0:
-                    _onchain_confirmed = True
-                    _onchain_tx = _act.get('transactionHash')
-                    _onchain_size = float(_act.get('usdcSize', 0))
-                    print(f"ON-CHAIN CONFIRMED: tx={_onchain_tx[:20]}... size=${_onchain_size:.2f}")
-                    break
-        except Exception as _ce:
-            print(f"On-chain check attempt {_attempt+1} error: {_ce}")
-        if _onchain_confirmed:
-            break
-        print(f"On-chain check {_attempt+1}/6 — not yet confirmed...")
-
-    if not _onchain_confirmed:
-        print(f"WARNING: Trade not confirmed on-chain after 3 minutes — retrying with +5¢ higher price...")
-
-        # ── RETRY WITH +5¢ ───────────────────────────────────────────────────
-        _retry_price = round(best_ask + 0.05, 3)
-        _confidence_ratio = confidence  # already float 0..1
-
-        # Re-evaluate EV with new price
-        _ev_ok = _confidence_ratio >= _retry_price + 0.08
-        print(f"EV re-check at +5¢: confidence={_confidence_ratio:.2f} >= {_retry_price:.3f} + 0.08 = {_retry_price+0.08:.3f} → {'✅ TRADE' if _ev_ok else '❌ SKIP'}")
-
-        if not _ev_ok:
-            print(f"SKIP: EV insufficient at +5¢ price ({_retry_price:.3f}). Aborting.")
-            _eq_path = f"{TRADING_DIR}/error_queue.json"
-            try:
-                _eq = json.load(open(_eq_path)) if __import__('os').path.exists(_eq_path) else []
-            except:
-                _eq = []
-            _eq.append({
-                "timestamp": now.isoformat(),
-                "type": "UNCONFIRMED_SKIP",
-                "question": QUESTION,
-                "condition_id": CONDITION_ID,
-                "original_price": best_ask,
-                "retry_price": _retry_price,
-                "confidence": _confidence_ratio,
-                "note": f"Unmatched at {best_ask}, EV insufficient at +5¢ retry ({_retry_price})"
-            })
-            json.dump(_eq, open(_eq_path, 'w'), indent=2)
-            sys.exit(1)
-
-        # Retry order at higher price (FOK — instant fill or reject)
-        print(f"Placing retry order at {_retry_price:.3f}...")
-        result = mcporter('create_market_order',
-            market_id=CONDITION_ID,
-            side=trade_side,
-            size=round(float(bet_size), 2)
-        )
-        best_ask = _retry_price  # update price for journal
-
-        # Poll 30s for on-chain confirmation
-        for _attempt2 in range(6):
-            _time.sleep(5)
-            try:
-                _act_r2 = _httpx.get(
-                    f"https://data-api.polymarket.com/activity?user={_ADDR}&limit=20",
-                    timeout=10
-                )
-                _acts2 = _act_r2.json()
-                for _act2 in _acts2:
-                    if _act2.get('conditionId') == CONDITION_ID and _act2.get('type') == 'TRADE' and float(_act2.get('usdcSize', 0)) > 0:
-                        _onchain_confirmed = True
-                        _onchain_tx = _act2.get('transactionHash')
-                        _onchain_size = float(_act2.get('usdcSize', 0))
-                        print(f"RETRY ON-CHAIN CONFIRMED: tx={_onchain_tx[:20]}... size=${_onchain_size:.2f}")
-                        break
-            except Exception as _ce2:
-                print(f"Retry on-chain check {_attempt2+1} error: {_ce2}")
-            if _onchain_confirmed:
-                break
-            print(f"Retry on-chain check {_attempt2+1}/6...")
-
-        if not _onchain_confirmed:
-            print(f"FAILED: Trade still not confirmed after retry. Logging to error_queue.")
-            _eq_path = f"{TRADING_DIR}/error_queue.json"
-            try:
-                _eq = json.load(open(_eq_path)) if __import__('os').path.exists(_eq_path) else []
-            except:
-                _eq = []
-            _eq.append({
-                "timestamp": now.isoformat(),
-                "type": "UNCONFIRMED_TRADE",
-                "question": QUESTION,
-                "condition_id": CONDITION_ID,
-                "order_id": result.get('order_id'),
-                "bet_size": bet_size,
-                "note": f"Order placed at {best_ask} and retry at {_retry_price} — both unconfirmed on-chain"
-            })
-            json.dump(_eq, open(_eq_path, 'w'), indent=2)
-            sys.exit(1)
-        # ─────────────────────────────────────────────────────────────────────
-    # ─────────────────────────────────────────────────────────────────────────
-
-    trade = {
-        'bot_id': 'prod',
-        'timestamp': now.isoformat(),
-        'question': QUESTION,
-        'condition_id': CONDITION_ID,
-        # Entry data
-        'entry_price': best_ask,
-        'spread_at_entry': round(spread, 4),
-        'mid_at_entry': round(mid, 4),
-        'hours_before_close': round(hours_left, 2),
-        'size_usd': _onchain_size or bet_size,  # use actual on-chain size
-        'shares': round((_onchain_size or bet_size) / best_ask, 2),
-        'max_payout': round(bet_size / best_ask, 2),  # shares * $1.00
-        'max_return_pct': round((1.0 - best_ask) / best_ask * 100, 1),  # % gain if won
-        'end_datetime': END_DATETIME,
-        'order_id': result.get('order_id'),
-        # Research data
-        'confidence_pct': research_confidence,
-        'research_summary': research_summary,
-        # Outcome (filled later)
-        'status': 'open',
-        'outcome': None,
-        'pnl': None,
-        'pnl_pct': None,
-        'resolved_at': None,
-        'redeem_amount': None
-    }
-    prod_journal.setdefault('trades', []).append(trade)
-    with open(f'{TRADING_DIR}/journal.json', 'w') as f:
-        json.dump(prod_journal, f, indent=2)
-
-    # (legacy log-based confidence fallback — kept for compatibility)
-    if research_confidence is None:
-        try:
-            with open(LOG_FILE) as _lf:
-                _all_logs = _json2.load(_lf)
-            for _entry in reversed(_all_logs):
-                if _entry.get('condition_id') == CONDITION_ID and _entry.get('result') == 'RESEARCH':
-                    research_confidence = _entry.get('confidence_pct')
-                    research_summary = _entry.get('sources_summary')
-                    break
-        except:
-            pass
-
-    entry = {
-        "timestamp": now.isoformat(),
-        "question": QUESTION,
-        "condition_id": CONDITION_ID,
-        "end_datetime": END_DATETIME,
-        "hours_left": round(hours_left, 2),
-        "best_bid": best_bid,
-        "best_ask": best_ask,
-        "spread": round(spread, 4),
-        "mid": round(mid, 4),
-        "portfolio_value": total_balance,
-        "bet_size_usd": bet_size,
-        "shares": round(bet_size / best_ask, 2),
-        "order_id": result.get('order_id'),
-        "confidence_pct": research_confidence,
-        "research_summary": research_summary,
-        "result": "TRADED",
-        "reason": "All conditions met — order placed",
-        "action": f"BUY {round(bet_size/best_ask,2)} shares @ {best_ask:.2f} = ${bet_size:.2f}"
-    }
-    write_log(entry)
-    print(json.dumps(entry))
-    print(f"TRADED: {QUESTION[:50]} @ {best_ask:.2f} ${bet_size:.2f} ({round(bet_size/best_ask,2)} shares)")
-    send_telegram(f"✅ TRADED: {QUESTION[:50]}\n{trade_side} ${bet_size:.2f} @ {best_ask:.2f}¢")
-else:
+if not (result.get('success') or result.get('order_id')):
     err_msg = str(result.get('error', result))
-    # CLOB spread safety check failure = illiquid orderbook → treat as NO_TRADE, not ERROR
+
+    # CLOB spread safety check = illiquid orderbook → NO_TRADE (not ERROR)
     if 'Safety check failed: Market spread' in err_msg and 'exceeds maximum' in err_msg:
-        # Extract CLOB spread from error message for logging
         import re as _re
-        clob_spread_match = _re.search(r'Market spread ([\d.]+)%', err_msg)
-        clob_spread_pct = clob_spread_match.group(1) if clob_spread_match else 'unknown'
-        entry = {
-            "timestamp": now.isoformat(),
-            "question": QUESTION,
-            "condition_id": CONDITION_ID,
-            "end_datetime": END_DATETIME,
-            "hours_left": round(hours_left, 2),
-            "best_bid": best_bid,
-            "best_ask": best_ask,
-            "amm_spread": round(spread, 4),
-            "clob_spread_pct": clob_spread_pct,
-            "mid": round(mid, 4),
-            "portfolio_value": total_balance,
-            "bet_size_usd": bet_size,
+        _m = _re.search(r'Market spread ([\d.]+)%', err_msg)
+        clob_spread_pct = _m.group(1) if _m else 'unknown'
+        print(json.dumps({
             "result": "NO_TRADE",
-            "reason": f"CLOB orderbook illiquid (spread {clob_spread_pct}%) — AMM price {mid:.3f} but no liquid CLOB orders",
-            "action": "Skipped — CLOB spread too wide for limit order"
-        }
-        write_log(entry)
-        print(json.dumps(entry))
+            "reason": f"CLOB illiquid ({clob_spread_pct}% spread) — AMM {mid:.3f} but no liquid CLOB orders",
+            "action": "Skipped — CLOB spread too wide"
+        }))
         print(f"NO_TRADE: {QUESTION[:50]} — CLOB illiquid ({clob_spread_pct}% spread)")
     else:
-        entry = {
-            "timestamp": now.isoformat(),
-            "question": QUESTION,
-            "condition_id": CONDITION_ID,
-            "end_datetime": END_DATETIME,
-            "hours_left": round(hours_left, 2),
-            "best_bid": best_bid,
-            "best_ask": best_ask,
-            "spread": round(spread, 4),
-            "mid": round(mid, 4),
-            "portfolio_value": total_balance,
-            "bet_size_usd": bet_size,
-            "result": "ERROR",
-            "reason": f"Order failed: {result}",
-            "action": "Trade attempt failed"
-        }
-        write_log(entry)
-        print(json.dumps(entry))
+        print(json.dumps({"result": "ERROR", "reason": f"Order failed: {result}", "action": "Trade attempt failed"}))
         print(f"ALERT: Order failed for {QUESTION[:50]} — {result}")
         send_telegram(f"❌ ORDER FAILED: {QUESTION[:50]}\n{str(result)[:200]}")
         queue_error(f"Order failed: {str(result)}", f"market_id={CONDITION_ID} side={trade_side} size={bet_size}")
+    sys.exit(0)
+
+
+# ── ON-CHAIN CONFIRMATION ─────────────────────────────────────────────────────
+
+import time as _time
+
+_ADDR = os.environ.get('POLYGON_ADDRESS', '')
+_onchain_confirmed = False
+_onchain_tx        = None
+_onchain_size      = None
+
+print(f"Waiting for on-chain confirmation ({CONDITION_ID[:20]}...)...")
+
+for _attempt in range(6):  # 6×5s = 30s (FOK fills instantly or rejects)
+    _time.sleep(5)
+    try:
+        _act_r = httpx.get(
+            f"https://data-api.polymarket.com/activity?user={_ADDR}&limit=20", timeout=10
+        )
+        for _act in _act_r.json():
+            if (_act.get('conditionId') == CONDITION_ID
+                    and _act.get('type') == 'TRADE'
+                    and float(_act.get('usdcSize', 0)) > 0):
+                _onchain_confirmed = True
+                _onchain_tx   = _act.get('transactionHash')
+                _onchain_size = float(_act.get('usdcSize', 0))
+                print(f"ON-CHAIN CONFIRMED: tx={_onchain_tx[:20]}... size=${_onchain_size:.2f}")
+                break
+    except Exception as _ce:
+        print(f"On-chain check {_attempt+1} error: {_ce}")
+    if _onchain_confirmed:
+        break
+    print(f"On-chain check {_attempt+1}/6 — not yet...")
+
+# ── RETRY at +5¢ if unconfirmed ───────────────────────────────────────────────
+
+if not _onchain_confirmed:
+    _retry_price = round(best_ask + 0.05, 3)
+    _ev_ok       = confidence >= _retry_price + 0.08
+    print(f"Unconfirmed — EV re-check at +5¢: {confidence:.2f} >= {_retry_price + 0.08:.3f} → {'TRADE' if _ev_ok else 'SKIP'}")
+
+    if not _ev_ok:
+        queue_error(f"Unmatched at {best_ask}, EV insufficient at +5¢ ({_retry_price})",
+                    f"condition_id={CONDITION_ID}")
+        sys.exit(1)
+
+    print(f"Retrying at {_retry_price:.3f}...")
+    result = mcporter('create_market_order', market_id=CONDITION_ID, side=trade_side, size=round(float(bet_size), 2))
+    best_ask = _retry_price  # update for journal
+
+    for _attempt2 in range(6):
+        _time.sleep(5)
+        try:
+            _act_r2 = httpx.get(
+                f"https://data-api.polymarket.com/activity?user={_ADDR}&limit=20", timeout=10
+            )
+            for _act2 in _act_r2.json():
+                if (_act2.get('conditionId') == CONDITION_ID
+                        and _act2.get('type') == 'TRADE'
+                        and float(_act2.get('usdcSize', 0)) > 0):
+                    _onchain_confirmed = True
+                    _onchain_tx   = _act2.get('transactionHash')
+                    _onchain_size = float(_act2.get('usdcSize', 0))
+                    print(f"RETRY ON-CHAIN CONFIRMED: tx={_onchain_tx[:20]}... size=${_onchain_size:.2f}")
+                    break
+        except Exception as _ce2:
+            print(f"Retry on-chain check {_attempt2+1} error: {_ce2}")
+        if _onchain_confirmed:
+            break
+        print(f"Retry on-chain check {_attempt2+1}/6...")
+
+    if not _onchain_confirmed:
+        queue_error(
+            f"Both orders unconfirmed on-chain (ask={best_ask}, retry={_retry_price})",
+            f"order_id={result.get('order_id')} bet_size={bet_size}"
+        )
+        sys.exit(1)
+
+
+# ── Write journal entry ───────────────────────────────────────────────────────
+
+try:
+    with open(f'{TRADING_DIR}/journal.json') as f:
+        journal = json.load(f)
+except:
+    journal = {'trades': []}
+
+trade = {
+    'bot_id': 'prod',
+    'timestamp': now.isoformat(),
+    'question': QUESTION,
+    'condition_id': CONDITION_ID,
+    'entry_price': best_ask,
+    'spread_at_entry': round(spread, 4),
+    'mid_at_entry': round(mid, 4),
+    'hours_before_close': round(hours_left, 2),
+    'size_usd': _onchain_size or bet_size,
+    'shares': round((_onchain_size or bet_size) / best_ask, 2),
+    'max_payout': round(bet_size / best_ask, 2),
+    'max_return_pct': round((1.0 - best_ask) / best_ask * 100, 1),
+    'end_datetime': END_DATETIME,
+    'order_id': result.get('order_id'),
+    'confidence_pct': research_confidence,
+    'research_summary': research_summary,
+    'status': 'open',
+    'outcome': None,
+    'pnl': None,
+    'pnl_pct': None,
+    'resolved_at': None,
+    'redeem_amount': None
+}
+journal.setdefault('trades', []).append(trade)
+with open(f'{TRADING_DIR}/journal.json', 'w') as f:
+    json.dump(journal, f, indent=2)
+
+print(f"TRADED: {QUESTION[:50]} @ {best_ask:.2f} ${bet_size:.2f} ({_best_shares:.2f} shares)")
+send_telegram(f"✅ TRADED: {QUESTION[:50]}\n{trade_side} ${bet_size:.2f} @ {best_ask:.2f}¢")
 
 PYEOF

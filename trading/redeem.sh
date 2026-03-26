@@ -1,6 +1,6 @@
 #!/bin/bash
-# Auto-redeemer — checks for winning positions and redeems them on-chain
-# Supports both normal CTF markets and NegRisk markets (via WCOL unwrap)
+# redeem.sh — redeem winning Polymarket positions on-chain
+# Supports normal CTF markets and NegRisk markets (via WCOL unwrap)
 
 python3 << 'PYEOF'
 import httpx, os, json, time

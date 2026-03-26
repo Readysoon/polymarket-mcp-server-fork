@@ -1,6 +1,5 @@
 #!/bin/bash
-# Event Sniper - Smart Scanner
-# Outputs JSON list of candidates for cron scheduling
+# scanner.sh — scan Polymarket for tradeable candidates and queue watcher jobs
 
 WORKSPACE="/home/node/.openclaw/workspace"
 
@@ -9,61 +8,69 @@ import json, httpx, subprocess
 from datetime import datetime, timezone, timedelta
 
 WORKSPACE = "$WORKSPACE"
+TRADING_DIR = f"{WORKSPACE}/trading"
 
-with open(f'{WORKSPACE}/trading/config.json') as f:
+with open(f'{TRADING_DIR}/config.json') as f:
     config = json.load(f)
 
 min_price = config['min_yes_price']
 max_price = config['max_yes_price']
-min_vol = 50000  # min 24h volume — real activity signal
+MIN_VOL   = 50000  # min 24h volume — real activity signal
 
-now = datetime.now(timezone.utc)
-cutoff = datetime.fromtimestamp(now.timestamp() + 28*3600, tz=timezone.utc)
+now    = datetime.now(timezone.utc)
+cutoff = datetime.fromtimestamp(now.timestamp() + 28 * 3600, tz=timezone.utc)
 
 BASE = "https://gamma-api.polymarket.com/markets"
 
+
+# ── Fetch candidates from Polymarket ─────────────────────────────────────────
+
 candidates = []
 with httpx.Client(timeout=15) as client:
-    # Fetch top markets by 24h volume — these have real CLOB activity
     offset = 0
     while offset < 500:
-        r = client.get(f"{BASE}?active=true&closed=false&order=volume24hr&ascending=false&limit=200&offset={offset}")
+        r = client.get(
+            f"{BASE}?active=true&closed=false&order=volume24hr&ascending=false&limit=200&offset={offset}"
+        )
         batch = r.json()
         if not batch:
             break
         for m in batch:
             vol = float(m.get('volume24hr') or 0)
-            if vol < min_vol:
-                break  # sorted descending, can stop early
+            if vol < MIN_VOL:
+                break  # sorted descending — stop early
+
             try:
                 ed = datetime.fromisoformat(m['endDate'].replace('Z', '+00:00'))
             except:
                 continue
             if ed < now or ed > cutoff:
                 continue
-            q = m.get('question', '')
+
+            q    = m.get('question', '')
             slug = m.get('slug', '')
+
+            # Skip up/down and social-media markets
             if 'Up or Down' in q or 'updown' in slug.lower():
                 continue
-            # Skip social media / tweet count markets
             if any(x in q.lower() for x in ['tweet', 'post ', 'elon musk', 'twitter', 'x.com']):
                 continue
+
             # Skip neg-risk markets (can't redeem programmatically)
             if m.get('negRisk', False):
                 continue
-            # Skip markets already actively traded (status=open)
+
+            # Skip markets already open in journal
             cid = m.get('conditionId', m.get('condition_id', ''))
             try:
-                with open(f'{WORKSPACE}/trading/journal.json') as jf:
+                with open(f'{TRADING_DIR}/journal.json') as jf:
                     journal = json.load(jf)
-                already_open = any(
-                    t.get('condition_id') == cid and t.get('status') == 'open'
-                    for t in journal.get('trades', [])
-                )
-                if already_open:
+                if any(t.get('condition_id') == cid and t.get('status') == 'open'
+                       for t in journal.get('trades', [])):
                     continue
             except:
                 pass
+
             prices = m.get('outcomePrices', '[0,0]')
             if isinstance(prices, str):
                 prices = json.loads(prices)
@@ -71,21 +78,21 @@ with httpx.Client(timeout=15) as client:
                 yes = float(prices[0])
             except:
                 continue
-            if yes < min_price:  # below 35¢ = too speculative
+
+            if yes < min_price:        # too speculative
                 continue
-            # Normal cap: max_yes_price (0.75)
-            # High-confidence exception: allow up to 0.90 (runner EV-check decides)
-            HIGH_CONF_MAX = 0.90
-            if yes > HIGH_CONF_MAX:  # above 90% = near-certain, skip always
+            if yes > 0.90:             # near-certain, always skip
                 continue
-            if yes > max_price:  # between 0.75-0.90: pass through, runner will filter by confidence
-                pass  # allow through for research
-            
-            token_ids = json.loads(m['clobTokenIds']) if isinstance(m.get('clobTokenIds'), str) else m.get('clobTokenIds', [])
+            # Between max_price (0.75) and 0.90: pass through, Runner EV-check decides
+
+            token_ids = (json.loads(m['clobTokenIds'])
+                         if isinstance(m.get('clobTokenIds'), str)
+                         else m.get('clobTokenIds', []))
             liq = float(m.get('liquidityClob') or m.get('liquidityNum') or m.get('liquidity') or 0)
+
             candidates.append({
                 'question': q,
-                'condition_id': m['conditionId'],
+                'condition_id': cid,
                 'slug': slug,
                 'yes_price': yes,
                 'liquidity': liq,
@@ -97,33 +104,30 @@ with httpx.Client(timeout=15) as client:
             })
         offset += 200
 
-# ── Orderbook pre-filter ─────────────────────────────────────────────────────
-# Check real orderbook for each candidate — drop markets with only placeholder orders
+
+# ── Orderbook pre-filter (AMM price check) ───────────────────────────────────
+
 def mcporter(tool, **kwargs):
     args = ['mcporter', 'call', f'polymarket.{tool}']
     for k, v in kwargs.items():
-        args.append(f'{k}={json.dumps(v) if isinstance(v,(dict,list)) else str(v)}')
+        args.append(f'{k}={json.dumps(v) if isinstance(v, (dict, list)) else str(v)}')
     r = subprocess.run(args, capture_output=True, text=True, timeout=10)
     try:
         return json.loads(r.stdout)
     except:
         return {'error': r.stdout.strip() + r.stderr.strip()}
 
-MIN_REAL_BID = 0.05   # ignore bids below this (placeholders)
-MAX_REAL_ASK = 0.95   # ignore asks above this (placeholders)
-MAX_SPREAD   = 0.10   # max allowed spread on real orders
-MIN_MID      = 0.15   # drop if market is already near-certain (YES < 15%)
-MAX_MID      = 0.90   # drop if market is already near-certain (YES > 90%)
+MAX_SPREAD = 0.10
+MIN_MID    = 0.15
+MAX_MID    = 0.90
 
 real_candidates = []
-candidates = candidates[:30]  # max 30 for orderbook check
-for c in candidates:
+for c in candidates[:30]:  # max 30 for orderbook check
     yes_token = c['clob_token_ids'][0] if c['clob_token_ids'] else ''
     if not yes_token:
         print(f"SKIP (no token): {c['question'][:55]}")
         continue
 
-    # Use AMM price (get_current_price) — more reliable than CLOB orderbook for sports markets
     price_data = mcporter('get_current_price', token_id=yes_token, side='BOTH')
     if 'error' in price_data:
         print(f"SKIP (price error): {c['question'][:55]}")
@@ -137,37 +141,38 @@ for c in candidates:
 
     bid = float(bid)
     ask = float(ask)
-    # AMM can return bid > ask — normalize
     if bid > ask:
         bid, ask = ask, bid
     spread = ask - bid
-    mid = (bid + ask) / 2
+    mid    = (bid + ask) / 2
 
     if spread > MAX_SPREAD:
         print(f"SKIP (spread {spread:.2f}): {c['question'][:55]}")
         continue
-
     if not (MIN_MID <= mid <= MAX_MID):
         print(f"SKIP (mid {mid:.2f} out of range): {c['question'][:55]}")
         continue
 
-    c['amm_bid'] = round(bid, 4)
-    c['amm_ask'] = round(ask, 4)
+    c['amm_bid']    = round(bid, 4)
+    c['amm_ask']    = round(ask, 4)
     c['amm_spread'] = round(spread, 4)
-    c['amm_mid'] = round(mid, 4)
+    c['amm_mid']    = round(mid, 4)
     real_candidates.append(c)
     print(f"CANDIDATE: {c['question'][:55]} | mid={mid:.2f} spread={spread:.3f}")
 
 candidates = real_candidates
 
-# Save watchlist
-watchlist = {'markets': candidates, 'last_scanned': now.isoformat()}
-with open(f'{WORKSPACE}/trading/watchlist.json', 'w') as f:
-    json.dump(watchlist, f, indent=2)
+
+# ── Save watchlist ────────────────────────────────────────────────────────────
+
+with open(f'{TRADING_DIR}/watchlist.json', 'w') as f:
+    json.dump({'markets': candidates, 'last_scanned': now.isoformat()}, f, indent=2)
 
 print(f"SCANNER_DONE:{len(candidates)}")
 
-# Load swarm population to find max window
+
+# ── Queue watcher jobs ────────────────────────────────────────────────────────
+
 swarm_dir = f'{WORKSPACE}/swarm'
 try:
     with open(f'{swarm_dir}/population.json') as f:
@@ -182,40 +187,36 @@ except:
 max_window = max([b.get('window_hours', 4) for b in pop.get('bots', [])] + [4])
 
 for c in candidates:
-    end_dt = datetime.fromisoformat(c['end_datetime'].replace('Z', '+00:00'))
+    end_dt  = datetime.fromisoformat(c['end_datetime'].replace('Z', '+00:00'))
     fire_at = end_dt - timedelta(hours=max_window)
-
-    # Don't schedule if fire time is in the past or too soon
     if fire_at <= now + timedelta(minutes=5):
         fire_at = now + timedelta(minutes=2)
-
     fire_iso = fire_at.strftime('%Y-%m-%dT%H:%M:%SZ')
-    yes_token = c['clob_token_ids'][0] if c['clob_token_ids'] else ''
 
-    # Pre-compute values that would require backslashes inside f-string expressions (not allowed in Python < 3.12)
-    q_80   = c['question'][:80].replace("'", "")
-    q_60   = c['question'][:60].replace("'", "")
-    q_50   = c['question'][:50].replace("'", "")
-    cond   = c['condition_id']
-    cond20 = c['condition_id'][:20]
-    end_dt_str = c['end_datetime']
-    amm_mid = c.get('amm_mid', c.get('yes_price', '?'))
-    outcome_check_iso = (datetime.fromisoformat(end_dt_str.replace('Z', '+00:00')) + timedelta(hours=3)).strftime('%Y-%m-%dT%H:%M:%SZ')
+    yes_token     = c['clob_token_ids'][0] if c['clob_token_ids'] else ''
+    cond          = c['condition_id']
+    cond20        = cond[:20]
+    end_dt_str    = c['end_datetime']
+    amm_mid       = c.get('amm_mid', c.get('yes_price', '?'))
+    outcome_check = (datetime.fromisoformat(end_dt_str.replace('Z', '+00:00')) + timedelta(hours=3)).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+    # Pre-strip apostrophes to avoid shell quoting issues in f-string
+    q_80 = c['question'][:80].replace("'", "")
+    q_60 = c['question'][:60].replace("'", "")
+    q_50 = c['question'][:50].replace("'", "")
 
     # Read research for this candidate if available
-    research_file = f"{WORKSPACE}/trading/research.json"
     research_entry = {}
     try:
-        with open(research_file) as rf:
-            all_research = json.load(rf)
-            research_entry = all_research.get(cond, {})
+        with open(f'{TRADING_DIR}/research.json') as rf:
+            research_entry = json.load(rf).get(cond, {})
     except:
         pass
 
-    allocated_usd = research_entry.get('allocated_usd', 3.0)
-    confidence = research_entry.get('confidence_pct', 0)
-    sources_summary = research_entry.get('sources_summary', 'No research available')
-    red_flags = research_entry.get('red_flags', 'unknown')
+    allocated_usd    = research_entry.get('allocated_usd', 3.0)
+    confidence       = research_entry.get('confidence_pct', 0)
+    sources_summary  = research_entry.get('sources_summary', 'No research available')
+    red_flags        = research_entry.get('red_flags', 'unknown')
 
     job = {
         "name": f"watch:{cond20}",
@@ -260,7 +261,7 @@ DEINE AUFGABE:
 
 5. Falls Trade platziert — Outcome-Checker registrieren:
    - name: outcome:{cond20}
-   - schedule: at {outcome_check_iso}
+   - schedule: at {outcome_check}
    - sessionTarget: isolated, timeoutSeconds: 120
    - delivery: announce to 866661912 telegram
    - message: Prüfe Ergebnis für {q_50} (condition_id: {cond}, yes_token: {yes_token}). Run redeem.sh. REDEEMED > 0 → WON, journal+log updaten, Philipp benachrichtigen. REDEEM_ZERO → retry in 2h. LOST → journal+log updaten, Philipp benachrichtigen.
@@ -277,8 +278,7 @@ DEINE AUFGABE:
         "delivery": {"mode": "none"}
     }
 
-    # Write to cron queue for agent to pick up (openclaw CLI hangs without TTY)
-    cron_queue_path = f"{WORKSPACE}/trading/cron_queue.json"
+    cron_queue_path = f"{TRADING_DIR}/cron_queue.json"
     try:
         with open(cron_queue_path) as f:
             queue = json.load(f)

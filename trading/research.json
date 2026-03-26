@@ -1,249 +1,1286 @@
-{
-  "0x0ed3a063f3ebd8bbc32d0563077b37fd585a2c3207ebf368ba02454627745c82": {
-    "question": "Will the price of Bitcoin be above $70,000 on March 25?",
-    "confidence_pct": 88,
-    "sources_summary": "BTC currently at $71,043 (Fortune, LatestLY March 24 2026). BTC surged past $70k on risk-on sentiment. StatMuse avg closing price March 2026: $69,985. BTC well above $70k threshold already with 19hrs to go.",
-    "red_flags": "BTC volatile, but currently $1,043 above threshold. Avg month closing is $69,985 which suggests brief dips possible but current momentum is upward.",
-    "decision": "TRADE",
-    "allocated_usd": 10,
-    "research_price": 0.565,
-    "current_price": 0.815,
-    "price_change": 0.25,
-    "price_trend": "↑",
-    "researched_at": "2026-03-24T21:08:00Z"
-  },
-  "0x4f3875ff89bea0da81401032db64c57e53c9434ca67521e3f351d25c8ff74551": {
-    "question": "Avalanche vs. Penguins",
-    "confidence_pct": 72,
-    "sources_summary": "Colorado leads NHL standings with 5-point cushion. Penguins giving up 15 goals in last 3 games. OddsShark backs Colorado. scoresandstats.com: 'Back Colorado on moneyline'. Covers.com NHL picks: Avs favored.",
-    "red_flags": "Game starts in ~50min (23:00Z). Penguins beat Colorado recently per OddsShark snippet.",
-    "decision": "SKIP",
-    "allocated_usd": 0,
-    "research_price": 0.615,
-    "current_price": 0.615,
-    "price_change": 0,
-    "price_trend": "→",
-    "researched_at": "2026-03-24T21:08:00Z"
-  },
-  "0xbd4c47f29092f81f777211bb56e17a6658e80992fb87db766f679160be3241c3": {
-    "question": "Nuggets vs. Suns",
-    "confidence_pct": 68,
-    "sources_summary": "Nuggets 44-28 (5-point favorites). Suns 40-32. Multiple sites back Nuggets. Nuggets won 5 of last 7. Game at PHX Arena (home for Suns). Covers expert picks lean Nuggets but multiple sources.",
-    "red_flags": "Game at Phoenix - home court for Suns. Suns 40-32 is a winning record. 68.5¢ market price means market agrees with Nuggets win.",
-    "decision": "SKIP",
-    "allocated_usd": 0,
-    "research_price": 0.685,
-    "current_price": 0.685,
-    "price_change": 0,
-    "price_trend": "→",
-    "researched_at": "2026-03-24T21:08:00Z"
-  },
-  "0xae0bacd8397c67269daea66181ae83fdb39c522616db9d93f69e63eadc975daa": {
-    "question": "Thunder vs. Celtics",
-    "confidence_pct": 73,
-    "sources_summary": "Covers: OKC hit moneyline in 15 of last 16 games (+14.50u). OKC hit 1H ML in 21/25 away games. 65% public consensus picking OKC spread. Expert pick: u218.5 (elite OKC defense + BOS league-slowest pace). Top user pick: OKC -2.5. OKC on historic win streak.",
-    "red_flags": "Celtics defending champions at home. BOS 1H ML 36/50 (72%). Game at 19:30Z.",
-    "decision": "TRADE",
-    "allocated_usd": 10.0,
-    "research_price": 0.575,
-    "current_price": 0.575,
+[
+  {
+    "condition_id": "0xc75831d24fabad4f6ff9dc932a177b5a611d769a704b4ee446eb57add7a8fd51",
+    "question": "Heat vs. Cavaliers",
+    "research_date": "2026-03-25",
+    "research_price": 0.425,
+    "current_price": 0.425,
     "price_change": 0.0,
-    "price_trend": "→",
-    "researched_at": "2026-03-25T07:07:00Z"
-  },
-  "0x76417d87959c9cf52572d45e2f3aff0db5ace3fd543746e5946ad6455277a769": {
-    "question": "Dota 2: paiN Gaming vs Nigma Galaxy (BO2) - ESL One Birmingham Group B",
-    "confidence_pct": 70,
-    "sources_summary": "Scanner shows mid=0.71 for paiN Gaming. HLTV unavailable (403). paiN Gaming is Brazilian team with strong regional performance. Market price 79¢ (ask 72¢ mid). Limited external data.",
-    "red_flags": "HLTV blocked, cannot verify current form. Market already pricing paiN at 71¢ mid.",
+    "price_trend": "\u2192",
+    "confidence_pct": 45,
+    "sources_summary": "Covers: Expert picks Heat +3.5 (closer to pick'em). CLE on back-to-back. Heat finally healthy. Market at 42.5\u00a2 for Heat win but only ~45% win prob.",
+    "red_flags": [
+      "Cavs home, Heat moneyline at 42.5\u00a2 implies 42.5% - experts say closer to 50-50 but not 80%+ for Heat outright"
+    ],
     "decision": "SKIP",
-    "allocated_usd": 0,
-    "research_price": 0.71,
-    "current_price": 0.71,
-    "price_change": 0,
-    "price_trend": "→",
-    "researched_at": "2026-03-24T21:08:00Z"
+    "skip_reason": "Price zone 35-50\u00a2 requires 80% confidence. Heat win prob ~45-48%, well below threshold."
   },
-  "0x71096d55892eb82f9661993472396dedb3068f79c68d2487f636fee86244a697": {
-    "question": "Capitals vs. Blues",
-    "confidence_pct": 52,
-    "sources_summary": "NHL matchup WSH @ STL. Market at 51.5¢. Covers has no direct pick for this game. Market closing in <1hr, game likely in progress.",
-    "red_flags": "Market closing in ~56 min, game likely in progress. No data advantage.",
-    "decision": "SKIP",
-    "allocated_usd": 0,
-    "research_price": 0.515,
-    "current_price": 0.515,
-    "price_change": 0,
-    "price_trend": "→",
-    "researched_at": "2026-03-24T23:08:00Z"
-  },
-  "0xfa1d6e6d69a5ab6ae6ff780c75cdc8c7a23215518d960f157cad7984df8a572d": {
-    "question": "Spread: Nuggets (-5.5)",
-    "confidence_pct": 58,
-    "sources_summary": "Nuggets vs PHX. Covers has heavy Jokic analysis (12+ assists, dominant performance). But covering -5.5 at road venue is harder than straight win.",
-    "red_flags": "Playing at Phoenix (home for Suns). -5.5 spread is a larger margin to cover. EV check fails: 0.58 < 0.605.",
-    "decision": "SKIP",
-    "allocated_usd": 0,
-    "research_price": 0.525,
-    "current_price": 0.525,
-    "price_change": 0,
-    "price_trend": "→",
-    "researched_at": "2026-03-24T23:08:00Z"
-  },
-  "0x2a7ff272c45e56636c104dfb747a93fd7e2d3659147d1b5d5f6edc1ec0594eb6": {
-    "question": "Magic vs. Cavaliers: O/U 229.5",
-    "confidence_pct": 50,
-    "sources_summary": "Covers backs ORL +10.5 spread bet. O/U at 51¢ (essentially 50/50). Market closing <1hr.",
-    "red_flags": "Market closing ~56 min, game likely starting now. Near 50/50 market price, no clear edge.",
-    "decision": "SKIP",
-    "allocated_usd": 0,
-    "research_price": 0.51,
-    "current_price": 0.51,
-    "price_change": 0,
-    "price_trend": "→",
-    "researched_at": "2026-03-24T23:08:00Z"
-  },
-  "0xfe25aec0093a873ae427d01628fb7cef785b7a678f090fcae70d85e38ebb835d": {
-    "question": "Spread: Nuggets (-4.5)",
-    "confidence_pct": 65,
-    "sources_summary": "Covers: Nikola Jokic dominant in this matchup - 12.5 assists avg vs PHX this season, 12+ assists at +128 value (priced at -165). Mark Williams out, PHX starting backup Ighodaro at C - size mismatch. Multiple expert Jokic/Nuggets picks. Nuggets strong favorites.",
-    "red_flags": "Playing at Phoenix (home court). Suns have .556 win %. -4.5 spread still requires winning by 5+.",
-    "decision": "TRADE",
-    "allocated_usd": 10,
+  {
+    "condition_id": "0xae0bacd8397c67269daea66181ae83fdb39c522616db9d93f69e63eadc975daa",
+    "question": "Thunder vs. Celtics",
+    "research_date": "2026-03-25",
     "research_price": 0.565,
+    "current_price": 0.555,
+    "price_change": -0.01,
+    "price_trend": "\u2193",
+    "confidence_pct": 72,
+    "sources_summary": "Covers: Expert picks OKC ML (-135). 'Thunder on a roll and fully healthy. Tatum returning but not yet at 100%.' Multiple computer picks also lean OKC.",
+    "red_flags": [
+      "Celtics have full lineup returning",
+      "Home court for Boston"
+    ],
+    "decision": "TRADE",
+    "skip_reason": null
+  },
+  {
+    "condition_id": "0x9f8ff09142e006b13e263d07b6c8813e89327ba79bd73f7f3cee6a2ef88903c4",
+    "question": "Hawks vs. Pistons",
+    "research_date": "2026-03-25",
+    "research_price": 0.405,
+    "current_price": 0.405,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 35,
+    "sources_summary": "Covers: Both expert picks for DET -2.5. Detroit won 6 of last 7 vs ATL. Pistons close to 5-pt favorites per model.",
+    "red_flags": [
+      "Experts unanimously picking Detroit"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "Price zone 35-50\u00a2 requires 80% confidence. Hawks expected to lose, confidence for Hawks only ~35%."
+  },
+  {
+    "condition_id": "0x37e55389468d891e2609c493ce9832bd07e03775f063a346722c1c6dad4dbb9c",
+    "question": "Lakers vs. Pacers",
+    "research_date": "2026-03-25",
+    "research_price": 0.805,
+    "current_price": 0.795,
+    "price_change": -0.01,
+    "price_trend": "\u2193",
+    "confidence_pct": 83,
+    "sources_summary": "Covers: Game script calls for LAL to cruise over Indiana. Lakers heavy favorites. No moneyline expert pick but ML implied ~80-82%.",
+    "red_flags": [
+      "EV check fails: 0.83 < 0.805 + 0.08 = 0.885"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "75-90\u00a2 zone: need confidence/100 >= 0.885. Only 83% confidence - fails EV threshold."
+  },
+  {
+    "condition_id": "0xaf9460cd6cf21d33353766c46b8118a6634d386962fe95b8555e4104b9c057ec",
+    "question": "Spread: Lakers (-10.5)",
+    "research_date": "2026-03-25",
+    "research_price": 0.455,
+    "current_price": 0.43,
+    "price_change": -0.025,
+    "price_trend": "\u2193",
+    "confidence_pct": 58,
+    "sources_summary": "Covers: Lakers should cruise but -10.5 is a significant spread. No explicit spread pick. Pacers have scored well lately.",
+    "red_flags": [
+      "Large spread of 10.5 pts",
+      "No expert pick for this spread"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Only 58% confident Lakers cover -10.5."
+  },
+  {
+    "condition_id": "0x0a23ef1bc0718876ff637c557cb4182e54407efcc4eddc0b48c9962923d4d844",
+    "question": "Spread: Spurs (-15.5)",
+    "research_date": "2026-03-25",
+    "research_price": 0.54,
+    "current_price": 0.555,
+    "price_change": 0.015,
+    "price_trend": "\u2191",
+    "confidence_pct": 55,
+    "sources_summary": "No expert pick for SA vs MEM. Very large spread of 15.5 pts.",
+    "red_flags": [
+      "No expert data",
+      "Large spread"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. Insufficient data, only 55%."
+  },
+  {
+    "condition_id": "0x582c66d505843a09b656d6d120d5616d1004150f9de25e3158b0037ee5104c0d",
+    "question": "Rangers vs. Maple Leafs",
+    "research_date": "2026-03-25",
+    "research_price": 0.545,
+    "current_price": 0.555,
+    "price_change": 0.01,
+    "price_trend": "\u2191",
+    "confidence_pct": 52,
+    "sources_summary": "Covers NHL: u6.5 total pick for NYR@TOR (both ranked bottom in xG/60 in March). No ML expert pick. Expert backs Rangers player props (Lafreniere).",
+    "red_flags": [
+      "No moneyline expert pick",
+      "Both teams ranked low in xG/60 in March"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. Insufficient ML data, only 52%."
+  },
+  {
+    "condition_id": "0xdf5fbdda438d2e6b49f22e4f0d64dda2c630de5ec2b431599576adfb00d7116f",
+    "question": "Lakers vs. Pacers: O/U 237.5",
+    "research_date": "2026-03-25",
+    "research_price": 0.515,
     "current_price": 0.565,
-    "price_change": 0,
-    "price_trend": "→",
-    "researched_at": "2026-03-24T23:08:00Z"
-  },
-  "0xf1e520ff07536c6a102dc4092ec58a182797a0680bbb2b1a097b6ceb7587a544": {
-    "question": "Ducks vs. Canucks",
-    "confidence_pct": 40,
-    "sources_summary": "Covers features Brock Boeser pick for Vancouver (o0.5 assists +175). Boeser on hot streak with 6 assists in March. Canucks at home. Market prices Ducks at 61.5¢ which seems high.",
-    "red_flags": "Can only bet YES (Ducks). Canucks appear to be the favored team. Ducks rebuilding. Market may be mispriced AGAINST us.",
+    "price_change": 0.05,
+    "price_trend": "\u2191",
+    "confidence_pct": 50,
+    "sources_summary": "No expert O/U pick for LAL@IND. Pacers 8th-fastest pace. No clear edge.",
+    "red_flags": [
+      "No expert data"
+    ],
     "decision": "SKIP",
-    "allocated_usd": 0,
-    "research_price": 0.615,
-    "current_price": 0.615,
-    "price_change": 0,
-    "price_trend": "→",
-    "researched_at": "2026-03-24T23:08:00Z"
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. Insufficient data."
   },
-  "0xfb9a66e2ecb32f2745037a25594c7eea17715cdc27beb642aee3516af20774e8": {
-    "question": "Golden Knights vs. Jets",
-    "confidence_pct": 53,
-    "sources_summary": "Covers has individual prop pick for Jets player (Samberg blocks). VGK @ WPG. Jets at home. Market at 53.5¢ for VGK.",
-    "red_flags": "Market closing ~56 min. Jets have home court. No strong moneyline edge.",
+  {
+    "condition_id": "0x742cccb8094536132d2afee783308a6eb3498a094f2082dc26dd13bfd0bf3c2b",
+    "question": "Illinois Fighting Illini vs. Houston Cougars",
+    "research_date": "2026-03-25",
+    "research_price": 0.405,
+    "current_price": 0.415,
+    "price_change": 0.01,
+    "price_trend": "\u2192",
+    "confidence_pct": 35,
+    "sources_summary": "Covers NCAAB: HOU -3 expert pick + player props for Kingston Flemings & Ivisic. 'Unfair spot for Illinois facing Houston in South Regional.' Houston clear value.",
+    "red_flags": [
+      "4 expert picks for HOU side",
+      "Houston home region advantage"
+    ],
     "decision": "SKIP",
-    "allocated_usd": 0,
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Illinois expected to lose, only ~35% confidence."
+  },
+  {
+    "condition_id": "0x0f1174cfd58d69a9a48e0fa55f756428d00fec2147b755e8f109b27da6de2bce",
+    "question": "Heat vs. Cavaliers: O/U 242.5",
+    "research_date": "2026-03-25",
+    "research_price": 0.525,
+    "current_price": 0.505,
+    "price_change": -0.02,
+    "price_trend": "\u2193",
+    "confidence_pct": 50,
+    "sources_summary": "Covers: Bam projected under 19pts at CLE. Lower scoring expected but no direct total expert pick.",
+    "red_flags": [
+      "No direct O/U pick"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. Insufficient data."
+  },
+  {
+    "condition_id": "0xe0d0feec47e857b4ea3640f774e1200ed8b2c2cf69be0d9f89f5a10b600a4572",
+    "question": "Spread: Thunder (-2.5)",
+    "research_date": "2026-03-25",
+    "research_price": 0.485,
+    "current_price": 0.475,
+    "price_change": -0.01,
+    "price_trend": "\u2193",
+    "confidence_pct": 57,
+    "sources_summary": "Covers: Expert picks OKC ML but OKC are only ~57% ML favorites (-135). Covering -2.5 spread is less certain.",
+    "red_flags": [
+      "OKC ML only ~57% per market, spread cover is ~52-55%"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. OKC cover -2.5 only ~55%, well below threshold."
+  },
+  {
+    "condition_id": "0x9fcbd4577befa10a6d8a40b962c347c82156bbf50616567eca44240bb4499be6",
+    "question": "Spread: Pistons (-3.5)",
+    "research_date": "2026-03-25",
+    "research_price": 0.485,
+    "current_price": 0.485,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 72,
+    "sources_summary": "Covers: Both expert picks for DET -2.5. One model says DET is closer to 5-pt favorites. DET won 6 of 7 vs ATL. However market asks for -3.5 which is slightly more than consensus spread.",
+    "red_flags": [
+      "Experts picked -2.5, not -3.5",
+      "Covering 3.5 with Cade Cunningham out"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. 72% confidence insufficient - experts picked -2.5 not -3.5."
+  },
+  {
+    "condition_id": "0x9b51d021c60ec92110e2af1a7970923aa1c2ff5dc2baaff0ea11766f427b2797",
+    "question": "Rockets vs. Timberwolves",
+    "research_date": "2026-03-25",
+    "research_price": 0.535,
+    "current_price": 0.545,
+    "price_change": 0.01,
+    "price_trend": "\u2191",
+    "confidence_pct": 50,
+    "sources_summary": "Covers: Kevin Durant o26.5 points prop, comp models split. No ML expert pick for HOU@MIN. KD scoring above 26.5 historically vs MIN but model says under 24.57.",
+    "red_flags": [
+      "No ML expert pick"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. No ML expert data."
+  },
+  {
+    "condition_id": "0xe96bab86f43e9ae8647eedb5ed680747a8875571c027d11f1f2bae39867d4209",
+    "question": "Nebraska Cornhuskers vs. Iowa Hawkeyes",
+    "research_date": "2026-03-25",
     "research_price": 0.535,
     "current_price": 0.535,
-    "price_change": 0,
-    "price_trend": "→",
-    "researched_at": "2026-03-24T23:08:00Z"
-  },
-  "0x74e77fc999045940760b08d64888b893a592e1a53ecd83f547bcc63f725df928": {
-    "question": "Kings vs. Flames",
-    "confidence_pct": 56,
-    "sources_summary": "Covers backs u5.5 total (+100) for this game. Calgary has allowed only 5 goals in last 3 games. Under has hit in 5 of last 6 H2H. No moneyline pick for Kings.",
-    "red_flags": "No clear moneyline edge. Covers pick is for total, not winner. EV check fails: 0.56 < 0.645.",
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 58,
+    "sources_summary": "Covers: NEB -1.5 expert pick. 'Nebraska plays slow pace, split season series with Iowa in plodding games.' Slight NEB home advantage.",
+    "red_flags": [
+      "Very close game - NEB only -1.5 favorites",
+      "Iowa effectively slows games"
+    ],
     "decision": "SKIP",
-    "allocated_usd": 0,
-    "research_price": 0.565,
-    "current_price": 0.565,
-    "price_change": 0,
-    "price_trend": "→",
-    "researched_at": "2026-03-24T23:08:00Z"
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. NEB only ~55-58% win prob per expert consensus."
   },
-  "0x0a4d8df0971335e951e402342ef1675b790ecfe1f3b4221d6d91c6e7e551adf0": {
-    "question": "Counter-Strike: 9INE vs OG (BO3) - BC Game Masters Championship Group D",
-    "confidence_pct": 55,
-    "sources_summary": "HLTV blocked (403). Market at 63.5¢ mid with 5¢ spread (low liquidity signal). No external data available for 9INE vs OG form.",
-    "red_flags": "HLTV blocked, no CS2 data. Large 5¢ spread = low liquidity. No informed edge.",
-    "decision": "SKIP",
-    "allocated_usd": 0,
-    "research_price": 0.635,
-    "current_price": 0.635,
-    "price_change": 0,
-    "price_trend": "→",
-    "researched_at": "2026-03-24T23:08:00Z"
-  },
-  "0x93f27df1c9748a89bc3969d4d3c40660dba28a48462a72a6dc3d8142ee41df9b": {
-    "question": "Spread: Cavaliers (-9.5)",
-    "confidence_pct": 40,
-    "sources_summary": "Covers explicitly backs ORL +10.5 (-105). Cleveland has gone 6-21-1 ATS when laying 7+ pts. Cavs 3-10 ATS with rest edge. Magic motivated after slipping in standings.",
-    "red_flags": "Covers betting AGAINST Cavaliers covering this spread. We would need to bet YES (Cavs cover -9.5) which is against the expert pick.",
-    "decision": "SKIP",
-    "allocated_usd": 0,
-    "research_price": 0.53,
-    "current_price": 0.53,
-    "price_change": 0,
-    "price_trend": "→",
-    "researched_at": "2026-03-24T23:08:00Z"
-  },
-  "0x165184132e217393670fa98855a0cf2597120489e2fcac4823d1f481c9a46ceb": {
-    "question": "Spread: New Mexico Lobos (-10.5)",
-    "confidence_pct": 38,
-    "sources_summary": "Covers backs JOES +10.5 (-110). St. Joe's 9-1 SU/ATS in last 10 games. Hawks 56th in adjusted D, 32nd in opponent eFG%. NM has 6 losses since Feb with 2 close wins.",
-    "red_flags": "Covers explicitly bets AGAINST Lobos covering -10.5. Expert pick is St. Joe's +10.5.",
-    "decision": "SKIP",
-    "allocated_usd": 0,
-    "research_price": 0.515,
-    "current_price": 0.515,
-    "price_change": 0,
-    "price_trend": "→",
-    "researched_at": "2026-03-24T23:08:00Z"
-  },
-  "0x1098204b102ae5aa40ced0aea47ca09c9ce95325835ad498cafcbd21e1ff693d": {
-    "question": "Dota 2: Team Falcons vs OG (BO2) - ESL One Birmingham Group B",
-    "confidence_pct": 50,
-    "sources_summary": "HLTV blocked. No external Dota 2 data available. Market at exactly 50¢ = pure coin flip.",
-    "red_flags": "No data. 50¢ market = no edge.",
-    "decision": "SKIP",
-    "allocated_usd": 0,
-    "research_price": 0.5,
-    "current_price": 0.5,
-    "price_change": 0,
-    "price_trend": "→",
-    "researched_at": "2026-03-24T23:08:00Z"
-  },
-  "0x29bc0f500eb53efb8797a6fb63f7aef0be3c6e09beb7b6b371db24d4812ec632": {
-    "question": "Nuggets vs. Suns: O/U 232.5",
-    "confidence_pct": 50,
-    "sources_summary": "Covers computer projects Under 231.5 for DEN/PHX total (233.5 line), 5.43% EV. Market at 50.5¢ (essentially coin flip for OVER 232.5). Jokic dominant passer, matchup could be high-scoring but market pricing reflects uncertainty.",
-    "red_flags": "Market essentially 50/50. Over/under totals very hard to call. No clear edge at 50.5¢.",
-    "decision": "SKIP",
-    "allocated_usd": 0,
+  {
+    "condition_id": "0xf52281b85968106cb91361c480e3184a23fc2e3df393f3fd431bb933ecc15f61",
+    "question": "Spread: 76ers (-6.5)",
+    "research_date": "2026-03-25",
     "research_price": 0.505,
     "current_price": 0.505,
-    "price_change": 0,
-    "price_trend": "→",
-    "researched_at": "2026-03-25T01:08:00Z"
-  },
-  "0xe96bab86f43e9ae8647eedb5ed680747a8875571c027d11f1f2bae39867d4209": {
-    "question": "Nebraska Cornhuskers vs. Iowa Hawkeyes",
-    "confidence_pct": 52,
-    "sources_summary": "NCAA Tournament Sweet 16 matchup. Market at 53.5¢ for Nebraska. Fox Sports confirms game March 26. No expert picks found from Covers for this matchup specifically. Very close odds (~-107 equivalent).",
-    "red_flags": "No expert picks available. Sweet 16 = tournament bracket game, both teams motivated. Market at 53.5¢ shows near 50/50. EV check fails: 0.52 < 0.615.",
-    "decision": "SKIP",
-    "allocated_usd": 0,
-    "research_price": 0.535,
-    "current_price": 0.535,
     "price_change": 0.0,
-    "price_trend": "→",
-    "researched_at": "2026-03-25T01:08:00Z"
+    "price_trend": "\u2192",
+    "confidence_pct": 72,
+    "sources_summary": "Covers: 2 expert picks for PHI -6.5. 'Sets up perfectly for Philly to cover.' Bulls on loss after win (historically horrible spot). 76ers in bounce-back mode, possibly Embiid+George returning. PHI rested and motivated.",
+    "red_flags": [
+      "Embiid/George health uncertain"
+    ],
+    "decision": "TRADE",
+    "skip_reason": null
   },
-  "0x9b51d021c60ec92110e2af1a7970923aa1c2ff5dc2baaff0ea11766f427b2797": {
-    "question": "Rockets vs. Timberwolves",
-    "confidence_pct": 54,
-    "sources_summary": "Rockets (43-28) at Timberwolves (44-28). Anthony Edwards OUT for MIN. Rockets -1.5 favorites. But Rockets lost 3 straight road games, 1-6 ATS last 7 games, 0-3 ATS last 4 away. Timberwolves 6-4 SU last 10, beat Celtics 102-92 recently. Market 52.5¢ for Rockets.",
-    "red_flags": "Rockets in brutal road form (3 straight losses). ATS trends heavily favor Timberwolves. Edwards OUT helps Rockets but road woes are real. EV check fails: 0.54 < 0.605.",
+  {
+    "condition_id": "0x655a0130edfb5fb0962a0444ea73ccd3bed3752f21dbac918436411f6d6b2465",
+    "question": "Wizards vs. Jazz",
+    "research_date": "2026-03-25",
+    "research_price": 0.385,
+    "current_price": 0.385,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 50,
+    "sources_summary": "Covers: 4 computer picks for WAS@UTA (Bilal Coulibaly points, pace matchup favors Wizards offensively). No ML expert pick.",
+    "red_flags": [
+      "No ML expert pick",
+      "Only computer/prop picks"
+    ],
     "decision": "SKIP",
-    "allocated_usd": 0,
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. No ML expert data, only prop computer picks."
+  },
+  {
+    "condition_id": "0x8d9817060c7e4937795ceb9dbaca799e0b0a390077b6595692e75b3bdbdcb23a",
+    "question": "Raptors vs. Clippers",
+    "research_date": "2026-03-25",
+    "research_price": 0.385,
+    "current_price": 0.385,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 50,
+    "sources_summary": "No Covers expert data for TOR@LAC.",
+    "red_flags": [
+      "No expert data"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "Insufficient research data."
+  },
+  {
+    "condition_id": "0x82311677c99ed1446012b4fd760aafaa917dd958ba00db2ec06f0a793fa2d3a4",
+    "question": "Spread: Cavaliers (-2.5)",
+    "research_date": "2026-03-25",
+    "research_price": 0.505,
+    "current_price": 0.505,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 50,
+    "sources_summary": "Covers: Expert says Heat +3.5 has value (closer to pick'em). If near pick'em, Cavs covering -2.5 is only ~52-53%.",
+    "red_flags": [
+      "Expert values Heat, undermining Cavs -2.5"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. CLE covering only ~52%, below threshold."
+  },
+  {
+    "condition_id": "0x153295802ef8c4d1a89aa1704c3072ef3f44953e6f464bdba2bc2e52e045c1ce",
+    "question": "Bucks vs. Trail Blazers: O/U 225.5",
+    "research_date": "2026-03-25",
+    "research_price": 0.515,
+    "current_price": 0.5,
+    "price_change": -0.015,
+    "price_trend": "\u2193",
+    "confidence_pct": 50,
+    "sources_summary": "No Covers expert data for MIL@POR O/U.",
+    "red_flags": [
+      "No expert data"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "Insufficient research data."
+  },
+  {
+    "condition_id": "0x8019508a5b508995f67ff415c0975906a8d5fc374e88700abc39c84c6eda79b8",
+    "question": "Spread: Spurs (-16.5)",
+    "research_date": "2026-03-25",
+    "research_price": 0.505,
+    "current_price": 0.515,
+    "price_change": 0.01,
+    "price_trend": "\u2191",
+    "confidence_pct": 50,
+    "sources_summary": "No Covers expert data for SAS@MEM -16.5.",
+    "red_flags": [
+      "No expert data",
+      "Very large spread"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "Insufficient data. Very large spread requires very high confidence."
+  },
+  {
+    "condition_id": "0x3bb951fdfa51bc8443b0cfcd08ad562fdcd66388846a34ff232075cc21de8599",
+    "question": "LoL: Karmine Corp Blue vs Movistar KOI F\u00e9nix (BO3) - EMEA Masters Playoffs",
+    "research_date": "2026-03-25",
+    "research_price": 0.9,
+    "current_price": 0.9,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 78,
+    "sources_summary": "KCB heavily favored at 90\u00a2. High favorite in esports. EV check requires 98% confidence for 75-90\u00a2 zone - impossible.",
+    "red_flags": [
+      "EV threshold impossible: need conf/100 >= 0.90 + 0.08 = 0.98"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "75-90\u00a2 zone: EV check requires 98% confidence. Mathematically impossible to satisfy."
+  },
+  {
+    "condition_id": "0x05c367d0c6831d38daac553a6688f9c1ecaa4f01659b8292e8d2b0bab0f8e9f8",
+    "question": "Wild vs. Panthers",
+    "research_date": "2026-03-26",
+    "research_price": 0.555,
+    "current_price": 0.565,
+    "price_change": 0.01,
+    "price_trend": "\u2191",
+    "confidence_pct": 42,
+    "sources_summary": "Multiple computer models (iHeart x3): Panthers 4, Wild 3. Consensus across 3 outlets picks Panthers win. Wild at 56.5\u00a2 but model is clear: Panthers win.",
+    "red_flags": [
+      "3 separate computer models all pick Panthers 4-3",
+      "Wild would need to overcome model consensus"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. Multiple models consistently pick Panthers win. Wild YES only ~42% confident."
+  },
+  {
+    "condition_id": "0x6fcdc6c92a5350ec90bd4e0c506947bab08e8a6f1f6cafce9eb052facf0312bf",
+    "question": "CD Riestra vs. CA San Lorenzo de Almagro: O/U 1.5",
+    "research_date": "2026-03-25",
+    "research_price": 0.515,
+    "current_price": 0.515,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 50,
+    "sources_summary": "No BBC data for Argentine football game. Market closes 22:00 UTC (~56 min from now).",
+    "red_flags": [
+      "Game imminent - <1h to close",
+      "No expert data"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "Insufficient data. Game closes too soon for reliable research."
+  },
+  {
+    "condition_id": "0x3aa86f658190f3eeac20ce24762cff77a911eb117833b7e735347ee0c355c8d2",
+    "question": "Rockets vs. Timberwolves: O/U 223.5",
+    "research_date": "2026-03-25",
+    "research_price": 0.485,
+    "current_price": 0.485,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 50,
+    "sources_summary": "No Covers expert data for HOU@MIN O/U.",
+    "red_flags": [
+      "No expert data"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "Insufficient research data."
+  },
+  {
+    "condition_id": "0x81edac85ad1e2da4614a9007ee3c3ce9f4d0149f87a82932ff9b3d501c0be20b",
+    "question": "Spread: Cavaliers (-3.5)",
+    "research_date": "2026-03-25",
+    "research_price": 0.465,
+    "current_price": 0.465,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 48,
+    "sources_summary": "Covers: Expert values Heat side. CLE covering -3.5 on back-to-back vs healthy Heat only ~48%.",
+    "red_flags": [
+      "Expert backs Heat value",
+      "CLE on back-to-back"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Only 48% confidence CLE covers -3.5."
+  },
+  {
+    "condition_id": "0x46c72d5cb92972c2d20d24f6ba68065a10545853557d0474cc73a88a718428f4",
+    "question": "Thunder vs. Celtics: O/U 218.5",
+    "research_date": "2026-03-25",
+    "research_price": 0.505,
+    "current_price": 0.56,
+    "price_change": 0.055,
+    "price_trend": "\u2191",
+    "confidence_pct": 40,
+    "sources_summary": "Covers: Expert picks UNDER 218.5. 'OKC elite defense, BOS league-slowest pace. Last meeting was 206 pts.' YES = OVER, but experts say under.",
+    "red_flags": [
+      "Expert explicitly picks UNDER - opposite of YES"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "Market YES = over 218.5, but expert explicitly picks under. Low confidence for OVER."
+  },
+  {
+    "condition_id": "0xee0184d2387e2d7808c75f0f2879e3817e44a38f469dcdc228aba2e79fc11807",
+    "question": "Bruins vs. Sabres: O/U 6.5",
+    "research_date": "2026-03-25",
+    "research_price": 0.505,
+    "current_price": 0.505,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 50,
+    "sources_summary": "Covers NHL: Props for BOS@BUF but no explicit O/U pick. Tage Thompson and McAvoy coverage only.",
+    "red_flags": [
+      "No O/U expert pick"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "Insufficient O/U data."
+  },
+  {
+    "condition_id": "0xb2033780ce3bc7ee1b5babb4b2e042e1b16cf16e6f31f0ee2c4dea3ced1ca550",
+    "question": "Hawks vs. Pistons: O/U 228.5",
+    "research_date": "2026-03-25",
+    "research_price": 0.505,
+    "current_price": 0.51,
+    "price_change": 0.005,
+    "price_trend": "\u2192",
+    "confidence_pct": 50,
+    "sources_summary": "No explicit O/U expert pick for ATL@DET from Covers.",
+    "red_flags": [
+      "No expert data"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "Insufficient research data."
+  },
+  {
+    "condition_id": "0xf8eda578ee4dcb26707e4f364af6bf6be495ede6e33eb7f7344762f3b8bc856d",
+    "question": "Spread: Warriors (-11.5)",
+    "research_date": "2026-03-25",
+    "research_price": 0.535,
+    "current_price": 0.545,
+    "price_change": 0.01,
+    "price_trend": "\u2191",
+    "confidence_pct": 50,
+    "sources_summary": "No Covers expert data for BKN@GSW -11.5.",
+    "red_flags": [
+      "No expert data"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "Insufficient research data."
+  },
+  {
+    "condition_id": "0x0d6ef58db21fbee18bd5a1f60d2264b467854697abc087659fb995e726482dbc",
+    "question": "Lakers vs. Pacers: O/U 238.5",
+    "research_date": "2026-03-25",
+    "research_price": 0.485,
+    "current_price": 0.535,
+    "price_change": 0.05,
+    "price_trend": "\u2191",
+    "confidence_pct": 50,
+    "sources_summary": "No explicit O/U pick for LAL@IND from Covers.",
+    "red_flags": [
+      "No expert data"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "Insufficient research data."
+  },
+  {
+    "condition_id": "0x2f3fbdc3608043ba6124e42ded7c12f39e18216cbf34e0c35bf56680e1f87a89",
+    "question": "Counter-Strike: G2 vs Sinners (BO3) - BC Game Masters Championship",
+    "research_date": "2026-03-25",
+    "research_price": 0.755,
+    "current_price": 0.755,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 80,
+    "sources_summary": "Strafe.com: G2 ranked #9 globally, Sinners #42. Community 94% vote G2. H2H: only 1 prior match (Aug 2021, Sinners won 2-1). Current form: both 2/5 last 5 games. G2 significantly higher ranked but recent form equal.",
+    "red_flags": [
+      "Market already at 75.5\u00a2 AMM, needs 83.5% confidence for EV",
+      "Both teams 2/5 recent form - not dominant G2",
+      "Only 1 H2H (Sinners won it)",
+      "Live match - may already be in progress"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "75-90\u00a2 zone: need confidence/100 >= 0.755 + 0.08 = 0.835. Only 80% confidence - EV threshold not met."
+  },
+  {
+    "condition_id": "0xfb0cd4dbe378fc2545829780ce18eb60ba56aafd799c81dce7f91f8d12c41931",
+    "question": "Lakers vs. Pacers: O/U 239.5",
+    "research_date": "2026-03-25",
+    "research_price": 0.515,
+    "current_price": 0.515,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 50,
+    "sources_summary": "Similar to O/U 237.5 and 238.5 for this game - no expert O/U pick for LAL@IND. Pacers 8th-fastest pace but no clear total edge.",
+    "red_flags": [
+      "No expert data",
+      "Near-identical to already-SKIPped O/U 237.5 and O/U 238.5"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. No expert total data, insufficient edge."
+  },
+  {
+    "condition_id": "0x5c89874aed8817fb9aa6355b5aef7bee3c8215190d7b8dedbafebf1a2567390f",
+    "question": "Spread: Auburn Tigers (-9.5)",
+    "research_date": "2026-03-25",
+    "research_price": 0.465,
+    "current_price": 0.465,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 35,
+    "sources_summary": "Covers NCAAB: Expert picks Nevada +9.5 (-110). Auburn 2-13 ATS in last 15 games, KeShawn Murphy opted out, depth issues. Nevada shoots 36.2% from deep, 5th-highest FT rate.",
+    "red_flags": [
+      "Expert explicitly picks Nevada +9.5 (against Auburn -9.5)",
+      "Auburn 2-13 ATS last 15 games",
+      "Murphy opted out - depth issues"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Expert picks against Auburn covering -9.5. Only ~35% confidence."
+  },
+  {
+    "condition_id": "0x7946fd76cca9267f5fa109e8bee02848916dcf7028dfa86c80eb20d964d6dcce",
+    "question": "Spread: Auburn Tigers (-8.5)",
+    "research_date": "2026-03-25",
+    "research_price": 0.505,
+    "current_price": 0.505,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 40,
+    "sources_summary": "Covers NCAAB: Expert picks Nevada +9.5 - Auburn -8.5 is less demanding but Auburn still 2-13 ATS last 15 and has depth issues with Murphy out.",
+    "red_flags": [
+      "Expert picks Nevada, Auburn's ATS record terrible",
+      "Auburn 2-13 ATS last 15"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. Auburn ATS record terrible, expert against Auburn. Only ~40% confidence."
+  },
+  {
+    "condition_id": "0x860c80210cdff8ef1d709508f4d72602a225ae20191c2a985e254ee0908835b7",
+    "question": "Heat vs. Cavaliers: O/U 243.5",
+    "research_date": "2026-03-25",
+    "research_price": 0.485,
+    "current_price": 0.485,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 48,
+    "sources_summary": "Covers: No direct O/U pick for MIA@CLE 243.5. Bam Adebayo projected under 19 pts, suggesting lower-scoring game. Lower confidence for OVER.",
+    "red_flags": [
+      "No direct O/U expert pick",
+      "Bam prop points toward under"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. No O/U expert pick, prop data hints under. Only 48%."
+  },
+  {
+    "condition_id": "0x56f547a79493d1f8306b29c415e52fb2b5462ad017c4cb31a84152dc1b4e0523",
+    "question": "Spread: Purdue Boilermakers (-7.5)",
+    "research_date": "2026-03-26",
+    "research_price": 0.495,
+    "current_price": 0.505,
+    "price_change": 0.01,
+    "price_trend": "\u2191",
+    "confidence_pct": 62,
+    "sources_summary": "CBS Sports/SportsLine: Purdue -7.5 confirmed (Purdue -355 ML). Texas 24.4% to win = Purdue 75.6% ML. SportsLine model 28-22 on side picks. No explicit spread pick (behind paywall). AZCentral: Purdue big fav.",
+    "red_flags": [
+      "Spread pick behind paywall",
+      "Texas 11-seed won 3 straight",
+      "No explicit -7.5 cover expert pick"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. No explicit spread expert pick. Purdue strong ML fav but -7.5 cover uncertain. Only 62%."
+  },
+  {
+    "condition_id": "0xd054586fd01c9df8335e400e8f28aa903afa0875e9409e274d006a9141d619c0",
+    "question": "Spread: Houston Cougars (-3.5)",
+    "research_date": "2026-03-26",
+    "research_price": 0.465,
+    "current_price": 0.445,
+    "price_change": -0.01,
+    "price_trend": "\u2193",
+    "confidence_pct": 55,
+    "sources_summary": "CBS Sports: Houston -2.5 in books (Polymarket harder at -3.5). Houston -164 ML, Illinois +137. OddsShark: 'Cougars Can Cover' headline for -2.5 only. SportsLine: HOU 3 players projected 12+ pts.",
+    "red_flags": [
+      "Books at -2.5, Polymarket at -3.5 (harder)",
+      "No expert pick specifically for -3.5",
+      "Illinois 26-8, won 4 of last 5"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Polymarket spread harder than books, no expert pick for -3.5. Only 55%."
+  },
+  {
+    "condition_id": "0xf1626aef5eadc0591a50bd1f1dbcb21306b0a3157a2100c973e2406d6ddf950f",
+    "question": "Pelicans vs. Pistons",
+    "research_date": "2026-03-26",
+    "research_price": 0.355,
+    "current_price": 0.355,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 30,
+    "sources_summary": "Doc's Sports: Pistons (51-19) vs Pelicans (25-47). Massive record mismatch. Pelicans lost 111-106 to Cavs last game. Cade Cunningham OUT (Lung injury). DET heavy favorites.",
+    "red_flags": [
+      "Pistons 51-19, Pelicans 25-47 (huge mismatch)",
+      "Cade Cunningham OUT",
+      "Pelicans last 5 games: losing record"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Pistons massive favorites, Pelicans YES only ~30% win prob."
+  },
+  {
+    "condition_id": "0xf746f355b414b64bf26947af27c0b6a64f885920da13375b73d9722676d07cfa",
+    "question": "Devils vs. Predators",
+    "research_date": "2026-03-26",
+    "research_price": 0.495,
+    "current_price": 0.495,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 42,
+    "sources_summary": "Computer model (iHeart): Predators 4, Devils 3. Model explicitly picks Nashville win. Devils at 49.5\u00a2 = near 50/50 but model leans Predators.",
+    "red_flags": [
+      "Computer model picks Predators (4-3)",
+      "No expert ML pick found"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Computer model picks Predators. Devils YES only ~42%."
+  },
+  {
+    "condition_id": "0x62fc79c8c0860444d9683502fb8c20ea372f83f854fe1f3c6c4162e41b7538b9",
+    "question": "Spurs vs. Grizzlies: O/U 233.5",
+    "research_date": "2026-03-25",
+    "research_price": 0.505,
+    "current_price": 0.505,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 48,
+    "sources_summary": "No Covers expert data for SAS@MEM O/U 233.5. Only Stephon Castle o17.5 points prop pick for SA. No total pick.",
+    "red_flags": [
+      "No O/U expert pick"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. No O/U expert data. Only 48%."
+  },
+  {
+    "condition_id": "0x8f86882f58ca2486548c1ae87fd3bc7b0664072a503ec8c7b839deed5c66cce9",
+    "question": "Spread: Rockets (-1.5)",
+    "research_date": "2026-03-26",
+    "research_price": 0.515,
+    "current_price": 0.515,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 42,
+    "sources_summary": "USA Today: HOU 1-6 ATS last 7 games. Edwards out for MIN. Rockets lost 132-124 at Chicago as 9-pt fav Monday. MIN won 3 of last 4. Edwards injury means big MIN boost.",
+    "red_flags": [
+      "Rockets 1-6 ATS last 7 games",
+      "Anthony Edwards OUT \u2014 huge MIN lineup boost",
+      "Rockets road trip, just lost big as heavy fav",
+      "MIN Under 4-1 last 5 (pace-slowing)",
+      "No expert pick for HOU -1.5"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. HOU ATS terrible (1-6 last 7), Edwards out for MIN, no expert pick. Only ~42% confidence HOU covers."
+  },
+  {
+    "condition_id": "0x4084f58e9677dde08ea9b84939e3633f9eeefc6f6d564eaf0843a4cbfe9cf44b",
+    "question": "Spread: Nuggets (-11.5)",
+    "research_date": "2026-03-26",
+    "research_price": 0.47,
+    "current_price": 0.47,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 48,
+    "sources_summary": "USA Today: Line moved from DEN -14.5 to -12.5 (huge 4-pt move toward DAL). 88% public on Dallas +12.5. WinnersAndWhiners: Dallas +12.5 pick. DAL eliminated from playoffs, but line move = steam on DAL.",
+    "red_flags": [
+      "Line moved 4 pts (from -14.5 to -12.5) = strong smart money on DAL",
+      "88% public and sharp picks on Dallas +12.5",
+      "No expert pick for Denver covering -11.5 \u2014 W&W picks DAL +12.5",
+      "DAL eliminated but getting cover picks"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Line moved heavily toward DAL, experts pick DAL +12.5, not DEN -11.5. Only ~48% confidence."
+  },
+  {
+    "condition_id": "0x118eb2a36e2e7bada4d1cdeb47ea4fd654d7be666f4593602e2cf6029954bb4b",
+    "question": "Spread: Clippers (-4.5)",
+    "research_date": "2026-03-26",
+    "research_price": 0.48,
+    "current_price": 0.48,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 48,
+    "sources_summary": "USA Today/Bleacher Nation: Books say LAC -3.5 (easier than Polymarket -4.5). TOR (40-31) better record than LAC (36-36). Raptors just won 4 of last 6, demolished Utah +143-127. Clippers won 2 straight after 4-game skid.",
+    "red_flags": [
+      "Polymarket -4.5 is harder than books -3.5",
+      "Raptors actually better record (40-31 vs 36-36)",
+      "Raptors strong form (143-127 demolition vs Utah)",
+      "No explicit expert pick for Clippers -4.5"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Raptors better team by record, market spread harder than books, no clear expert pick. Only ~48% confidence."
+  },
+  {
+    "condition_id": "0x2bc1088c5aa055350231f3a4ae4dd47a8b8bbefe1ea5044c58c959ef570605a6",
+    "question": "Mavericks vs. Nuggets: O/U 245.5",
+    "research_date": "2026-03-26",
+    "research_price": 0.505,
+    "current_price": 0.505,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 65,
+    "sources_summary": "WinnersAndWhiners: Over 244.5 explicit pick, projected Denver 128 Dallas 123 = 251 total. DAL 5/6 last games went Over. DEN: last game 248 (125-123 OT). Both push pace. Last meeting: Over 224.5 cashed.",
+    "red_flags": [
+      "Books at 244.5, Polymarket at 245.5 (1pt harder)",
+      "Dallas recently lost to GSW 131-137 in OT (268 pts)",
+      "DEN 125-123 vs PHX OT (248 pts)",
+      "Edwards out for MIN tonight (different game)"
+    ],
+    "decision": "TRADE",
+    "skip_reason": null
+  },
+  {
+    "condition_id": "0xf819e1271eb99985143505bd2ad3ca397515a37e741e66b411e954c8ef14ab97",
+    "question": "Arkansas Razorbacks vs. Arizona Wildcats: O/U 165.5",
+    "research_date": "2026-03-26",
+    "research_price": 0.485,
+    "current_price": 0.485,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 48,
+    "sources_summary": "CBS/SportsLine (11-1 O/U run): picks UNDER 166.5. Arizona under in 5 of 7 Thursday games. Arkansas OVER in 9 of last 11. Books at 166.5 - Polymarket at 165.5 is easier but SportsLine model leans under. Mixed signals.",
+    "red_flags": [
+      "SportsLine proven model picks UNDER 166.5 (equivalent to under 165.5)",
+      "Arizona trend: under in 5/7 Thursday games",
+      "Conflicting: Arkansas over in 9/11 recent games"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Conflicting signals - SportsLine proven model picks under, Arizona Thursday trend also under. Mixed evidence, only ~48% confidence for OVER."
+  },
+  {
+    "condition_id": "0x27c8a932a8b03e56e2621dd1dc1b8e4bc3f1b51fc9f55264b1099e0acf14e2eb",
+    "question": "Knicks vs. Hornets",
+    "research_date": "2026-03-26",
+    "research_price": 0.485,
+    "current_price": 0.485,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 30,
+    "sources_summary": "SportsGrid model: Charlotte Hornets favored to win by 6 pts, 66% win probability for Hornets. Yahoo: Hornets are slight favorites. Polymarket YES = Knicks win but market implies only ~35% Knicks win.",
+    "red_flags": [
+      "Model says Hornets win by 6 (66% probability)",
+      "Knicks are road underdogs",
+      "Polymarket YES = Knicks win, but 35-50\u00a2 zone requires 80% confidence"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Models and odds favor Hornets. Knicks win only ~34% likely. Cannot meet threshold."
+  },
+  {
+    "condition_id": "0x8c6bcf1a4bea1ca87839723918f2bb867beeba85343fc3ca0f3a7b10ca210d66",
+    "question": "Blue Jackets vs. Canadiens",
+    "research_date": "2026-03-26",
+    "research_price": 0.485,
+    "current_price": 0.485,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 38,
+    "sources_summary": "Computer model: Canadiens 4, Blue Jackets 3. SportsBettingDime: Canadiens (39-21-12 SU) better record than CBJ (38-22-11). Game at Bell Centre (Canadiens home). CBJ YES at 48.5\u00a2 = underdogs.",
+    "red_flags": [
+      "Computer model picks Canadiens to win",
+      "Canadiens home + better record",
+      "Blue Jackets are underdogs, only ~38% win prob"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Computer model picks Canadiens win. Blue Jackets YES only ~38% likely."
+  },
+  {
+    "condition_id": "0x818fbb20862adb089c7bf29940fdb39a86670783c7b0dc5e2658e05cc31a2d93",
+    "question": "Spread: Nebraska Cornhuskers (-1.5)",
+    "research_date": "2026-03-26",
+    "research_price": 0.505,
+    "current_price": 0.505,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 68,
+    "sources_summary": "CBS Sports: NEB -1.5 favorites per latest odds. Bennett Stirtz (Iowa) projected 19.8 pts. Covers: 'Quality over heroics, NEB the better team Thursday.' Multiple experts picking Nebraska. CBS model favors NEB cover.",
+    "red_flags": [
+      "Iowa slows pace effectively",
+      "Stirtz projected 19.8 pts for Iowa",
+      "Close game expected (-1.5 spread)"
+    ],
+    "decision": "TRADE",
+    "skip_reason": null
+  },
+  {
+    "condition_id": "0xd1a824d8e3eb509b9a51b2bb857dc3e85c96f327b5d7d9279b53d8e7f757e2b2",
+    "question": "Kings vs. Canucks",
+    "research_date": "2026-03-26",
+    "research_price": 0.615,
+    "current_price": 0.615,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 55,
+    "sources_summary": "Computer model (iHeart/Spreads): Canucks 4, Kings 3 \u2014 picks Canucks win. Bleacher Nation: Kings -172 ML on road (heavy fav), Canucks +144. Market 61.5\u00a2 implies Kings ~62% win prob but model contradicts.",
+    "red_flags": [
+      "Computer model explicitly picks Canucks (4-3)",
+      "Kings on road despite being -172 ML",
+      "Conflicting signals: sharp odds vs computer pick"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. Computer model picks Canucks win. Conflicting signals, only ~55% confidence for Kings YES."
+  },
+  {
+    "condition_id": "0x7b1f0b5473c652fe8b3cb1fefc95e0021c6300911f5f54c857c62ecd090abba1",
+    "question": "Kings vs. Magic: O/U 230.5",
+    "research_date": "2026-03-26",
+    "research_price": 0.5,
+    "current_price": 0.5,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 35,
+    "sources_summary": "Dimers model (10k simulations): Kings 108, Magic 122 = 230 total \u2014 projects UNDER 230.5. Magic -1011 ML, -15.5 spread. YES = Over, but model explicitly says under.",
+    "red_flags": [
+      "Dimers explicitly projects 230 (under 230.5)",
+      "Magic heavy -1011 favorites (blowout potential = slow 4th Q)",
+      "Low liquidity market ($2,784)"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone needs 65% confidence for OVER. Dimers model projects under (230 < 230.5). Only ~35% confidence."
+  },
+  {
+    "condition_id": "0xca2cbc854a3c45dde9199a423be2590f544bcf45485adc3ce47cf128d791b42a",
+    "question": "Pelicans vs. Pistons: O/U 225.5",
+    "research_date": "2026-03-26",
     "research_price": 0.525,
     "current_price": 0.525,
     "price_change": 0.0,
-    "price_trend": "→",
-    "researched_at": "2026-03-25T01:08:00Z"
+    "price_trend": "\u2192",
+    "confidence_pct": 55,
+    "sources_summary": "Doc's Sports: NOP 115.5 ppg, DET heavy favs (51-19). Pistons pace=fast + Pelicans pace=middling. SportsGrid: Cade Cunningham OUT (Lung). No explicit O/U pick found.",
+    "red_flags": [
+      "No expert O/U pick",
+      "Cade OUT could lower DET total"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. No explicit O/U pick. Cade OUT could suppress DET scoring. Only 55%."
+  },
+  {
+    "condition_id": "0x94e74d6e460e5d16268f79fcd5915ff550df3c5a1d7f660c137d4ff31ba3eeb9",
+    "question": "Spread: Magic (-15.5)",
+    "research_date": "2026-03-26",
+    "research_price": 0.505,
+    "current_price": 0.505,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 55,
+    "sources_summary": "USA Today/BetMGM: ORL favored by 16.5 in books. Polymarket -15.5 slightly easier. Expert SGP pick: Kings +15.5 on spread (i.e., picking SAC to cover). No expert picks ORL -15.5.",
+    "red_flags": [
+      "Expert SGP explicitly includes Kings +15.5 (against Magic)",
+      "Books -16.5, Polymarket -15.5 (easier)",
+      "Kings 19-53 \u2013 massive mismatch but spread is huge"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. Expert SGP pick includes Kings +15.5, conflicting with Magic covering -15.5. Only ~55%."
+  },
+  {
+    "condition_id": "0x10da3117d9ca9b8129b04b777cc362cd8bc37baed4f12e6ac2a62edcbf12173d",
+    "question": "Wales vs. Bosnia and Herzegovina: O/U 2.5",
+    "research_date": "2026-03-26",
+    "research_price": 0.475,
+    "current_price": 0.475,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 55,
+    "sources_summary": "Covers: Expert picks Harry Wilson to score (player prop), Wales ML. Goal.com snippet mentions 'Over 2.5 goals' as a bet. Sportskeeda: 3 of 4 H2H meetings produced under 2.5 goals. Racing Post: 'tightly contested.' Mixed signals on total.",
+    "red_flags": [
+      "3 of 4 H2H meetings UNDER 2.5",
+      "World Cup playoff = cautious play",
+      "No explicit O/U 2.5 expert pick"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. H2H history heavily leans under. No explicit O/U expert pick. Only ~55% confidence."
+  },
+  {
+    "condition_id": "0xab5dc033d363ef9bcacba8f735b209f9006a87d4ac4cafd7cc30b0480116c7c4",
+    "question": "Knicks vs. Hornets: O/U 223.5",
+    "research_date": "2026-03-26",
+    "research_price": 0.495,
+    "current_price": 0.495,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 45,
+    "sources_summary": "Bleacher Nation: Hornets ranked 8th in defensive points allowed (112.1 ppg). SportsGrid model: CHA wins by 6, 66% win prob. No explicit O/U expert pick for NYK@CHA total.",
+    "red_flags": [
+      "No O/U expert pick found",
+      "Hornets strong defense (112.1 ppg allowed)",
+      "Market at ~50/50"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. No explicit O/U pick. Hornets defense suggests under lean. Only 45%."
+  },
+  {
+    "condition_id": "0x9e740afa452f280154ba0bf8a89bf41263033d25a9cea18e954877c2bb78d5f1",
+    "question": "Pelicans vs. Pistons: O/U 226.5",
+    "research_date": "2026-03-26",
+    "research_price": 0.505,
+    "current_price": 0.505,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 50,
+    "sources_summary": "Similar to O/U 225.5 (also researched today: SKIP). Cade Cunningham OUT, no explicit O/U pick. Marginally harder line than 225.5.",
+    "red_flags": [
+      "Cade OUT suppresses DET scoring",
+      "No expert O/U pick",
+      "Near-identical SKIP analysis as 225.5"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. Same data as O/U 225.5 research. No expert total pick, Cade OUT. Only ~50%."
+  },
+  {
+    "condition_id": "0x98e653f7436b9db05a804c8dc90e0849bc1ebdb6df081c9e8273860975f2879c",
+    "question": "Avalanche vs. Jets",
+    "research_date": "2026-03-26",
+    "research_price": 0.625,
+    "current_price": 0.625,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 66,
+    "sources_summary": "iHeart/FoxSports model: Avalanche 4, Jets 3. Moneyline: Avalanche -191 (~66% implied). AVL 47-13-10, Jets 30-29-12. AVL won 3 straight.",
+    "red_flags": [
+      "EV check fails: need 70.5% confidence for 62.5\u00a2 zone",
+      "Jets at home (Canada Life Centre)",
+      "Jets 5-3-2 last 10 \u2014 not terrible form"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone: EV check requires confidence/100 >= 0.625 + 0.08 = 0.705. Model gives ~66%. Fails EV threshold."
+  },
+  {
+    "condition_id": "0x462d1e51f71495060e521b1ee97529c1b8767a2fd18d299db9e5ea12cb931d48",
+    "question": "Dota 2: Team Yandex vs Team Spirit (BO3) - ESL One Birmingham Playoffs",
+    "research_date": "2026-03-26",
+    "research_price": 0.565,
+    "current_price": 0.565,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 58,
+    "sources_summary": "EGamersWorld: Bookmakers see Yandex as favorite at 1.732 odds (~57.8% win prob). Team Spirit at 1.87. Market closes 14:00 UTC.",
+    "red_flags": [
+      "Confidence below 65% threshold",
+      "Close to market close time (14:00 UTC)",
+      "Conflicting sources on favorite"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. Bookmaker odds imply only ~58% for Yandex. Below threshold."
+  },
+  {
+    "condition_id": "0xc2c0e71cca280bbe90e3838f79ddc40fe58ea2132ca88727a2e4242508920f0a",
+    "question": "Knicks vs. Hornets: O/U 224.5",
+    "research_date": "2026-03-26",
+    "research_price": 0.48,
+    "current_price": 0.48,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 42,
+    "sources_summary": "Same game context as Knicks vs. Hornets O/U 223.5 (already SKIP). Hornets strong defense (112.1 ppg allowed). No O/U expert pick.",
+    "red_flags": [
+      "No expert O/U pick",
+      "Hornets 8th-best defense",
+      "35-50\u00a2 zone requires 80% confidence"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Mirroring 223.5 analysis. No O/U expert data. Only ~42%."
+  },
+  {
+    "condition_id": "0x813540567fcb76210b35bbdaf0707bfccc01e529749f523108f761366592f6d7",
+    "question": "Capitals vs. Utah",
+    "research_date": "2026-03-26",
+    "research_price": 0.415,
+    "current_price": 0.415,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 40,
+    "sources_summary": "Doc's Sports: Washington (35-27-9) at Utah (37-28-6) at Delta Center. WSH lost last game 3-2 to AVL. Utah has better record and home ice. No ML expert pick for Washington.",
+    "red_flags": [
+      "Utah better record (37-28-6 vs 35-27-9)",
+      "WSH on road, lost last game",
+      "No ML expert pick for WSH"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Utah has better record + home ice. WSH YES only ~40% win prob. No expert ML pick for Washington."
+  },
+  {
+    "condition_id": "0x350ef0d87df99d532893bef1a17faa72e0437266c8b1233a78c2f858283117b4",
+    "question": "Oilers vs. Golden Knights",
+    "research_date": "2026-03-26",
+    "research_price": 0.435,
+    "current_price": 0.435,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 42,
+    "sources_summary": "Bleacher Nation: VGK (32-26-14) favored on home ice vs EDM (35-28-9). Best bet found: Connor McDavid Over 1.5 points prop only. No ML expert pick for Edmonton.",
+    "red_flags": [
+      "VGK home ice advantage",
+      "No ML expert pick for EDM",
+      "Only prop pick found (McDavid)"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. VGK home favorites. No ML expert pick for EDM. Only ~42% confidence."
+  },
+  {
+    "condition_id": "0x2a7be326158a8ce78c4f38304fd489cf60ed7483a4ef5865c6303134a86898e1",
+    "question": "Penguins vs. Senators",
+    "research_date": "2026-03-26",
+    "research_price": 0.415,
+    "current_price": 0.415,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 35,
+    "sources_summary": "iHeart/computer model: Senators 4, Penguins 3. ML Pick: Senators (-153). OTT (38-24-9) beat DET 3-2 last game. PIT (35-20-16) coming off 6-2 blowout loss to AVL.",
+    "red_flags": [
+      "Computer model picks Senators (4-3)",
+      "Senators ML pick (-153)",
+      "Penguins just lost 6-2 to AVL",
+      "OTT at home at Canadian Tire Centre"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Computer model and ML expert pick Senators. PIT YES only ~35% win prob."
+  },
+  {
+    "condition_id": "0xfcfa2e978a4c88415189fbf7504d21d4b2023641daecef6b3b90b2e4be3f6948",
+    "question": "Blackhawks vs. Flyers",
+    "research_date": "2026-03-26",
+    "research_price": 0.395,
+    "current_price": 0.395,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 35,
+    "sources_summary": "SportsGambler: picks Philadelphia Flyers at 1.91 in regulation. Flyers won 6 of last 10 H2H, including last meeting 3-1. CHI won back-to-back road games but expert favors PHI.",
+    "red_flags": [
+      "Expert explicitly picks Flyers (1.91 odds)",
+      "PHI won 6 of last 10 H2H",
+      "PHI at home (Xfinity Mobile Arena)"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Expert picks Flyers. CHI YES only ~35% win prob given expert pick and H2H record."
+  },
+  {
+    "condition_id": "0xf964d61c05f4580daa9f78af744075897bb9881efe4ddfb695d7f43699f28615",
+    "question": "Spread: Pistons (-4.5)",
+    "research_date": "2026-03-26",
+    "research_price": 0.495,
+    "current_price": 0.495,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 72,
+    "sources_summary": "Predictem: DET -4.5 explicit pick, projects DET by ~8 pts (net rating gap +11.5/100 poss). Murphy III + Murray questionable for NOP (back-to-back, tanking). atsstats: 58% public on DET. DET won 7 of 8.",
+    "red_flags": [
+      "Cade Cunningham still OUT for DET",
+      "35-50\u00a2 zone requires 80% confidence",
+      "Only 1 explicit expert pick found"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Strong case for DET but only 72% confidence with Cade OUT. Threshold not met."
+  },
+  {
+    "condition_id": "0x8664c4391a9d0a6b394a890de3d407aeef618c3c0c9aa52b7eb2b80a96594dcf",
+    "question": "Stars vs. Islanders",
+    "research_date": "2026-03-26",
+    "research_price": 0.545,
+    "current_price": 0.545,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 60,
+    "sources_summary": "SportGambler: DAL ML at 1.80 explicit pick. W&W: projects Stars 3-2 win but puck line pick NYI +1.5. iHeart computer: Islanders 4, Stars 3. 91% public on NYI, line stable.",
+    "red_flags": [
+      "iHeart computer picks Islanders win",
+      "91% public on NYI, line held (sharp DAL?)",
+      "Stars dropped 3 straight",
+      "NYI home ice"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. W&W projects DAL win but picks NYI puck line. Computer picks NYI. Mixed signals, ~60% for DAL ML."
+  },
+  {
+    "condition_id": "0x2988c83589cd6f392b61df4c4d60a44ae98b44f8aeb6f912573a522abcc03348",
+    "question": "Texas Longhorns vs. Purdue Boilermakers: O/U 147.5",
+    "research_date": "2026-03-26",
+    "research_price": 0.495,
+    "current_price": 0.495,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 72,
+    "sources_summary": "CBS SportsLine model (proven): picks OVER 147.5. Over hit in last 3 H2H meetings. Over in 7 of past games for this matchup. Books at 148.5 (Polymarket 147.5 easier).",
+    "red_flags": [
+      "35-50\u00a2 zone requires 80% confidence",
+      "Only CBS SportsLine as source (no 2nd confirmation)",
+      "Texas strong defense in tournament play"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. CBS SportsLine OVER pick strong but only 72% confidence \u2014 threshold not met."
+  },
+  {
+    "condition_id": "SCANNER_ONLY_NO_WATCHLIST",
+    "question": "Sharks vs. Blues",
+    "research_date": "2026-03-26",
+    "research_price": 0.46,
+    "current_price": 0.46,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 30,
+    "sources_summary": "W&W: Blues -1.5 puck line pick, projected Blues 4 Sharks 2. Sharks on 5-game losing streak, worse defense on road. Blues in best form of last month.",
+    "red_flags": [
+      "Expert picks Blues -1.5 (against Sharks)",
+      "Sharks 5-game losing streak",
+      "Blues at home in best form",
+      "Market not in watchlist - no condition_id for trading"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "Not in watchlist (no condition_id). Expert explicitly picks Blues. Sharks YES only ~30% win prob."
+  },
+  {
+    "condition_id": "SCANNER_ONLY_NO_WATCHLIST_2",
+    "question": "Dota 2: Aurora vs Tundra Esports (BO3) - ESL One Birmingham",
+    "research_date": "2026-03-26",
+    "research_price": 0.45,
+    "current_price": 0.45,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 45,
+    "sources_summary": "GosuGamers: Aurora and Yandex led the group stage. Tundra in upper bracket. Aurora vs Tundra playoff match. No explicit BO3 pick found.",
+    "red_flags": [
+      "No explicit BO3 expert pick",
+      "Match not in watchlist - no condition_id for trading",
+      "Aurora top seed but Tundra also upper bracket"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "Not in watchlist. No explicit expert pick. Insufficient data."
+  },
+  {
+    "condition_id": "0x59d81cb0dd49f515863164de49526dbdc9418760b3b1b667269b2c3375fdc12d",
+    "question": "Knicks vs. Hornets: O/U 222.5",
+    "research_date": "2026-03-26",
+    "research_price": 0.545,
+    "current_price": 0.545,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 50,
+    "sources_summary": "CBS/Bleacher Nation: O/U 222.5. Knicks won both prior meetings by 15+ pts. Charlotte 8th-best defense (112.1 ppg allowed). No explicit OVER expert pick found.",
+    "red_flags": [
+      "No explicit OVER expert pick",
+      "Hornets defense 8th-best (112.1 ppg)",
+      "50-65\u00a2 zone needs 65%"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. No expert total pick. Hornets defense hints under. Only ~50%."
+  },
+  {
+    "condition_id": "0xaed541c8f7a11f5866e18ae7c21c35a304dcdc9d2e0530bf8d68e125e5d416ba",
+    "question": "Spread: Arizona Wildcats (-7.5)",
+    "research_date": "2026-03-26",
+    "research_price": 0.535,
+    "current_price": 0.535,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 58,
+    "sources_summary": "AZCentral/CBS: Arizona -7.5 confirmed. SportsLine model projects ARK 20.4 pts. Multiple AZ players projected 10.9+ pts. No explicit -7.5 cover expert pick found.",
+    "red_flags": [
+      "No explicit spread expert pick for AZ -7.5",
+      "SportsLine UNDER lean for total suggests slow game",
+      "50-65\u00a2 zone needs 65%"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. No explicit -7.5 spread expert pick. Under lean suggests low-scoring = less decisive. ~58%."
+  },
+  {
+    "condition_id": "0x436f645f4d276d61a100421742d2daf2eca13a191f1a9f2b0ea9209151ac1490",
+    "question": "Counter-Strike: Sinners vs BIG (BO3) - BC Game Masters Championship Playoffs",
+    "research_date": "2026-03-26",
+    "research_price": 0.89,
+    "current_price": 0.89,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 82,
+    "sources_summary": "Liquipedia: SINNERS advancing through playoffs. Beat Monte 2-0 yesterday. HLTV: SINNERS vs BIG official match. BIG also strong in ranking. Market 89\u00a2 YES = SINNERS win.",
+    "red_flags": [
+      "75-90\u00a2 zone EV impossible: need 97% confidence (0.89 + 0.08)",
+      "BIG also competitive at this tournament level"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "75-90\u00a2 zone: EV requires confidence/100 >= 0.89 + 0.08 = 0.97. Mathematically impossible to satisfy. SKIP despite SINNERS likely favored."
+  },
+  {
+    "condition_id": "0xfecc5d4b5065cc5e796e5c9dbb749448672c4d6d542962cb10d6762db80ed5be",
+    "question": "Ducks vs. Flames",
+    "research_date": "2026-03-26",
+    "research_price": 0.545,
+    "current_price": 0.545,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 58,
+    "sources_summary": "W&W: Puck line pick Flames +1.5, Under 6.5. Both teams on 4-game winning streaks. Ducks ML -142 (59% implied). No explicit Ducks ML pick found.",
+    "red_flags": [
+      "W&W picks Flames puck line +1.5 (against Ducks -1.5)",
+      "No explicit ML expert pick for Ducks",
+      "Under lean from W&W"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. No ML expert pick for Ducks. W&W actually takes Flames puck line. ~58% implied only."
+  },
+  {
+    "condition_id": "0x1673956ee76e61d9a5427b62c50ef2977acb15c48d87012bb87dffbb2882f80b",
+    "question": "Nebraska Cornhuskers vs. Iowa Hawkeyes: O/U 131.5",
+    "research_date": "2026-03-26",
+    "research_price": 0.525,
+    "current_price": 0.525,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 45,
+    "sources_summary": "CBS SportsLine: O/U 131.5. NEB-IOWA historically 'plodding, slow-paced games.' NEB -1.5 favorite. NO explicit OVER pick found. Under lean from pace data.",
+    "red_flags": [
+      "No expert OVER pick",
+      "Both teams play slow pace per prior research",
+      "50-65\u00a2 zone needs 65%"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone requires 65% confidence. Both NEB and Iowa slow-paced teams. No explicit over pick. Only ~45% confidence for over."
+  },
+  {
+    "condition_id": "0x875b3e5a36d7354cb1f3d305ff986d083edbce6f0f0997db1253d2abade64f76",
+    "question": "Nebraska Cornhuskers vs. Iowa Hawkeyes: O/U 132.5",
+    "research_date": "2026-03-26",
+    "research_price": 0.485,
+    "current_price": 0.485,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 38,
+    "sources_summary": "Same game context as O/U 131.5. NEB-IOWA slow-paced game. Harder total. No expert OVER pick.",
+    "red_flags": [
+      "Harder total than 131.5",
+      "No expert OVER pick",
+      "Slow-paced matchup"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50\u00a2 zone requires 80% confidence. Even harder total, same slow-pace concern. Only ~38% confidence."
+  },
+  {
+    "condition_id": "0x594d9b1fbc50e4257fd42a609bd838b0f19c619040ca3de11fab52f721b940a5",
+    "question": "St. John's Red Storm vs. Duke Blue Devils: O/U 141.5",
+    "research_date": "2026-03-26",
+    "research_price": 0.525,
+    "current_price": 0.525,
+    "price_change": 0.0,
+    "price_trend": "\u2192",
+    "confidence_pct": 65,
+    "sources_summary": "Predictem: Model projects 146.9 total \u2014 explicit OVER 141.5 pick (5.4 pts over line). Duke 16-6 all-time vs St. John's. Pickswise: St. John's +6.5 (competitive game). USA Today: multiple experts preview Duke strong.",
+    "red_flags": [
+      "Only 1 explicit model source (Predictem)",
+      "Duke may win big \u2192 garbage time slows scoring"
+    ],
+    "decision": "TRADE",
+    "skip_reason": null
   }
-}
+]

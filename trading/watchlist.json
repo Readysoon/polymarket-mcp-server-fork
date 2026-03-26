@@ -1,37 +1,322 @@
 {
   "markets": [
     {
-      "question": "Thunder vs. Celtics",
-      "condition_id": "0xae0bacd8397c67269daea66181ae83fdb39c522616db9d93f69e63eadc975daa",
-      "slug": "nba-okc-bos-2026-03-25",
-      "yes_price": 0.575,
-      "liquidity": 426574.8871,
-      "end_date": "2026-03-25",
-      "end_datetime": "2026-03-25T23:30:00Z",
+      "question": "Kings vs. Canucks",
+      "condition_id": "0xd1a824d8e3eb509b9a51b2bb857dc3e85c96f327b5d7d9279b53d8e7f757e2b2",
+      "slug": "nhl-lak-van-2026-03-26",
+      "yes_price": 0.625,
+      "liquidity": 412922.0945,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T02:00:00Z",
       "clob_token_ids": [
-        "107873275012767872940089881195560536670209084976663788557868940051552278053349",
-        "12160776981609763533501553797509574492383854838127183751971345302533107597107"
+        "106988653240778910361211296011361895611835814605643547098811119658875804802903",
+        "106629085945232945877690705490200329595996859935409722676112859430925745797120"
       ],
-      "volume_24h": 253336.89853699997,
+      "volume_24h": 505304.93806600064,
       "status": "watching",
-      "amm_bid": 0.57,
-      "amm_ask": 0.58,
+      "amm_bid": 0.62,
+      "amm_ask": 0.63,
       "amm_spread": 0.01,
-      "amm_mid": 0.575
+      "amm_mid": 0.625
     },
     {
-      "question": "Rockets vs. Timberwolves",
-      "condition_id": "0x9b51d021c60ec92110e2af1a7970923aa1c2ff5dc2baaff0ea11766f427b2797",
-      "slug": "nba-hou-min-2026-03-25",
-      "yes_price": 0.525,
-      "liquidity": 153462.8926,
-      "end_date": "2026-03-26",
-      "end_datetime": "2026-03-26T01:30:00Z",
+      "question": "Avalanche vs. Jets",
+      "condition_id": "0x98e653f7436b9db05a804c8dc90e0849bc1ebdb6df081c9e8273860975f2879c",
+      "slug": "nhl-col-wpg-2026-03-26",
+      "yes_price": 0.625,
+      "liquidity": 489108.1557,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T00:00:00Z",
       "clob_token_ids": [
-        "92478388793162701688228117655170187221557905686840754078187669782700067722048",
-        "111191110166685402703345809072251891917258815235664098103848966919430435408957"
+        "21925688177300407689534174747357938405746631874389949718454663425832446863773",
+        "59693605422715250403576125506527638107814812366362706591864429775945647086185"
       ],
-      "volume_24h": 104466.22631499992,
+      "volume_24h": 470380.9242319998,
+      "status": "watching",
+      "amm_bid": 0.62,
+      "amm_ask": 0.63,
+      "amm_spread": 0.01,
+      "amm_mid": 0.625
+    },
+    {
+      "question": "Michigan State Spartans vs. Connecticut Huskies",
+      "condition_id": "0xcdedd4460eed2734e4680bf73b08872fe7347931814cda6f2eb570231ba08c03",
+      "slug": "cbb-mst-uconn-2026-03-27",
+      "yes_price": 0.465,
+      "liquidity": 5139483.1967,
+      "end_date": "2026-03-28",
+      "end_datetime": "2026-03-28T01:45:00Z",
+      "clob_token_ids": [
+        "23071365530007840499595140099244953388320355039725407838409210788227385062169",
+        "908726398549149977786555873192888390832262725037682630056119381505182857140"
+      ],
+      "volume_24h": 462082.83193,
+      "status": "watching",
+      "amm_bid": 0.46,
+      "amm_ask": 0.47,
+      "amm_spread": 0.01,
+      "amm_mid": 0.465
+    },
+    {
+      "question": "Capitals vs. Utah",
+      "condition_id": "0x813540567fcb76210b35bbdaf0707bfccc01e529749f523108f761366592f6d7",
+      "slug": "nhl-wsh-utah-2026-03-26",
+      "yes_price": 0.445,
+      "liquidity": 488072.9121,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T01:00:00Z",
+      "clob_token_ids": [
+        "45737621932485713337337507715594986478493489574706040139559830444101515766902",
+        "105942349223628289019114570783643104448282110895828044560199990778585620786988"
+      ],
+      "volume_24h": 322875.87575799966,
+      "status": "watching",
+      "amm_bid": 0.44,
+      "amm_ask": 0.45,
+      "amm_spread": 0.01,
+      "amm_mid": 0.445
+    },
+    {
+      "question": "Arkansas Razorbacks vs. Arizona Wildcats: O/U 165.5",
+      "condition_id": "0xf819e1271eb99985143505bd2ad3ca397515a37e741e66b411e954c8ef14ab97",
+      "slug": "cbb-ark-arz-2026-03-26-total-165pt5",
+      "yes_price": 0.5,
+      "liquidity": 263756.4539,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T01:45:00Z",
+      "clob_token_ids": [
+        "95626823256413396747317034380059459813322821737628731401164008751982874584718",
+        "53672610104884801589662124213210078919813716584355622362595283011438952484973"
+      ],
+      "volume_24h": 320461.3606599999,
+      "status": "watching",
+      "amm_bid": 0.49,
+      "amm_ask": 0.51,
+      "amm_spread": 0.02,
+      "amm_mid": 0.5
+    },
+    {
+      "question": "Sharks vs. Blues",
+      "condition_id": "0xdc5aec0a5139c27fa1d977f93e71152d91b54163461fd7919ff4d2ab8dbf1ae9",
+      "slug": "nhl-sj-stl-2026-03-26",
+      "yes_price": 0.455,
+      "liquidity": 471297.2109,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T00:00:00Z",
+      "clob_token_ids": [
+        "47522293291521277917590230349783805267332063364898381973739267409717329459370",
+        "112145946960844319509641364657281960689785111291715015538392974449973199746497"
+      ],
+      "volume_24h": 272445.7557959999,
+      "status": "watching",
+      "amm_bid": 0.45,
+      "amm_ask": 0.46,
+      "amm_spread": 0.01,
+      "amm_mid": 0.455
+    },
+    {
+      "question": "Oilers vs. Golden Knights",
+      "condition_id": "0x350ef0d87df99d532893bef1a17faa72e0437266c8b1233a78c2f858283117b4",
+      "slug": "nhl-edm-las-2026-03-26",
+      "yes_price": 0.435,
+      "liquidity": 407136.6521,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T01:30:00Z",
+      "clob_token_ids": [
+        "25013122691628868657688609861070177666952840580106522777753532634257745377085",
+        "88892298582893985315968192674551663250701176219471545724978729209571995024860"
+      ],
+      "volume_24h": 232137.4164239997,
+      "status": "watching",
+      "amm_bid": 0.43,
+      "amm_ask": 0.44,
+      "amm_spread": 0.01,
+      "amm_mid": 0.435
+    },
+    {
+      "question": "Spread: Purdue Boilermakers (-7.5)",
+      "condition_id": "0x56f547a79493d1f8306b29c415e52fb2b5462ad017c4cb31a84152dc1b4e0523",
+      "slug": "cbb-tx-pur-2026-03-26-spread-home-7pt5",
+      "yes_price": 0.555,
+      "liquidity": 135665.2279,
+      "end_date": "2026-03-26",
+      "end_datetime": "2026-03-26T23:10:00Z",
+      "clob_token_ids": [
+        "85415667566096267120925279069927294857587323132502557841241342277472924057387",
+        "54016595303352325410049035426698556427888763924057855966613247160099232407978"
+      ],
+      "volume_24h": 224885.69499099994,
+      "status": "watching",
+      "amm_bid": 0.55,
+      "amm_ask": 0.56,
+      "amm_spread": 0.01,
+      "amm_mid": 0.555
+    },
+    {
+      "question": "Nebraska Cornhuskers vs. Iowa Hawkeyes: O/U 132.5",
+      "condition_id": "0x875b3e5a36d7354cb1f3d305ff986d083edbce6f0f0997db1253d2abade64f76",
+      "slug": "cbb-nebr-iowa-2026-03-26-total-132pt5",
+      "yes_price": 0.475,
+      "liquidity": 34408.8962,
+      "end_date": "2026-03-26",
+      "end_datetime": "2026-03-26T23:30:00Z",
+      "clob_token_ids": [
+        "90942143070415859834926319342089324522939928333429187093825751390919224314315",
+        "70969505943082564017412412264664335051166964982415244645998864152600952357416"
+      ],
+      "volume_24h": 207545.803216,
+      "status": "watching",
+      "amm_bid": 0.48,
+      "amm_ask": 0.49,
+      "amm_spread": 0.01,
+      "amm_mid": 0.485
+    },
+    {
+      "question": "Texas Longhorns vs. Purdue Boilermakers: O/U 147.5",
+      "condition_id": "0x2988c83589cd6f392b61df4c4d60a44ae98b44f8aeb6f912573a522abcc03348",
+      "slug": "cbb-tx-pur-2026-03-26-total-147pt5",
+      "yes_price": 0.48,
+      "liquidity": 48089.5896,
+      "end_date": "2026-03-26",
+      "end_datetime": "2026-03-26T23:10:00Z",
+      "clob_token_ids": [
+        "89333514383436702280766474632235291649681695390880729740168726177167186585642",
+        "104758226349546436860195322769851154764849957924123748449488335631884536454959"
+      ],
+      "volume_24h": 206918.5462609999,
+      "status": "watching",
+      "amm_bid": 0.46,
+      "amm_ask": 0.47,
+      "amm_spread": 0.01,
+      "amm_mid": 0.465
+    },
+    {
+      "question": "Spread: Arizona Wildcats (-7.5)",
+      "condition_id": "0xaed541c8f7a11f5866e18ae7c21c35a304dcdc9d2e0530bf8d68e125e5d416ba",
+      "slug": "cbb-ark-arz-2026-03-26-spread-home-7pt5",
+      "yes_price": 0.535,
+      "liquidity": 331987.5594,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T01:45:00Z",
+      "clob_token_ids": [
+        "110206116697484557348821181564505072158019549479359571295195453313722606066116",
+        "70486622419794407206843359017506410182127424205262217857335980040717523184367"
+      ],
+      "volume_24h": 201507.06450100002,
+      "status": "watching",
+      "amm_bid": 0.53,
+      "amm_ask": 0.54,
+      "amm_spread": 0.01,
+      "amm_mid": 0.535
+    },
+    {
+      "question": "Texas Longhorns vs. Purdue Boilermakers: O/U 148.5",
+      "condition_id": "0x693480962df95fb3c45536b4b42aabb6b362f5a38b4cdc0a46ef3b36cb36103c",
+      "slug": "cbb-tx-pur-2026-03-26-total-148pt5",
+      "yes_price": 0.465,
+      "liquidity": 68961.9068,
+      "end_date": "2026-03-26",
+      "end_datetime": "2026-03-26T23:10:00Z",
+      "clob_token_ids": [
+        "70781183295342554079922208925078370472584492272083188042571775707855401789889",
+        "99833291180969407165044647334695208828864326944246640375233452874369462028049"
+      ],
+      "volume_24h": 188699.78001300004,
+      "status": "watching",
+      "amm_bid": 0.44,
+      "amm_ask": 0.45,
+      "amm_spread": 0.01,
+      "amm_mid": 0.445
+    },
+    {
+      "question": "Devils vs. Predators",
+      "condition_id": "0xf746f355b414b64bf26947af27c0b6a64f885920da13375b73d9722676d07cfa",
+      "slug": "nhl-nj-nsh-2026-03-26",
+      "yes_price": 0.495,
+      "liquidity": 381262.9043,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T00:00:00Z",
+      "clob_token_ids": [
+        "48118243461468539225604457280093731848423830389587555806454726937226676898750",
+        "12001948648388201975817070812681855544099449627357220037536958368807290559063"
+      ],
+      "volume_24h": 134278.22350099997,
+      "status": "watching",
+      "amm_bid": 0.49,
+      "amm_ask": 0.5,
+      "amm_spread": 0.01,
+      "amm_mid": 0.495
+    },
+    {
+      "question": "Ducks vs. Flames",
+      "condition_id": "0xfecc5d4b5065cc5e796e5c9dbb749448672c4d6d542962cb10d6762db80ed5be",
+      "slug": "nhl-ana-cal-2026-03-26",
+      "yes_price": 0.545,
+      "liquidity": 337583.3627,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T01:00:00Z",
+      "clob_token_ids": [
+        "111554545480171375211021123311619630577131002441238393096769783714798313444300",
+        "71255592309104705878304261934946486051875910903788544116808987192629695197753"
+      ],
+      "volume_24h": 128512.33566699996,
+      "status": "watching",
+      "amm_bid": 0.54,
+      "amm_ask": 0.55,
+      "amm_spread": 0.01,
+      "amm_mid": 0.545
+    },
+    {
+      "question": "Nebraska Cornhuskers vs. Iowa Hawkeyes: O/U 131.5",
+      "condition_id": "0x1673956ee76e61d9a5427b62c50ef2977acb15c48d87012bb87dffbb2882f80b",
+      "slug": "cbb-nebr-iowa-2026-03-26-total-131pt5",
+      "yes_price": 0.505,
+      "liquidity": 69586.4513,
+      "end_date": "2026-03-26",
+      "end_datetime": "2026-03-26T23:30:00Z",
+      "clob_token_ids": [
+        "25181365215845258187079437335758473032554084991650600161429195734919821272872",
+        "4147316895693984937294691770475712746475613624530158751091774836178832340215"
+      ],
+      "volume_24h": 110943.99169000002,
+      "status": "watching",
+      "amm_bid": 0.5,
+      "amm_ask": 0.51,
+      "amm_spread": 0.01,
+      "amm_mid": 0.505
+    },
+    {
+      "question": "Spread: Purdue Boilermakers (-6.5)",
+      "condition_id": "0x1141ab4e3abf2c85817f9b911b2d17e8a1b8c7f551ab6558868c9092f80888f0",
+      "slug": "cbb-tx-pur-2026-03-26-spread-home-6pt5",
+      "yes_price": 0.605,
+      "liquidity": 79855.4313,
+      "end_date": "2026-03-26",
+      "end_datetime": "2026-03-26T23:10:00Z",
+      "clob_token_ids": [
+        "80374829585421857316144270434864988584482242048942230623928042266845746422249",
+        "60850200669742950009363712771959695150512497827756340677781899429768378394797"
+      ],
+      "volume_24h": 109564.937125,
+      "status": "watching",
+      "amm_bid": 0.59,
+      "amm_ask": 0.6,
+      "amm_spread": 0.01,
+      "amm_mid": 0.595
+    },
+    {
+      "question": "Michigan State Spartans vs. Connecticut Huskies: O/U 134.5",
+      "condition_id": "0x007ce41344248dbff53abef1c591c94490e8626481260f1234cdbdeb2beff9ee",
+      "slug": "cbb-mst-uconn-2026-03-27-total-134pt5",
+      "yes_price": 0.525,
+      "liquidity": 143434.9386,
+      "end_date": "2026-03-28",
+      "end_datetime": "2026-03-28T01:45:00Z",
+      "clob_token_ids": [
+        "31096046405346212047603442436604356722746545659020384337519309897860490001063",
+        "88557596958983791283806020971493088701672350149237833516919142750145989331050"
+      ],
+      "volume_24h": 94159.47693399999,
       "status": "watching",
       "amm_bid": 0.52,
       "amm_ask": 0.53,
@@ -39,24 +324,252 @@
       "amm_mid": 0.525
     },
     {
-      "question": "Nebraska Cornhuskers vs. Iowa Hawkeyes",
-      "condition_id": "0xe96bab86f43e9ae8647eedb5ed680747a8875571c027d11f1f2bae39867d4209",
-      "slug": "cbb-nebr-iowa-2026-03-26",
-      "yes_price": 0.535,
-      "liquidity": 5258372.9333,
-      "end_date": "2026-03-26",
-      "end_datetime": "2026-03-26T04:00:00Z",
+      "question": "Spread: Duke Blue Devils (-6.5)",
+      "condition_id": "0xee09e7ad4876f3403678d8eb6de4898a780841de59e634e262985f11b291a471",
+      "slug": "cbb-stjohn-duke-2026-03-27-spread-home-6pt5",
+      "yes_price": 0.505,
+      "liquidity": 166302.6274,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T23:10:00Z",
       "clob_token_ids": [
-        "6143758395191852229197516807548968371194839168426806816072019634277215860097",
-        "8407769013236185519523211059555999620435865750175863777492373951715898856141"
+        "56993424750533235169815460788435629467697403425317363987949436959415886366272",
+        "82821867031005272593191111681731808990571696380699912276770859786293922990938"
       ],
-      "volume_24h": 78896.54693899996,
+      "volume_24h": 88715.24214100002,
       "status": "watching",
-      "amm_bid": 0.53,
-      "amm_ask": 0.54,
+      "amm_bid": 0.5,
+      "amm_ask": 0.51,
       "amm_spread": 0.01,
-      "amm_mid": 0.535
+      "amm_mid": 0.505
+    },
+    {
+      "question": "Spread: Michigan Wolverines (-9.5)",
+      "condition_id": "0xfe1e55b0a6ff09f3ab7e3ad5dab679afbcf6df66d7b5cd37f6ebb552dca19274",
+      "slug": "cbb-ala-mich-2026-03-27-spread-home-9pt5",
+      "yes_price": 0.485,
+      "liquidity": 90432.7124,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T23:35:00Z",
+      "clob_token_ids": [
+        "24668290430392103724725526088530613788654681313921886342692284408135010014672",
+        "45888770380872256106554384739286339515432861215300669239468888992644513960721"
+      ],
+      "volume_24h": 86593.89598200003,
+      "status": "watching",
+      "amm_bid": 0.48,
+      "amm_ask": 0.49,
+      "amm_spread": 0.01,
+      "amm_mid": 0.485
+    },
+    {
+      "question": "Spread: Purdue Boilermakers (-8.5)",
+      "condition_id": "0x25df3629f27705aa0fae9c8338f1edabff67c41db15d7f4fb952e778969e1b1b",
+      "slug": "cbb-tx-pur-2026-03-26-spread-home-8pt5",
+      "yes_price": 0.505,
+      "liquidity": 168610.6036,
+      "end_date": "2026-03-26",
+      "end_datetime": "2026-03-26T23:10:00Z",
+      "clob_token_ids": [
+        "50720129763303372640419132346369563574430096394851197430122152011270821125997",
+        "34870795901525612543597842635694785688184132467768086902724064329374606361458"
+      ],
+      "volume_24h": 86309.61465000005,
+      "status": "watching",
+      "amm_bid": 0.5,
+      "amm_ask": 0.51,
+      "amm_spread": 0.01,
+      "amm_mid": 0.505
+    },
+    {
+      "question": "Counter-Strike: Aurora Gaming vs TheMongolz (BO3) - BLAST Open Rotterdam Playoffs",
+      "condition_id": "0xe8e998f70289030f391412f08333a6d1f6f7a675f832c5f33ce1d6406d032172",
+      "slug": "cs2-aur1-mglz-2026-03-27",
+      "yes_price": 0.515,
+      "liquidity": 160202.7712,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T20:00:00Z",
+      "clob_token_ids": [
+        "15123330915598717189497973542773823331791286107430062590249277305264487336217",
+        "74447381118788675658562421814899918275262782076499363712892161070516026923500"
+      ],
+      "volume_24h": 71667.47902400003,
+      "status": "watching",
+      "amm_bid": 0.51,
+      "amm_ask": 0.52,
+      "amm_spread": 0.01,
+      "amm_mid": 0.515
+    },
+    {
+      "question": "Spread: Houston Cougars (-3.5)",
+      "condition_id": "0xd054586fd01c9df8335e400e8f28aa903afa0875e9409e274d006a9141d619c0",
+      "slug": "cbb-ill-hou-2026-03-26-spread-home-3pt5",
+      "yes_price": 0.44,
+      "liquidity": 275363.4763,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T02:05:00Z",
+      "clob_token_ids": [
+        "52759416439617292200269184234612426092076629921529283607253965142824719290393",
+        "36876375793781266548810247180340933295405288265445728423650993629986586885106"
+      ],
+      "volume_24h": 71660.2199030001,
+      "status": "watching",
+      "amm_bid": 0.43,
+      "amm_ask": 0.44,
+      "amm_spread": 0.01,
+      "amm_mid": 0.435
+    },
+    {
+      "question": "Spread: Iowa State Cyclones (-3.5)",
+      "condition_id": "0xc1fbe3cccad749c3a0d0a00b37239b9620e82488d004407ee546add491c58685",
+      "slug": "cbb-tenn-iowast-2026-03-27-spread-home-3pt5",
+      "yes_price": 0.51,
+      "liquidity": 55167.4952,
+      "end_date": "2026-03-28",
+      "end_datetime": "2026-03-28T02:10:00Z",
+      "clob_token_ids": [
+        "90319593684466312977123681023217304588529971409145229648118884868973389384446",
+        "17787443776067708614603896056430546769149251046527206847526290753247018244570"
+      ],
+      "volume_24h": 69547.99292500003,
+      "status": "watching",
+      "amm_bid": 0.51,
+      "amm_ask": 0.52,
+      "amm_spread": 0.01,
+      "amm_mid": 0.515
+    },
+    {
+      "question": "Heat vs. Cavaliers",
+      "condition_id": "0x795cf457372a694aa0e30de28a499ad2adbd2c7d6c754440fe69d3f1951234d0",
+      "slug": "nba-mia-cle-2026-03-27",
+      "yes_price": 0.355,
+      "liquidity": 57341.7561,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T23:30:00Z",
+      "clob_token_ids": [
+        "77559241074239791146483316774205587811353199775671108863986222014613556277366",
+        "110583828665134319756217985538045278198982902791171614366178394831028294472397"
+      ],
+      "volume_24h": 67575.97009699998,
+      "status": "watching",
+      "amm_bid": 0.35,
+      "amm_ask": 0.36,
+      "amm_spread": 0.01,
+      "amm_mid": 0.355
+    },
+    {
+      "question": "Will the price of Bitcoin be above $68,000 on March 27?",
+      "condition_id": "0x737ae93c68047e675e79ba3290272ab095e96cf70abb2018ac2a84ed60c8275c",
+      "slug": "bitcoin-above-68k-on-march-27",
+      "yes_price": 0.725,
+      "liquidity": 20374.5629,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T16:00:00Z",
+      "clob_token_ids": [
+        "57651566505308364793569280651276882597993293455483902010427634131587481684438",
+        "15289396132030641881286941213556444040208447519816335620499934748656149672346"
+      ],
+      "volume_24h": 66910.127361,
+      "status": "watching",
+      "amm_bid": 0.72,
+      "amm_ask": 0.73,
+      "amm_spread": 0.01,
+      "amm_mid": 0.725
+    },
+    {
+      "question": "Alabama Crimson Tide vs. Michigan Wolverines: O/U 172.5",
+      "condition_id": "0x12a9fe857c3145c8ca9e3ea56118f3bf7e4b79d8a6b3020745f50e75fc7e9493",
+      "slug": "cbb-ala-mich-2026-03-27-total-172pt5",
+      "yes_price": 0.515,
+      "liquidity": 17102.9436,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T23:35:00Z",
+      "clob_token_ids": [
+        "22065501326430061897545132399185473401747491626419835938895980260649267321184",
+        "74528678541815664030709393802981716049582325811993073382069200364081484331946"
+      ],
+      "volume_24h": 60233.855608,
+      "status": "watching",
+      "amm_bid": 0.51,
+      "amm_ask": 0.52,
+      "amm_spread": 0.01,
+      "amm_mid": 0.515
+    },
+    {
+      "question": "Valorant: Nightblood Gaming vs Azure Dragon Gaming (BO3) - VCL North America: Stage 2 Swiss Stage Group Stage",
+      "condition_id": "0xf8ff1e0234bcff62fd2c38d37483d4bbdb2f54291fe419c89edbcb17876b9bb5",
+      "slug": "val-nbg-adg-2026-03-26",
+      "yes_price": 0.75,
+      "liquidity": 6481.1308,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T04:30:00Z",
+      "clob_token_ids": [
+        "71470112270805798592228311135487752067486456186785179072948793313354177240351",
+        "61769393659901212101575421761652786878654472727157239602923135374591454046804"
+      ],
+      "volume_24h": 58842.24194300001,
+      "status": "watching",
+      "amm_bid": 0.78,
+      "amm_ask": 0.79,
+      "amm_spread": 0.01,
+      "amm_mid": 0.785
+    },
+    {
+      "question": "Tennessee Volunteers vs. Iowa State Cyclones: O/U 138.5",
+      "condition_id": "0x5cbf25ccfd1f73bb860da1972260abc039513d1e44b8a10d0232231d8fc60ca9",
+      "slug": "cbb-tenn-iowast-2026-03-27-total-138pt5",
+      "yes_price": 0.545,
+      "liquidity": 155331.8735,
+      "end_date": "2026-03-28",
+      "end_datetime": "2026-03-28T02:10:00Z",
+      "clob_token_ids": [
+        "82621425101473501109066466974097339838059117981447410246281069074129039182728",
+        "42976051740463056253705256757510889105574986369772750907104606640257785182448"
+      ],
+      "volume_24h": 57213.326539,
+      "status": "watching",
+      "amm_bid": 0.54,
+      "amm_ask": 0.55,
+      "amm_spread": 0.01,
+      "amm_mid": 0.545
+    },
+    {
+      "question": "Counter-Strike: 9z vs Game Hunters (BO3) - FERJEE In House Group B",
+      "condition_id": "0x053989a23c218c346fd299227a33b835bd4764619c8c0b7bdf22f346a16298aa",
+      "slug": "cs2-9z-gh-2026-03-26",
+      "yes_price": 0.716,
+      "liquidity": 2519.96948,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T03:00:00Z",
+      "clob_token_ids": [
+        "92003501961617695239347953323864077777128704262688471931215146651816198122637",
+        "99632390806652237364424401321859836532037860929473059464945195331746579297932"
+      ],
+      "volume_24h": 55464.136778,
+      "status": "watching",
+      "amm_bid": 0.811,
+      "amm_ask": 0.854,
+      "amm_spread": 0.043,
+      "amm_mid": 0.8325
+    },
+    {
+      "question": "Clippers vs. Pacers",
+      "condition_id": "0x946833228cae9572bc293e26a19d7333d162bec248b18df7ba0166c7ec76690b",
+      "slug": "nba-lac-ind-2026-03-27",
+      "yes_price": 0.79,
+      "liquidity": 32672.1921,
+      "end_date": "2026-03-27",
+      "end_datetime": "2026-03-27T23:00:00Z",
+      "clob_token_ids": [
+        "66623376009737658478526904468037148785237831025311445804738042694106366298048",
+        "90527368220056094499787958638375970410413722308601684454359395969617817547528"
+      ],
+      "volume_24h": 50091.221297,
+      "status": "watching",
+      "amm_bid": 0.79,
+      "amm_ask": 0.8,
+      "amm_spread": 0.01,
+      "amm_mid": 0.795
     }
   ],
-  "last_scanned": "2026-03-25T07:04:55.559121+00:00"
+  "last_scanned": "2026-03-26T23:05:17.663871+00:00"
 }
