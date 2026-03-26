@@ -602,11 +602,25 @@ try:
 except:
     pass
 
-# Round shares to 2 decimal places (Polymarket: maker amount max 2 decimals)
+# Find valid share amount where both maker (shares) and taker (shares*price)
+# have max 2 decimal places — Polymarket requirement
 _raw_shares = float(bet_size) / best_ask
-_rounded_shares = round(_raw_shares, 2)
-_adjusted_bet = round(_rounded_shares * best_ask, 2)
-bet_size = _adjusted_bet
+_best_shares = round(_raw_shares, 2)
+_best_cost = round(_best_shares * best_ask, 10)
+# Try quarter-share increments to find valid combo
+for _q in range(int(_raw_shares * 4) - 4, int(_raw_shares * 4) + 6):
+    _try_shares = round(_q / 4, 2)  # multiples of 0.25 → guaranteed 2 decimals
+    if _try_shares <= 0:
+        continue
+    _try_cost = _try_shares * best_ask
+    _try_cost_str = f'{_try_cost:.10f}'.rstrip('0')
+    _try_decimals = len(_try_cost_str.split('.')[-1]) if '.' in _try_cost_str else 0
+    if _try_decimals <= 2 and abs(_try_shares - _raw_shares) < abs(_best_shares - _raw_shares) + 0.5:
+        _best_shares = _try_shares
+        _best_cost = round(_try_cost, 2)
+        break
+bet_size = round(_best_cost, 2)
+_rounded_shares = _best_shares
 print(f"Adjusted bet_size to ${bet_size:.2f} ({_rounded_shares:.2f} shares @ {best_ask:.4f})")
 
 # Place market order (AMM)
