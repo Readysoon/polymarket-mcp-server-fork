@@ -396,18 +396,19 @@ if projected_shares < MIN_SHARES:
 # which always give 2-decimal quantities, then check that shares×price also rounds cleanly.
 
 _raw_shares  = float(bet_size) / best_ask
-_best_shares = round(_raw_shares, 2)
+_best_shares = None
 
-for _q in range(int(_raw_shares * 4) - 4, int(_raw_shares * 4) + 6):
-    _try_shares = round(_q / 4, 2)          # multiples of 0.25 → ≤ 2 decimal places
-    if _try_shares <= 0:
-        continue
-    _try_cost     = _try_shares * best_ask
-    _cost_str     = f'{_try_cost:.10f}'.rstrip('0')
-    _cost_decimals = len(_cost_str.split('.')[-1]) if '.' in _cost_str else 0
-    if _cost_decimals <= 2 and abs(_try_shares - _raw_shares) < abs(_best_shares - _raw_shares) + 0.5:
-        _best_shares = _try_shares
-        break
+# Search quarter-share increments: maker (shares) always has ≤ 2 decimals.
+# Pick closest valid combo where taker (shares×price) also rounds cleanly to 2 dp.
+for _q in range(max(1, int(_raw_shares * 4) - 8), int(_raw_shares * 4) + 9):
+    _try_shares = round(_q / 4, 2)   # 0.25 step → always ≤ 2 decimal places
+    _try_cost   = _try_shares * best_ask
+    if abs(_try_cost - round(_try_cost, 2)) < 1e-9:   # taker rounds cleanly
+        if _best_shares is None or abs(_try_shares - _raw_shares) < abs(_best_shares - _raw_shares):
+            _best_shares = _try_shares
+
+if _best_shares is None:
+    _best_shares = round(_raw_shares / 0.25) * 0.25   # last-resort
 
 bet_size = round(_best_shares * best_ask, 2)
 print(f"Rounded to ${bet_size:.2f} ({_best_shares:.2f} shares @ {best_ask:.4f})")
