@@ -1,5 +1,5 @@
-[
-  {
+{
+  "0xc75831d24fabad4f6ff9dc932a177b5a611d769a704b4ee446eb57add7a8fd51": {
     "condition_id": "0xc75831d24fabad4f6ff9dc932a177b5a611d769a704b4ee446eb57add7a8fd51",
     "question": "Heat vs. Cavaliers",
     "research_date": "2026-03-25",
@@ -15,7 +15,7 @@
     "decision": "SKIP",
     "skip_reason": "Price zone 35-50\u00a2 requires 80% confidence. Heat win prob ~45-48%, well below threshold."
   },
-  {
+  "0xae0bacd8397c67269daea66181ae83fdb39c522616db9d93f69e63eadc975daa": {
     "condition_id": "0xae0bacd8397c67269daea66181ae83fdb39c522616db9d93f69e63eadc975daa",
     "question": "Thunder vs. Celtics",
     "research_date": "2026-03-25",
@@ -32,7 +32,7 @@
     "decision": "TRADE",
     "skip_reason": null
   },
-  {
+  "0x9f8ff09142e006b13e263d07b6c8813e89327ba79bd73f7f3cee6a2ef88903c4": {
     "condition_id": "0x9f8ff09142e006b13e263d07b6c8813e89327ba79bd73f7f3cee6a2ef88903c4",
     "question": "Hawks vs. Pistons",
     "research_date": "2026-03-25",
@@ -48,7 +48,7 @@
     "decision": "SKIP",
     "skip_reason": "Price zone 35-50\u00a2 requires 80% confidence. Hawks expected to lose, confidence for Hawks only ~35%."
   },
-  {
+  "0x37e55389468d891e2609c493ce9832bd07e03775f063a346722c1c6dad4dbb9c": {
     "condition_id": "0x37e55389468d891e2609c493ce9832bd07e03775f063a346722c1c6dad4dbb9c",
     "question": "Lakers vs. Pacers",
     "research_date": "2026-03-25",
@@ -64,7 +64,7 @@
     "decision": "SKIP",
     "skip_reason": "75-90\u00a2 zone: need confidence/100 >= 0.885. Only 83% confidence - fails EV threshold."
   },
-  {
+  "0xaf9460cd6cf21d33353766c46b8118a6634d386962fe95b8555e4104b9c057ec": {
     "condition_id": "0xaf9460cd6cf21d33353766c46b8118a6634d386962fe95b8555e4104b9c057ec",
     "question": "Spread: Lakers (-10.5)",
     "research_date": "2026-03-25",
@@ -81,7 +81,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Only 58% confident Lakers cover -10.5."
   },
-  {
+  "0x0a23ef1bc0718876ff637c557cb4182e54407efcc4eddc0b48c9962923d4d844": {
     "condition_id": "0x0a23ef1bc0718876ff637c557cb4182e54407efcc4eddc0b48c9962923d4d844",
     "question": "Spread: Spurs (-15.5)",
     "research_date": "2026-03-25",
@@ -98,7 +98,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. Insufficient data, only 55%."
   },
-  {
+  "0x582c66d505843a09b656d6d120d5616d1004150f9de25e3158b0037ee5104c0d": {
     "condition_id": "0x582c66d505843a09b656d6d120d5616d1004150f9de25e3158b0037ee5104c0d",
     "question": "Rangers vs. Maple Leafs",
     "research_date": "2026-03-25",
@@ -115,7 +115,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. Insufficient ML data, only 52%."
   },
-  {
+  "0xdf5fbdda438d2e6b49f22e4f0d64dda2c630de5ec2b431599576adfb00d7116f": {
     "condition_id": "0xdf5fbdda438d2e6b49f22e4f0d64dda2c630de5ec2b431599576adfb00d7116f",
     "question": "Lakers vs. Pacers: O/U 237.5",
     "research_date": "2026-03-25",
@@ -131,7 +131,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. Insufficient data."
   },
-  {
+  "0x742cccb8094536132d2afee783308a6eb3498a094f2082dc26dd13bfd0bf3c2b": {
     "condition_id": "0x742cccb8094536132d2afee783308a6eb3498a094f2082dc26dd13bfd0bf3c2b",
     "question": "Illinois Fighting Illini vs. Houston Cougars",
     "research_date": "2026-03-25",
@@ -148,7 +148,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Illinois expected to lose, only ~35% confidence."
   },
-  {
+  "0x0f1174cfd58d69a9a48e0fa55f756428d00fec2147b755e8f109b27da6de2bce": {
     "condition_id": "0x0f1174cfd58d69a9a48e0fa55f756428d00fec2147b755e8f109b27da6de2bce",
     "question": "Heat vs. Cavaliers: O/U 242.5",
     "research_date": "2026-03-25",
@@ -164,7 +164,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. Insufficient data."
   },
-  {
+  "0xe0d0feec47e857b4ea3640f774e1200ed8b2c2cf69be0d9f89f5a10b600a4572": {
     "condition_id": "0xe0d0feec47e857b4ea3640f774e1200ed8b2c2cf69be0d9f89f5a10b600a4572",
     "question": "Spread: Thunder (-2.5)",
     "research_date": "2026-03-25",
@@ -180,7 +180,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. OKC cover -2.5 only ~55%, well below threshold."
   },
-  {
+  "0x9fcbd4577befa10a6d8a40b962c347c82156bbf50616567eca44240bb4499be6": {
     "condition_id": "0x9fcbd4577befa10a6d8a40b962c347c82156bbf50616567eca44240bb4499be6",
     "question": "Spread: Pistons (-3.5)",
     "research_date": "2026-03-25",
@@ -197,7 +197,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. 72% confidence insufficient - experts picked -2.5 not -3.5."
   },
-  {
+  "0x9b51d021c60ec92110e2af1a7970923aa1c2ff5dc2baaff0ea11766f427b2797": {
     "condition_id": "0x9b51d021c60ec92110e2af1a7970923aa1c2ff5dc2baaff0ea11766f427b2797",
     "question": "Rockets vs. Timberwolves",
     "research_date": "2026-03-25",
@@ -213,7 +213,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. No ML expert data."
   },
-  {
+  "0xe96bab86f43e9ae8647eedb5ed680747a8875571c027d11f1f2bae39867d4209": {
     "condition_id": "0xe96bab86f43e9ae8647eedb5ed680747a8875571c027d11f1f2bae39867d4209",
     "question": "Nebraska Cornhuskers vs. Iowa Hawkeyes",
     "research_date": "2026-03-25",
@@ -230,7 +230,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. NEB only ~55-58% win prob per expert consensus."
   },
-  {
+  "0xf52281b85968106cb91361c480e3184a23fc2e3df393f3fd431bb933ecc15f61": {
     "condition_id": "0xf52281b85968106cb91361c480e3184a23fc2e3df393f3fd431bb933ecc15f61",
     "question": "Spread: 76ers (-6.5)",
     "research_date": "2026-03-25",
@@ -246,7 +246,7 @@
     "decision": "TRADE",
     "skip_reason": null
   },
-  {
+  "0x655a0130edfb5fb0962a0444ea73ccd3bed3752f21dbac918436411f6d6b2465": {
     "condition_id": "0x655a0130edfb5fb0962a0444ea73ccd3bed3752f21dbac918436411f6d6b2465",
     "question": "Wizards vs. Jazz",
     "research_date": "2026-03-25",
@@ -263,7 +263,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. No ML expert data, only prop computer picks."
   },
-  {
+  "0x8d9817060c7e4937795ceb9dbaca799e0b0a390077b6595692e75b3bdbdcb23a": {
     "condition_id": "0x8d9817060c7e4937795ceb9dbaca799e0b0a390077b6595692e75b3bdbdcb23a",
     "question": "Raptors vs. Clippers",
     "research_date": "2026-03-25",
@@ -279,7 +279,7 @@
     "decision": "SKIP",
     "skip_reason": "Insufficient research data."
   },
-  {
+  "0x82311677c99ed1446012b4fd760aafaa917dd958ba00db2ec06f0a793fa2d3a4": {
     "condition_id": "0x82311677c99ed1446012b4fd760aafaa917dd958ba00db2ec06f0a793fa2d3a4",
     "question": "Spread: Cavaliers (-2.5)",
     "research_date": "2026-03-25",
@@ -295,7 +295,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. CLE covering only ~52%, below threshold."
   },
-  {
+  "0x153295802ef8c4d1a89aa1704c3072ef3f44953e6f464bdba2bc2e52e045c1ce": {
     "condition_id": "0x153295802ef8c4d1a89aa1704c3072ef3f44953e6f464bdba2bc2e52e045c1ce",
     "question": "Bucks vs. Trail Blazers: O/U 225.5",
     "research_date": "2026-03-25",
@@ -311,7 +311,7 @@
     "decision": "SKIP",
     "skip_reason": "Insufficient research data."
   },
-  {
+  "0x8019508a5b508995f67ff415c0975906a8d5fc374e88700abc39c84c6eda79b8": {
     "condition_id": "0x8019508a5b508995f67ff415c0975906a8d5fc374e88700abc39c84c6eda79b8",
     "question": "Spread: Spurs (-16.5)",
     "research_date": "2026-03-25",
@@ -328,7 +328,7 @@
     "decision": "SKIP",
     "skip_reason": "Insufficient data. Very large spread requires very high confidence."
   },
-  {
+  "0x3bb951fdfa51bc8443b0cfcd08ad562fdcd66388846a34ff232075cc21de8599": {
     "condition_id": "0x3bb951fdfa51bc8443b0cfcd08ad562fdcd66388846a34ff232075cc21de8599",
     "question": "LoL: Karmine Corp Blue vs Movistar KOI F\u00e9nix (BO3) - EMEA Masters Playoffs",
     "research_date": "2026-03-25",
@@ -344,7 +344,7 @@
     "decision": "SKIP",
     "skip_reason": "75-90\u00a2 zone: EV check requires 98% confidence. Mathematically impossible to satisfy."
   },
-  {
+  "0x05c367d0c6831d38daac553a6688f9c1ecaa4f01659b8292e8d2b0bab0f8e9f8": {
     "condition_id": "0x05c367d0c6831d38daac553a6688f9c1ecaa4f01659b8292e8d2b0bab0f8e9f8",
     "question": "Wild vs. Panthers",
     "research_date": "2026-03-26",
@@ -361,7 +361,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. Multiple models consistently pick Panthers win. Wild YES only ~42% confident."
   },
-  {
+  "0x6fcdc6c92a5350ec90bd4e0c506947bab08e8a6f1f6cafce9eb052facf0312bf": {
     "condition_id": "0x6fcdc6c92a5350ec90bd4e0c506947bab08e8a6f1f6cafce9eb052facf0312bf",
     "question": "CD Riestra vs. CA San Lorenzo de Almagro: O/U 1.5",
     "research_date": "2026-03-25",
@@ -378,7 +378,7 @@
     "decision": "SKIP",
     "skip_reason": "Insufficient data. Game closes too soon for reliable research."
   },
-  {
+  "0x3aa86f658190f3eeac20ce24762cff77a911eb117833b7e735347ee0c355c8d2": {
     "condition_id": "0x3aa86f658190f3eeac20ce24762cff77a911eb117833b7e735347ee0c355c8d2",
     "question": "Rockets vs. Timberwolves: O/U 223.5",
     "research_date": "2026-03-25",
@@ -394,7 +394,7 @@
     "decision": "SKIP",
     "skip_reason": "Insufficient research data."
   },
-  {
+  "0x81edac85ad1e2da4614a9007ee3c3ce9f4d0149f87a82932ff9b3d501c0be20b": {
     "condition_id": "0x81edac85ad1e2da4614a9007ee3c3ce9f4d0149f87a82932ff9b3d501c0be20b",
     "question": "Spread: Cavaliers (-3.5)",
     "research_date": "2026-03-25",
@@ -411,7 +411,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Only 48% confidence CLE covers -3.5."
   },
-  {
+  "0x46c72d5cb92972c2d20d24f6ba68065a10545853557d0474cc73a88a718428f4": {
     "condition_id": "0x46c72d5cb92972c2d20d24f6ba68065a10545853557d0474cc73a88a718428f4",
     "question": "Thunder vs. Celtics: O/U 218.5",
     "research_date": "2026-03-25",
@@ -427,7 +427,7 @@
     "decision": "SKIP",
     "skip_reason": "Market YES = over 218.5, but expert explicitly picks under. Low confidence for OVER."
   },
-  {
+  "0xee0184d2387e2d7808c75f0f2879e3817e44a38f469dcdc228aba2e79fc11807": {
     "condition_id": "0xee0184d2387e2d7808c75f0f2879e3817e44a38f469dcdc228aba2e79fc11807",
     "question": "Bruins vs. Sabres: O/U 6.5",
     "research_date": "2026-03-25",
@@ -443,7 +443,7 @@
     "decision": "SKIP",
     "skip_reason": "Insufficient O/U data."
   },
-  {
+  "0xb2033780ce3bc7ee1b5babb4b2e042e1b16cf16e6f31f0ee2c4dea3ced1ca550": {
     "condition_id": "0xb2033780ce3bc7ee1b5babb4b2e042e1b16cf16e6f31f0ee2c4dea3ced1ca550",
     "question": "Hawks vs. Pistons: O/U 228.5",
     "research_date": "2026-03-25",
@@ -459,7 +459,7 @@
     "decision": "SKIP",
     "skip_reason": "Insufficient research data."
   },
-  {
+  "0xf8eda578ee4dcb26707e4f364af6bf6be495ede6e33eb7f7344762f3b8bc856d": {
     "condition_id": "0xf8eda578ee4dcb26707e4f364af6bf6be495ede6e33eb7f7344762f3b8bc856d",
     "question": "Spread: Warriors (-11.5)",
     "research_date": "2026-03-25",
@@ -475,7 +475,7 @@
     "decision": "SKIP",
     "skip_reason": "Insufficient research data."
   },
-  {
+  "0x0d6ef58db21fbee18bd5a1f60d2264b467854697abc087659fb995e726482dbc": {
     "condition_id": "0x0d6ef58db21fbee18bd5a1f60d2264b467854697abc087659fb995e726482dbc",
     "question": "Lakers vs. Pacers: O/U 238.5",
     "research_date": "2026-03-25",
@@ -491,7 +491,7 @@
     "decision": "SKIP",
     "skip_reason": "Insufficient research data."
   },
-  {
+  "0x2f3fbdc3608043ba6124e42ded7c12f39e18216cbf34e0c35bf56680e1f87a89": {
     "condition_id": "0x2f3fbdc3608043ba6124e42ded7c12f39e18216cbf34e0c35bf56680e1f87a89",
     "question": "Counter-Strike: G2 vs Sinners (BO3) - BC Game Masters Championship",
     "research_date": "2026-03-25",
@@ -510,7 +510,7 @@
     "decision": "SKIP",
     "skip_reason": "75-90\u00a2 zone: need confidence/100 >= 0.755 + 0.08 = 0.835. Only 80% confidence - EV threshold not met."
   },
-  {
+  "0xfb0cd4dbe378fc2545829780ce18eb60ba56aafd799c81dce7f91f8d12c41931": {
     "condition_id": "0xfb0cd4dbe378fc2545829780ce18eb60ba56aafd799c81dce7f91f8d12c41931",
     "question": "Lakers vs. Pacers: O/U 239.5",
     "research_date": "2026-03-25",
@@ -527,7 +527,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. No expert total data, insufficient edge."
   },
-  {
+  "0x5c89874aed8817fb9aa6355b5aef7bee3c8215190d7b8dedbafebf1a2567390f": {
     "condition_id": "0x5c89874aed8817fb9aa6355b5aef7bee3c8215190d7b8dedbafebf1a2567390f",
     "question": "Spread: Auburn Tigers (-9.5)",
     "research_date": "2026-03-25",
@@ -545,7 +545,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Expert picks against Auburn covering -9.5. Only ~35% confidence."
   },
-  {
+  "0x7946fd76cca9267f5fa109e8bee02848916dcf7028dfa86c80eb20d964d6dcce": {
     "condition_id": "0x7946fd76cca9267f5fa109e8bee02848916dcf7028dfa86c80eb20d964d6dcce",
     "question": "Spread: Auburn Tigers (-8.5)",
     "research_date": "2026-03-25",
@@ -562,7 +562,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. Auburn ATS record terrible, expert against Auburn. Only ~40% confidence."
   },
-  {
+  "0x860c80210cdff8ef1d709508f4d72602a225ae20191c2a985e254ee0908835b7": {
     "condition_id": "0x860c80210cdff8ef1d709508f4d72602a225ae20191c2a985e254ee0908835b7",
     "question": "Heat vs. Cavaliers: O/U 243.5",
     "research_date": "2026-03-25",
@@ -579,7 +579,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. No O/U expert pick, prop data hints under. Only 48%."
   },
-  {
+  "0x56f547a79493d1f8306b29c415e52fb2b5462ad017c4cb31a84152dc1b4e0523": {
     "condition_id": "0x56f547a79493d1f8306b29c415e52fb2b5462ad017c4cb31a84152dc1b4e0523",
     "question": "Spread: Purdue Boilermakers (-7.5)",
     "research_date": "2026-03-26",
@@ -597,7 +597,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. No explicit spread expert pick. Purdue strong ML fav but -7.5 cover uncertain. Only 62%."
   },
-  {
+  "0xd054586fd01c9df8335e400e8f28aa903afa0875e9409e274d006a9141d619c0": {
     "condition_id": "0xd054586fd01c9df8335e400e8f28aa903afa0875e9409e274d006a9141d619c0",
     "question": "Spread: Houston Cougars (-3.5)",
     "research_date": "2026-03-26",
@@ -615,7 +615,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Polymarket spread harder than books, no expert pick for -3.5. Only 55%."
   },
-  {
+  "0xf1626aef5eadc0591a50bd1f1dbcb21306b0a3157a2100c973e2406d6ddf950f": {
     "condition_id": "0xf1626aef5eadc0591a50bd1f1dbcb21306b0a3157a2100c973e2406d6ddf950f",
     "question": "Pelicans vs. Pistons",
     "research_date": "2026-03-26",
@@ -633,7 +633,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Pistons massive favorites, Pelicans YES only ~30% win prob."
   },
-  {
+  "0xf746f355b414b64bf26947af27c0b6a64f885920da13375b73d9722676d07cfa": {
     "condition_id": "0xf746f355b414b64bf26947af27c0b6a64f885920da13375b73d9722676d07cfa",
     "question": "Devils vs. Predators",
     "research_date": "2026-03-26",
@@ -650,7 +650,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Computer model picks Predators. Devils YES only ~42%."
   },
-  {
+  "0x62fc79c8c0860444d9683502fb8c20ea372f83f854fe1f3c6c4162e41b7538b9": {
     "condition_id": "0x62fc79c8c0860444d9683502fb8c20ea372f83f854fe1f3c6c4162e41b7538b9",
     "question": "Spurs vs. Grizzlies: O/U 233.5",
     "research_date": "2026-03-25",
@@ -666,7 +666,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. No O/U expert data. Only 48%."
   },
-  {
+  "0x8f86882f58ca2486548c1ae87fd3bc7b0664072a503ec8c7b839deed5c66cce9": {
     "condition_id": "0x8f86882f58ca2486548c1ae87fd3bc7b0664072a503ec8c7b839deed5c66cce9",
     "question": "Spread: Rockets (-1.5)",
     "research_date": "2026-03-26",
@@ -686,7 +686,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. HOU ATS terrible (1-6 last 7), Edwards out for MIN, no expert pick. Only ~42% confidence HOU covers."
   },
-  {
+  "0x4084f58e9677dde08ea9b84939e3633f9eeefc6f6d564eaf0843a4cbfe9cf44b": {
     "condition_id": "0x4084f58e9677dde08ea9b84939e3633f9eeefc6f6d564eaf0843a4cbfe9cf44b",
     "question": "Spread: Nuggets (-11.5)",
     "research_date": "2026-03-26",
@@ -705,7 +705,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Line moved heavily toward DAL, experts pick DAL +12.5, not DEN -11.5. Only ~48% confidence."
   },
-  {
+  "0x118eb2a36e2e7bada4d1cdeb47ea4fd654d7be666f4593602e2cf6029954bb4b": {
     "condition_id": "0x118eb2a36e2e7bada4d1cdeb47ea4fd654d7be666f4593602e2cf6029954bb4b",
     "question": "Spread: Clippers (-4.5)",
     "research_date": "2026-03-26",
@@ -724,7 +724,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Raptors better team by record, market spread harder than books, no clear expert pick. Only ~48% confidence."
   },
-  {
+  "0x2bc1088c5aa055350231f3a4ae4dd47a8b8bbefe1ea5044c58c959ef570605a6": {
     "condition_id": "0x2bc1088c5aa055350231f3a4ae4dd47a8b8bbefe1ea5044c58c959ef570605a6",
     "question": "Mavericks vs. Nuggets: O/U 245.5",
     "research_date": "2026-03-26",
@@ -743,7 +743,7 @@
     "decision": "TRADE",
     "skip_reason": null
   },
-  {
+  "0xf819e1271eb99985143505bd2ad3ca397515a37e741e66b411e954c8ef14ab97": {
     "condition_id": "0xf819e1271eb99985143505bd2ad3ca397515a37e741e66b411e954c8ef14ab97",
     "question": "Arkansas Razorbacks vs. Arizona Wildcats: O/U 165.5",
     "research_date": "2026-03-26",
@@ -761,7 +761,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Conflicting signals - SportsLine proven model picks under, Arizona Thursday trend also under. Mixed evidence, only ~48% confidence for OVER."
   },
-  {
+  "0x27c8a932a8b03e56e2621dd1dc1b8e4bc3f1b51fc9f55264b1099e0acf14e2eb": {
     "condition_id": "0x27c8a932a8b03e56e2621dd1dc1b8e4bc3f1b51fc9f55264b1099e0acf14e2eb",
     "question": "Knicks vs. Hornets",
     "research_date": "2026-03-26",
@@ -779,7 +779,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Models and odds favor Hornets. Knicks win only ~34% likely. Cannot meet threshold."
   },
-  {
+  "0x8c6bcf1a4bea1ca87839723918f2bb867beeba85343fc3ca0f3a7b10ca210d66": {
     "condition_id": "0x8c6bcf1a4bea1ca87839723918f2bb867beeba85343fc3ca0f3a7b10ca210d66",
     "question": "Blue Jackets vs. Canadiens",
     "research_date": "2026-03-26",
@@ -797,7 +797,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Computer model picks Canadiens win. Blue Jackets YES only ~38% likely."
   },
-  {
+  "0x818fbb20862adb089c7bf29940fdb39a86670783c7b0dc5e2658e05cc31a2d93": {
     "condition_id": "0x818fbb20862adb089c7bf29940fdb39a86670783c7b0dc5e2658e05cc31a2d93",
     "question": "Spread: Nebraska Cornhuskers (-1.5)",
     "research_date": "2026-03-26",
@@ -815,7 +815,7 @@
     "decision": "TRADE",
     "skip_reason": null
   },
-  {
+  "0xd1a824d8e3eb509b9a51b2bb857dc3e85c96f327b5d7d9279b53d8e7f757e2b2": {
     "condition_id": "0xd1a824d8e3eb509b9a51b2bb857dc3e85c96f327b5d7d9279b53d8e7f757e2b2",
     "question": "Kings vs. Canucks",
     "research_date": "2026-03-26",
@@ -833,7 +833,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. Computer model picks Canucks win. Conflicting signals, only ~55% confidence for Kings YES."
   },
-  {
+  "0x7b1f0b5473c652fe8b3cb1fefc95e0021c6300911f5f54c857c62ecd090abba1": {
     "condition_id": "0x7b1f0b5473c652fe8b3cb1fefc95e0021c6300911f5f54c857c62ecd090abba1",
     "question": "Kings vs. Magic: O/U 230.5",
     "research_date": "2026-03-26",
@@ -851,7 +851,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone needs 65% confidence for OVER. Dimers model projects under (230 < 230.5). Only ~35% confidence."
   },
-  {
+  "0xca2cbc854a3c45dde9199a423be2590f544bcf45485adc3ce47cf128d791b42a": {
     "condition_id": "0xca2cbc854a3c45dde9199a423be2590f544bcf45485adc3ce47cf128d791b42a",
     "question": "Pelicans vs. Pistons: O/U 225.5",
     "research_date": "2026-03-26",
@@ -868,7 +868,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. No explicit O/U pick. Cade OUT could suppress DET scoring. Only 55%."
   },
-  {
+  "0x94e74d6e460e5d16268f79fcd5915ff550df3c5a1d7f660c137d4ff31ba3eeb9": {
     "condition_id": "0x94e74d6e460e5d16268f79fcd5915ff550df3c5a1d7f660c137d4ff31ba3eeb9",
     "question": "Spread: Magic (-15.5)",
     "research_date": "2026-03-26",
@@ -886,7 +886,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. Expert SGP pick includes Kings +15.5, conflicting with Magic covering -15.5. Only ~55%."
   },
-  {
+  "0x10da3117d9ca9b8129b04b777cc362cd8bc37baed4f12e6ac2a62edcbf12173d": {
     "condition_id": "0x10da3117d9ca9b8129b04b777cc362cd8bc37baed4f12e6ac2a62edcbf12173d",
     "question": "Wales vs. Bosnia and Herzegovina: O/U 2.5",
     "research_date": "2026-03-26",
@@ -904,7 +904,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. H2H history heavily leans under. No explicit O/U expert pick. Only ~55% confidence."
   },
-  {
+  "0xab5dc033d363ef9bcacba8f735b209f9006a87d4ac4cafd7cc30b0480116c7c4": {
     "condition_id": "0xab5dc033d363ef9bcacba8f735b209f9006a87d4ac4cafd7cc30b0480116c7c4",
     "question": "Knicks vs. Hornets: O/U 223.5",
     "research_date": "2026-03-26",
@@ -922,7 +922,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. No explicit O/U pick. Hornets defense suggests under lean. Only 45%."
   },
-  {
+  "0x9e740afa452f280154ba0bf8a89bf41263033d25a9cea18e954877c2bb78d5f1": {
     "condition_id": "0x9e740afa452f280154ba0bf8a89bf41263033d25a9cea18e954877c2bb78d5f1",
     "question": "Pelicans vs. Pistons: O/U 226.5",
     "research_date": "2026-03-26",
@@ -940,7 +940,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. Same data as O/U 225.5 research. No expert total pick, Cade OUT. Only ~50%."
   },
-  {
+  "0x98e653f7436b9db05a804c8dc90e0849bc1ebdb6df081c9e8273860975f2879c": {
     "condition_id": "0x98e653f7436b9db05a804c8dc90e0849bc1ebdb6df081c9e8273860975f2879c",
     "question": "Avalanche vs. Jets",
     "research_date": "2026-03-26",
@@ -958,7 +958,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone: EV check requires confidence/100 >= 0.625 + 0.08 = 0.705. Model gives ~66%. Fails EV threshold."
   },
-  {
+  "0x462d1e51f71495060e521b1ee97529c1b8767a2fd18d299db9e5ea12cb931d48": {
     "condition_id": "0x462d1e51f71495060e521b1ee97529c1b8767a2fd18d299db9e5ea12cb931d48",
     "question": "Dota 2: Team Yandex vs Team Spirit (BO3) - ESL One Birmingham Playoffs",
     "research_date": "2026-03-26",
@@ -976,7 +976,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. Bookmaker odds imply only ~58% for Yandex. Below threshold."
   },
-  {
+  "0xc2c0e71cca280bbe90e3838f79ddc40fe58ea2132ca88727a2e4242508920f0a": {
     "condition_id": "0xc2c0e71cca280bbe90e3838f79ddc40fe58ea2132ca88727a2e4242508920f0a",
     "question": "Knicks vs. Hornets: O/U 224.5",
     "research_date": "2026-03-26",
@@ -994,7 +994,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Mirroring 223.5 analysis. No O/U expert data. Only ~42%."
   },
-  {
+  "0x813540567fcb76210b35bbdaf0707bfccc01e529749f523108f761366592f6d7": {
     "condition_id": "0x813540567fcb76210b35bbdaf0707bfccc01e529749f523108f761366592f6d7",
     "question": "Capitals vs. Utah",
     "research_date": "2026-03-26",
@@ -1012,7 +1012,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Utah has better record + home ice. WSH YES only ~40% win prob. No expert ML pick for Washington."
   },
-  {
+  "0x350ef0d87df99d532893bef1a17faa72e0437266c8b1233a78c2f858283117b4": {
     "condition_id": "0x350ef0d87df99d532893bef1a17faa72e0437266c8b1233a78c2f858283117b4",
     "question": "Oilers vs. Golden Knights",
     "research_date": "2026-03-26",
@@ -1030,7 +1030,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. VGK home favorites. No ML expert pick for EDM. Only ~42% confidence."
   },
-  {
+  "0x2a7be326158a8ce78c4f38304fd489cf60ed7483a4ef5865c6303134a86898e1": {
     "condition_id": "0x2a7be326158a8ce78c4f38304fd489cf60ed7483a4ef5865c6303134a86898e1",
     "question": "Penguins vs. Senators",
     "research_date": "2026-03-26",
@@ -1049,7 +1049,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Computer model and ML expert pick Senators. PIT YES only ~35% win prob."
   },
-  {
+  "0xfcfa2e978a4c88415189fbf7504d21d4b2023641daecef6b3b90b2e4be3f6948": {
     "condition_id": "0xfcfa2e978a4c88415189fbf7504d21d4b2023641daecef6b3b90b2e4be3f6948",
     "question": "Blackhawks vs. Flyers",
     "research_date": "2026-03-26",
@@ -1067,7 +1067,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Expert picks Flyers. CHI YES only ~35% win prob given expert pick and H2H record."
   },
-  {
+  "0xf964d61c05f4580daa9f78af744075897bb9881efe4ddfb695d7f43699f28615": {
     "condition_id": "0xf964d61c05f4580daa9f78af744075897bb9881efe4ddfb695d7f43699f28615",
     "question": "Spread: Pistons (-4.5)",
     "research_date": "2026-03-26",
@@ -1085,7 +1085,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Strong case for DET but only 72% confidence with Cade OUT. Threshold not met."
   },
-  {
+  "0x8664c4391a9d0a6b394a890de3d407aeef618c3c0c9aa52b7eb2b80a96594dcf": {
     "condition_id": "0x8664c4391a9d0a6b394a890de3d407aeef618c3c0c9aa52b7eb2b80a96594dcf",
     "question": "Stars vs. Islanders",
     "research_date": "2026-03-26",
@@ -1104,7 +1104,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. W&W projects DAL win but picks NYI puck line. Computer picks NYI. Mixed signals, ~60% for DAL ML."
   },
-  {
+  "0x2988c83589cd6f392b61df4c4d60a44ae98b44f8aeb6f912573a522abcc03348": {
     "condition_id": "0x2988c83589cd6f392b61df4c4d60a44ae98b44f8aeb6f912573a522abcc03348",
     "question": "Texas Longhorns vs. Purdue Boilermakers: O/U 147.5",
     "research_date": "2026-03-26",
@@ -1122,7 +1122,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. CBS SportsLine OVER pick strong but only 72% confidence \u2014 threshold not met."
   },
-  {
+  "SCANNER_ONLY_NO_WATCHLIST": {
     "condition_id": "SCANNER_ONLY_NO_WATCHLIST",
     "question": "Sharks vs. Blues",
     "research_date": "2026-03-26",
@@ -1141,7 +1141,7 @@
     "decision": "SKIP",
     "skip_reason": "Not in watchlist (no condition_id). Expert explicitly picks Blues. Sharks YES only ~30% win prob."
   },
-  {
+  "SCANNER_ONLY_NO_WATCHLIST_2": {
     "condition_id": "SCANNER_ONLY_NO_WATCHLIST_2",
     "question": "Dota 2: Aurora vs Tundra Esports (BO3) - ESL One Birmingham",
     "research_date": "2026-03-26",
@@ -1159,7 +1159,7 @@
     "decision": "SKIP",
     "skip_reason": "Not in watchlist. No explicit expert pick. Insufficient data."
   },
-  {
+  "0x59d81cb0dd49f515863164de49526dbdc9418760b3b1b667269b2c3375fdc12d": {
     "condition_id": "0x59d81cb0dd49f515863164de49526dbdc9418760b3b1b667269b2c3375fdc12d",
     "question": "Knicks vs. Hornets: O/U 222.5",
     "research_date": "2026-03-26",
@@ -1177,7 +1177,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. No expert total pick. Hornets defense hints under. Only ~50%."
   },
-  {
+  "0xaed541c8f7a11f5866e18ae7c21c35a304dcdc9d2e0530bf8d68e125e5d416ba": {
     "condition_id": "0xaed541c8f7a11f5866e18ae7c21c35a304dcdc9d2e0530bf8d68e125e5d416ba",
     "question": "Spread: Arizona Wildcats (-7.5)",
     "research_date": "2026-03-26",
@@ -1195,7 +1195,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. No explicit -7.5 spread expert pick. Under lean suggests low-scoring = less decisive. ~58%."
   },
-  {
+  "0x436f645f4d276d61a100421742d2daf2eca13a191f1a9f2b0ea9209151ac1490": {
     "condition_id": "0x436f645f4d276d61a100421742d2daf2eca13a191f1a9f2b0ea9209151ac1490",
     "question": "Counter-Strike: Sinners vs BIG (BO3) - BC Game Masters Championship Playoffs",
     "research_date": "2026-03-26",
@@ -1212,7 +1212,7 @@
     "decision": "SKIP",
     "skip_reason": "75-90\u00a2 zone: EV requires confidence/100 >= 0.89 + 0.08 = 0.97. Mathematically impossible to satisfy. SKIP despite SINNERS likely favored."
   },
-  {
+  "0xfecc5d4b5065cc5e796e5c9dbb749448672c4d6d542962cb10d6762db80ed5be": {
     "condition_id": "0xfecc5d4b5065cc5e796e5c9dbb749448672c4d6d542962cb10d6762db80ed5be",
     "question": "Ducks vs. Flames",
     "research_date": "2026-03-26",
@@ -1230,7 +1230,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. No ML expert pick for Ducks. W&W actually takes Flames puck line. ~58% implied only."
   },
-  {
+  "0x1673956ee76e61d9a5427b62c50ef2977acb15c48d87012bb87dffbb2882f80b": {
     "condition_id": "0x1673956ee76e61d9a5427b62c50ef2977acb15c48d87012bb87dffbb2882f80b",
     "question": "Nebraska Cornhuskers vs. Iowa Hawkeyes: O/U 131.5",
     "research_date": "2026-03-26",
@@ -1248,7 +1248,7 @@
     "decision": "SKIP",
     "skip_reason": "50-65\u00a2 zone requires 65% confidence. Both NEB and Iowa slow-paced teams. No explicit over pick. Only ~45% confidence for over."
   },
-  {
+  "0x875b3e5a36d7354cb1f3d305ff986d083edbce6f0f0997db1253d2abade64f76": {
     "condition_id": "0x875b3e5a36d7354cb1f3d305ff986d083edbce6f0f0997db1253d2abade64f76",
     "question": "Nebraska Cornhuskers vs. Iowa Hawkeyes: O/U 132.5",
     "research_date": "2026-03-26",
@@ -1266,7 +1266,7 @@
     "decision": "SKIP",
     "skip_reason": "35-50\u00a2 zone requires 80% confidence. Even harder total, same slow-pace concern. Only ~38% confidence."
   },
-  {
+  "0x594d9b1fbc50e4257fd42a609bd838b0f19c619040ca3de11fab52f721b940a5": {
     "condition_id": "0x594d9b1fbc50e4257fd42a609bd838b0f19c619040ca3de11fab52f721b940a5",
     "question": "St. John's Red Storm vs. Duke Blue Devils: O/U 141.5",
     "research_date": "2026-03-26",
@@ -1282,5 +1282,191 @@
     ],
     "decision": "TRADE",
     "skip_reason": null
+  },
+  "0xcdedd4460eed2734e4680bf73b08872fe7347931814cda6f2eb570231ba08c03": {
+    "condition_id": "0xcdedd4460eed2734e4680bf73b08872fe7347931814cda6f2eb570231ba08c03",
+    "question": "Michigan State Spartans vs. Connecticut Huskies",
+    "research_date": "2026-03-27",
+    "price": 0.465,
+    "confidence_pct": 44,
+    "sources_summary": "Brave AI: UConn -1.5 to -2.0 fav. Dimers: UConn 57%. ESPN BPI: UConn 53.4%. MSU +110 ML. Experts: Arizona Republic, Bookies.com both pick UConn.",
+    "red_flags": [
+      "Multiple experts and models favor UConn",
+      "MSU YES only 43-47% per all sources",
+      "35-50c zone requires 80% confidence"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50c zone needs 80% conf. MSU YES only ~44% per ESPN BPI + Dimers + expert consensus."
+  },
+  "0x007ce41344248dbff53abef1c591c94490e8626481260f1234cdbdeb2beff9ee": {
+    "condition_id": "0x007ce41344248dbff53abef1c591c94490e8626481260f1234cdbdeb2beff9ee",
+    "question": "Michigan State Spartans vs. Connecticut Huskies: O/U 134.5",
+    "research_date": "2026-03-27",
+    "price": 0.525,
+    "confidence_pct": 50,
+    "sources_summary": "UConn -1.5 to -2.0 in books. Both elite defensive teams, smallest spread in Sweet 16. O/U total 134.5-136.5 in books. No explicit 134.5 over/under expert pick.",
+    "red_flags": [
+      "No explicit O/U pick",
+      "Both teams elite defenders (MSU + UConn)",
+      "Low-scoring defensive clash expected"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone needs 65% conf. Elite defense matchup, no O/U expert pick. Only ~50%."
+  },
+  "0xee09e7ad4876f3403678d8eb6de4898a780841de59e634e262985f11b291a471": {
+    "condition_id": "0xee09e7ad4876f3403678d8eb6de4898a780841de59e634e262985f11b291a471",
+    "question": "Spread: Duke Blue Devils (-6.5)",
+    "research_date": "2026-03-26",
+    "price": 0.505,
+    "confidence_pct": 62,
+    "sources_summary": "Duke 34-2, top seed. St Johns backcourt inconsistent. Duke -6.5 widely favored. St Johns +7 per odds. Duke strong but 62% conf below 65% needed.",
+    "decision": "SKIP",
+    "skip_reason": "Price 50-65\u00a2 needs 65% conf. 62% confidence marginally below threshold."
+  },
+  "0x5cbf25ccfd1f73bb860da1972260abc039513d1e44b8a10d0232231d8fc60ca9": {
+    "condition_id": "0x5cbf25ccfd1f73bb860da1972260abc039513d1e44b8a10d0232231d8fc60ca9",
+    "question": "Tennessee Volunteers vs. Iowa State Cyclones: O/U 138.5",
+    "research_date": "2026-03-26",
+    "price": 0.545,
+    "confidence_pct": 55,
+    "sources_summary": "One model: ISU 79 TENN 71 = 150 total \u2192 OVER 138.5. Action Network has data. Single source only.",
+    "decision": "SKIP",
+    "skip_reason": "Only one model source. Need multi-expert consensus."
+  },
+  "0xfe1e55b0a6ff09f3ab7e3ad5dab679afbcf6df66d7b5cd37f6ebb552dca19274": {
+    "condition_id": "0xfe1e55b0a6ff09f3ab7e3ad5dab679afbcf6df66d7b5cd37f6ebb552dca19274",
+    "question": "Spread: Michigan Wolverines (-9.5)",
+    "research_date": "2026-03-26",
+    "price": 0.485,
+    "confidence_pct": 58,
+    "sources_summary": "Michigan 9.5pt fav over Alabama. Large spread. Covers and models confirm Michigan favored but -9.5 is big ask.",
+    "decision": "SKIP",
+    "skip_reason": "Price 35-50\u00a2 needs 80% conf. Only 58% for covering 9.5-pt spread."
+  },
+  "0xc1fbe3cccad749c3a0d0a00b37239b9620e82488d004407ee546add491c58685": {
+    "question": "Spread: Iowa State Cyclones (-3.5)",
+    "confidence_pct": 60,
+    "sources_summary": "Dimers: ISU 69%, ESPN: 60.6%. CBS Sports recommends Tennessee +4.5 citing Jefferson ankle (doubtful). Lineups: ISU -4.5 pick. Big Al: ISU covers.",
+    "red_flags": "Joshua Jefferson (16.4 ppg) listed DOUBTFUL with ankle injury per CBS Sports. CBS explicitly picks Tennessee +4.5.",
+    "decision": "SKIP",
+    "researched_at": "2026-03-27T05:04:00Z"
+  },
+  "0x737ae93c68047e675e79ba3290272ab095e96cf70abb2018ac2a84ed60c8275c": {
+    "question": "Will the price of Bitcoin be above $68,000 on March 27?",
+    "confidence_pct": 92,
+    "sources_summary": "BTC live price ~$70,081 (CoinMarketCap). Already $2,081 above threshold. 11 hours until 16:00 UTC resolution.",
+    "red_flags": "SCRIPT BUG: market_watcher rounding error prevents trading. ERROR_PERSISTENT in journal.",
+    "decision": "TRADE_BLOCKED",
+    "researched_at": "2026-03-27T05:04:00Z"
+  },
+  "0x795cf457372a694aa0e30de28a499ad2adbd2c7d6c754440fe69d3f1951234d0": {
+    "condition_id": "0x795cf457372a694aa0e30de28a499ad2adbd2c7d6c754440fe69d3f1951234d0",
+    "question": "Heat vs. Cavaliers",
+    "research_date": "2026-03-26",
+    "price": 0.355,
+    "confidence_pct": 40,
+    "sources_summary": "CLE heavy favorite. 38-21 record as fav. CLE hosts MIA. Heat inconsistent.",
+    "decision": "SKIP",
+    "skip_reason": "Price 35-50\u00a2 needs 80% conf. Heat win prob only ~40%."
+  },
+  "0x946833228cae9572bc293e26a19d7333d162bec248b18df7ba0166c7ec76690b": {
+    "condition_id": "0x946833228cae9572bc293e26a19d7333d162bec248b18df7ba0166c7ec76690b",
+    "question": "Clippers vs. Pacers",
+    "research_date": "2026-03-27",
+    "price": 0.795,
+    "confidence_pct": 72,
+    "sources_summary": "Sprediction.com: Clippers 72% win probability, projected 125-115. ML -125 (implied 55.6%). Polymarket at 79.5\u00a2. Multiple model consensus: Clippers win.",
+    "red_flags": [
+      "75-90\u00a2 zone requires 85% conf",
+      "ML odds imply only 55.6% (Clippers -125)",
+      "Polymarket at 79.5\u00a2 requires much higher conf than market ML"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "75-90\u00a2 zone needs 85% conf. ML odds imply only 55-72% depending on source. Cannot reach 85% threshold."
+  },
+  "0xf50387313a4cbfe0b39568f02237c4bd76b2672ec9b54d0d7b83db9e189faee0": {
+    "condition_id": "0xf50387313a4cbfe0b39568f02237c4bd76b2672ec9b54d0d7b83db9e189faee0",
+    "question": "Counter-Strike: Team Falcons vs PARIVISION (BO3) - BLAST Open Rotterdam",
+    "research_date": "2026-03-27",
+    "price": 0.625,
+    "confidence_pct": 65,
+    "sources_summary": "Falcons #4 VRS/HLTV globally vs PARIVISION #7. Bookmaker odds ~1.53 for Falcons (~65.4% win prob). Falcons won 3/5 recent. Better ranked team as favorite.",
+    "red_flags": [
+      "PARIVISION #7 also high-ranked",
+      "Starts 18:30Z - 17+ hours from now",
+      "BO3 results less predictable than single games"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone needs 65% conf. Exactly at boundary (65%). EV check: 65%/100=0.65 >= 0.625+0.08=0.705 \u2192 FAILS. No EV edge at this price."
+  },
+  "0xe8e998f70289030f391412f08333a6d1f6f7a675f832c5f33ce1d6406d032172": {
+    "condition_id": "0xe8e998f70289030f391412f08333a6d1f6f7a675f832c5f33ce1d6406d032172",
+    "question": "Counter-Strike: Aurora Gaming vs TheMongolz (BO3) - BLAST Open Rotterdam",
+    "research_date": "2026-03-27",
+    "price": 0.515,
+    "confidence_pct": 53,
+    "sources_summary": "Aurora #6 globally vs TheMongolz (higher ranked). Polymarket 53% Aurora. HLTV community 52.3% TheMongolz. TheMongolz won recent H2H. Near 50/50 match.",
+    "red_flags": [
+      "H2H: TheMongolz beat Aurora recently",
+      "HLTV fans favor TheMongolz 52.3%",
+      "Effectively a coin flip"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone needs 65% conf. Too close to 50/50, no clear expert consensus. Only 53%."
+  },
+  "0x12a9fe857c3145c8ca9e3ea56118f3bf7e4b79d8a6b3020745f50e75fc7e9493": {
+    "condition_id": "0x12a9fe857c3145c8ca9e3ea56118f3bf7e4b79d8a6b3020745f50e75fc7e9493",
+    "question": "Alabama Crimson Tide vs. Michigan Wolverines: O/U 172.5",
+    "research_date": "2026-03-27",
+    "price": 0.515,
+    "confidence_pct": 58,
+    "sources_summary": "Books O/U at 174.5-176, Polymarket 172.5 is 2+ pts easier. Michigan -10 spread = blowout potential = reduced scoring. Line moved from 10.5 to 9.5 (Alabama covering). No explicit O/U 172.5 expert pick.",
+    "red_flags": [
+      "No explicit O/U expert pick",
+      "Blowout potential (Michigan -10) means garbage time",
+      "Books 174.5 vs Polymarket 172.5"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "50-65\u00a2 zone needs 65% conf. No explicit over pick. Blowout games often stay under. Only ~58%."
+  },
+  "0xa0da0105d7c4d12aca76e33b00977a5f9aecc05ca6d7798114a2f4f84e026eb4": {
+    "condition_id": "0xa0da0105d7c4d12aca76e33b00977a5f9aecc05ca6d7798114a2f4f84e026eb4",
+    "question": "Red Wings vs. Sabres",
+    "research_date": "2026-03-27",
+    "price": 0.405,
+    "confidence_pct": 38,
+    "sources_summary": "Brave AI: Sabres heavily favored. BUF 23-6-4 in 2026, KeyBank home ice. DET 3-game road losing streak (18-12-5 away). BUF won both H2H meetings 9-6. Sportytrader: Sabres win in regulation (-113).",
+    "red_flags": [
+      "Sabres 23-6-4 in 2026 - dominant form",
+      "Red Wings 14-11-5 since January, only 4 wins in March",
+      "BUF won both H2H meetings this season",
+      "DET special teams: 17.5% PP, 74.0% PK (bottom of league)"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "35-50 zone needs 80% conf. Sabres heavy favorites, Red Wings YES only ~38% win prob."
+  },
+  "0x8cdf3e7e2322abce8d841b8aae3b1e771a2a2ca1b614a6fd33ef15ee51339609": {
+    "condition_id": "0x8cdf3e7e2322abce8d841b8aae3b1e771a2a2ca1b614a6fd33ef15ee51339609",
+    "question": "Tennessee Volunteers vs. Iowa State Cyclones",
+    "research_date": "2026-03-27",
+    "price": 0.375,
+    "confidence_pct": 33,
+    "sources_summary": "Brave AI: ISU -3.5, ML -200. AZCentral: ISU 69% win prob. Knox News: ISU 68-64. Jefferson (key fwd) LIKELY OUT. Market YES=Tennessee win at 37.5c.",
+    "red_flags": [
+      "Market closes 04:00Z - only ~56 min away! (03:04Z now)",
+      "Tennessee YES only ~31-37% win prob per consensus",
+      "Joshua Jefferson (ISU) likely OUT but ISU still heavily favored",
+      "35-50c zone needs 80% confidence - far from achievable"
+    ],
+    "decision": "SKIP",
+    "skip_reason": "Market closes in <60 min AND Tennessee YES only ~33% prob. 35-50c zone needs 80% conf."
+  },
+  "0x359e176adadd76141620686e43aeeeb03e97b7c3ecfd7b81d0c4bda9a36e254f": {
+    "question": "Rockets vs. Grizzlies",
+    "confidence_pct": 68,
+    "sources_summary": "Sprediction: HOU 71% win prob, predicted 121-112. SportsGambler: ~60% HOU. Rockets road favorites. Over trending (18/20 Grizz games hit over).",
+    "red_flags": "Market at 87.5\u00a2 requires 85%+ confidence; expert consensus only 60-71%, no source hits 85%. EV check fails.",
+    "decision": "SKIP",
+    "researched_at": "2026-03-27T05:04:00Z"
   }
-]
+}
