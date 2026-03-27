@@ -442,14 +442,29 @@ except:
 # ── Place FOK order ───────────────────────────────────────────────────────────
 # For NO side: buy the NO token directly (it's always a BUY order on the token)
 if TRADE_SIDE == 'NO' and NO_TOKEN:
-    result = mcporter('create_limit_order',
-        market_id=CONDITION_ID,
-        token_id=ACTIVE_TOKEN,
-        side='BUY',
-        price=round(best_ask, 4),
-        size=round(float(_best_shares), 2),
-        order_type='FOK'
-    )
+    # For NO token: use post_order directly (same as SELL orders use)
+    import asyncio, sys as _sys
+    _sys.path.insert(0, WORKSPACE + '/src')
+    async def _place_no_order():
+        from polymarket_mcp.auth.client import PolymarketClient
+        _client = PolymarketClient(
+            private_key=os.environ['POLYGON_PRIVATE_KEY'],
+            address=os.environ['POLYGON_ADDRESS'],
+            api_key=os.environ['POLYMARKET_API_KEY'],
+            api_secret=os.environ['POLYMARKET_API_SECRET'],
+            passphrase=os.environ['POLYMARKET_PASSPHRASE'],
+            chain_id=137
+        )
+        _client._initialize_client()
+        return await _client.post_order(
+            token_id=ACTIVE_TOKEN,
+            price=round(best_ask, 4),
+            size=round(float(_best_shares), 2),
+            side='BUY',
+            order_type='FOK'
+        )
+    _no_result = asyncio.run(_place_no_order())
+    result = {'success': _no_result.get('success', False), 'order_id': _no_result.get('orderID'), **_no_result}
 else:
     result = mcporter('create_market_order',
         market_id=CONDITION_ID,
