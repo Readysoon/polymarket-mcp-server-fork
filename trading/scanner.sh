@@ -95,10 +95,13 @@ with httpx.Client(timeout=15) as client:
                 'condition_id': cid,
                 'slug': slug,
                 'yes_price': yes,
+                'no_price': round(1.0 - yes, 4),
                 'liquidity': liq,
                 'end_date': m['endDate'][:10],
                 'end_datetime': m['endDate'],
                 'clob_token_ids': token_ids,
+                'yes_token_id': token_ids[0] if token_ids else '',
+                'no_token_id': token_ids[1] if len(token_ids) > 1 else '',
                 'volume_24h': vol,
                 'status': 'watching'
             })

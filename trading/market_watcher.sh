@@ -1,12 +1,14 @@
 #!/bin/bash
 # market_watcher.sh — single market, single run
-# Args: <condition_id> <yes_token_id> <end_datetime> <question> [allocated_usd]
+# Args: <condition_id> <yes_token_id> <end_datetime> <question> [allocated_usd] [side: YES|NO] [no_token_id]
 
 CONDITION_ID="${1}"
 YES_TOKEN="${2}"
 END_DATETIME="${3}"
 QUESTION="${4}"
 ALLOCATED_USD="${5:-}"
+TRADE_SIDE="${6:-YES}"      # YES (default) or NO
+NO_TOKEN="${7:-}"
 
 WORKSPACE="/home/node/.openclaw/workspace"
 TRADING_DIR="$WORKSPACE/trading"
@@ -18,6 +20,8 @@ export MW_QUESTION="$QUESTION"
 export MW_WORKSPACE="$WORKSPACE"
 export MW_TRADING_DIR="$TRADING_DIR"
 export MW_ALLOCATED_USD="$ALLOCATED_USD"
+export MW_TRADE_SIDE="$TRADE_SIDE"
+export MW_NO_TOKEN="$NO_TOKEN"
 
 python3 << 'PYEOF'
 import json, subprocess, sys, os, httpx
@@ -30,6 +34,11 @@ QUESTION      = os.environ['MW_QUESTION']
 WORKSPACE     = os.environ['MW_WORKSPACE']
 TRADING_DIR   = os.environ['MW_TRADING_DIR']
 ALLOCATED_USD = float(os.environ.get('MW_ALLOCATED_USD', '0') or '0')
+TRADE_SIDE    = os.environ.get('MW_TRADE_SIDE', 'YES').upper()  # YES or NO
+NO_TOKEN      = os.environ.get('MW_NO_TOKEN', '')
+
+# Select the correct token based on side
+ACTIVE_TOKEN  = NO_TOKEN if TRADE_SIDE == 'NO' and NO_TOKEN else YES_TOKEN
 
 now = datetime.now(timezone.utc)
 
@@ -139,7 +148,8 @@ if hours_left < 0.1:
 
 # ── AMM price check ───────────────────────────────────────────────────────────
 
-price_data = mcporter('get_current_price', token_id=YES_TOKEN, side='BOTH')
+price_data = mcporter('get_current_price', token_id=ACTIVE_TOKEN, side='BOTH')
+print(f"Trading side: {TRADE_SIDE} | token: {ACTIVE_TOKEN[:20]}...")
 
 if 'error' in price_data or price_data.get('bid') is None or price_data.get('ask') is None:
     error_detail = price_data.get('error', 'no price available')
@@ -430,12 +440,22 @@ except:
 
 
 # ── Place FOK order ───────────────────────────────────────────────────────────
-
-result = mcporter('create_market_order',
-    market_id=CONDITION_ID,
-    side=trade_side,
-    size=round(float(bet_size), 2)
-)
+# For NO side: buy the NO token directly (it's always a BUY order on the token)
+if TRADE_SIDE == 'NO' and NO_TOKEN:
+    result = mcporter('create_limit_order',
+        market_id=CONDITION_ID,
+        token_id=ACTIVE_TOKEN,
+        side='BUY',
+        price=round(best_ask, 4),
+        size=round(float(_best_shares), 2),
+        order_type='FOK'
+    )
+else:
+    result = mcporter('create_market_order',
+        market_id=CONDITION_ID,
+        side='BUY',
+        size=round(float(bet_size), 2)
+    )
 
 if not (result.get('success') or result.get('order_id')):
     err_msg = str(result.get('error', result))
