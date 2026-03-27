@@ -89,8 +89,10 @@ flyctl secrets set KEY=VALUE --app polymarket-mcp-dashboard
 Läuft alle **2 Stunden** (Europe/Vienna). Führt folgende Schritte aus:
 
 1. 💰 **Redeem** — löst gewonnene Positionen automatisch ein
-2. 🔍 **Scanner** — scannt Märkte (Volumen >$50k, Spread <10%, YES 40-85¢)
-3. 📰 **Research** — **Brave AI Answers** (`BRAVE_ANSWERS_API_KEY`) liefert KI-generierte Zusammenfassungen mit ESPN Win-Prozenten, Experten-Picks und Spreads direkt aus mehreren Quellen. Fallback: Brave Web Search (`BRAVE_SEARCH_API_KEY`) mit `extra_snippets`. Confidence basiert direkt auf ESPN Analytics Win-Wahrscheinlichkeiten wenn verfügbar.
+2. 🎯 **Brave Top Picks** (**1 Anfrage**) — fragt Brave AI Answers nach den stärksten Sport-Picks des Tages mit Experten-Konsens, Win-Wahrscheinlichkeiten und klarer Seite (YES/NO/OVER/UNDER)
+3. 🔍 **Scanner** — holt alle aktiven Polymarket-Märkte als Lookup-Tabelle
+4. 🔗 **Matching** — Brave-Picks werden mit Polymarket-Märkten gematcht. Kein Match = SKIP (kein weiteres Research)
+5. 💵 **Kelly-Sizing + EV-Check** — nur bei positivem EV wird getraded, Betgröße dynamisch nach Confidence/Preis/Bankroll
 4. 💵 **Kapital aufteilen** — nach Confidence gewichtet (80%+ → 30%, 70-79% → 20%, 65-69% → 10%)
 5. ⚡ **Sofort kaufen** — wenn EV positiv (confidence ≥ preis + 8%)
 6. 📱 **Pflichtbericht** — sendet nach jedem Run eine Zusammenfassung per Telegram
@@ -226,15 +228,25 @@ EV pro Trade: +$1.45 × ($7/$10) = +$1.02
 
 **Fazit:** 20-35% monatlich ist realistisch mit Brave AI Answers:
 
-Der entscheidende Vorteil von Brave AI Answers: **Confidence wird messbar statt geschätzt.**
+Der entscheidende Vorteil: **1 Brave-Anfrage pro Run statt 20-30.**
 
-| Research-Qualität | Confidence-Qualität | Erwartetes Ergebnis |
-|-------------------|---------------------|---------------------|
-| Covers-Snippet (alt) | Oft geraten | Viele Fehleinschätzungen → schlechter EV |
-| Brave Web Search | Snippets, wenig Kontext | Bessere Basis, aber lückenhaft |
-| **Brave AI Answers** | ESPN Win-% direkt | Confidence entspricht echten Daten |
+**Alter Flow (ineffizient):**
+- Scanner findet 30 Märkte → für jeden Markt 1 Brave-Anfrage = 30 Anfragen
+- 25 davon SKIP weil kein Edge → 25 verschwendete Anfragen
 
-Brave AI Answers liefert z.B. "ESPN Analytics: 59.6% Nebraska" → wir verwenden 59.6% direkt als Confidence statt zu raten. Das führt zu **weniger aber besseren Trades** und damit positivem EV.
+**Neuer Flow (Brave-First):**
+- 1 Brave-Anfrage: *"Welche Spiele heute haben starken Experten-Konsens?"*
+- Brave gibt 3-5 Top-Picks mit Win-Probabilities zurück
+- Scanner holt Polymarket-Märkte als Lookup
+- Nur Picks die auf Polymarket verfügbar sind → EV-Check → Trade
+- Kein Match = SKIP, kein weiteres Research
+
+| Ansatz | Brave-Anfragen/Run | Trade-Qualität |
+|--------|-------------------|----------------|
+| Alt (pro Markt) | 20-30 | Gemischt |
+| **Neu (Top-Picks)** | **1** | **Nur starker Konsens** |
+
+Brave AI Answers liefert z.B. "ESPN: 59.6% Nebraska, Under 18/20 Michigan games" → Confidence direkt aus echten Daten statt geraten. Führt zu weniger aber besseren Trades.
 
 ### Optimales Trade-Verhältnis
 
