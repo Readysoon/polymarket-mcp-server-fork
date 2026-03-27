@@ -97,24 +97,21 @@ Läuft alle **2 Stunden** (Europe/Vienna). Führt folgende Schritte aus:
 
 **EV-Formel:** `confidence/100 >= current_price + 0.08`
 
-**Position Sizing (Half Kelly):**
-```python
-def kelly_bet(confidence_pct, price, bankroll, min_bet=2.50):
-    p = confidence_pct / 100
-    b = (1 - price) / price  # net odds
-    kelly_pct = max(0, (p * b - (1-p)) / b)
-    half_kelly = kelly_pct * 0.5
-    return round(max(min_bet, half_kelly * bankroll), 2)
-```
+**Position Sizing — dynamisch nach drei Faktoren:**
+
+Je größer der Einsatz, wenn:
+- 📉 **Preis niedrig** (z.B. 40¢ statt 70¢) — mehr Gewinnpotenzial pro Dollar
+- 📊 **Confidence hoch** (z.B. 88% statt 65%) — stärkerer Edge über den Markt
+- 💰 **Bankroll groß** — absoluter Betrag skaliert automatisch mit
 
 Beispiele bei $30 Bankroll:
-| Confidence | Preis | Kelly Bet |
-|------------|-------|-----------|
+| Confidence | Preis | Einsatz |
+|------------|-------|---------|
 | 65% | 52¢ | ~$4.00 |
 | 72% | 55¢ | ~$5.50 |
 | 88% | 52¢ | ~$11.60 |
 
-**Kein fixer Cap** — Kelly skaliert automatisch mit dem Bankroll. Min: $2.50.
+Bei $100 Bankroll einfach ~3.3× multiplizieren. Kein fixer Cap — das System setzt mehr ein wenn alles stimmt, wenig wenn das Signal schwach ist. Min: $2.50.
 
 **Bankroll:** Wallet USDC.e Balance via Polygon RPC (nicht Polymarket-internes Cash)
 
@@ -281,20 +278,23 @@ f = (p × b - (1-p)) / b
 
 > ⚠️ Prognosen basieren auf historischen Win-Rates. Für valide Statistiken brauchen wir 50+ abgeschlossene Trades.
 
-### Dynamische Kapitalallokation nach Kelly
+### Dynamische Kapitalallokation
 
-Das System verwendet **Half Kelly** ohne fixen Cap — der Betrag skaliert automatisch mit Bankroll und Confidence:
+Das System setzt automatisch mehr Geld ein wenn:
+- der Einstiegspreis niedrig ist (mehr Gewinnpotenzial)
+- die Confidence hoch ist (stärkerer Edge)
+- der Bankroll groß ist (absolut mehr zu setzen)
 
-| Bankroll | 65% conf, 52¢ | 72% conf, 55¢ | 88% conf, 52¢ |
-|----------|--------------|--------------|--------------|
+Und weniger wenn das Signal schwach ist. Kein manueller Cap — alles automatisch.
+
+| Bankroll | Schwaches Signal (65%, 52¢) | Gutes Signal (72%, 55¢) | Starkes Signal (88%, 52¢) |
+|----------|----------------------------|------------------------|--------------------------|
 | $30 | $4.00 | $5.50 | $11.60 |
 | $60 | $7.90 | $10.80 | $23.20 |
 | $100 | $13.20 | $18.00 | $38.70 |
 | $200 | $26.40 | $36.00 | $77.40 |
 
-**Kein manueller Cap nötig** — Kelly % × 50% × Bankroll. Min Bet: $2.50.
-
-> Halbes Kelly (f/2): ~75% der theoretischen Rendite bei deutlich weniger Volatilität.
+Min Bet: $2.50 (damit sich die Order-Fees lohnen).
 
 ---
 
