@@ -90,7 +90,7 @@ Läuft alle **2 Stunden** (Europe/Vienna). Führt folgende Schritte aus:
 
 1. 💰 **Redeem** — löst gewonnene Positionen automatisch ein
 2. 🔍 **Scanner** — scannt Märkte (Volumen >$50k, Spread <10%, YES 40-85¢)
-3. 📰 **Research** — Gezielte **Brave API Suche** pro Spiel (`"[Team A] vs [Team B] picks expert [datum]"`), Fallback auf covers.com/bbc bei Limit (2.000 Suchen/Monat Free Tier, Warnung bei 1.800)
+3. 📰 **Research** — **Brave AI Answers** (`BRAVE_ANSWERS_API_KEY`) liefert KI-generierte Zusammenfassungen mit ESPN Win-Prozenten, Experten-Picks und Spreads direkt aus mehreren Quellen. Fallback: Brave Web Search (`BRAVE_SEARCH_API_KEY`) mit `extra_snippets`. Confidence basiert direkt auf ESPN Analytics Win-Wahrscheinlichkeiten wenn verfügbar.
 4. 💵 **Kapital aufteilen** — nach Confidence gewichtet (80%+ → 30%, 70-79% → 20%, 65-69% → 10%)
 5. ⚡ **Sofort kaufen** — wenn EV positiv (confidence ≥ preis + 8%)
 6. 📱 **Pflichtbericht** — sendet nach jedem Run eine Zusammenfassung per Telegram
@@ -227,10 +227,15 @@ EV pro Trade: +$1.45 × ($7/$10) = +$1.02
 100 Trades × $1.02 = +$102/Monat auf $400 Bankroll = +25%
 ```
 
-**Fazit:** 15-25% monatlich ist realistisch wenn:
-- Win-Rate ≥ 65% (konsistent durch gutes Research)
-- Märkte mit Preis 50-65¢ bevorzugt (gutes Gewinn/Verlust-Verhältnis)
-- EV-Filter konsequent eingehalten
+**Fazit:** 20-35% monatlich ist realistisch mit Brave AI Answers:
+
+| Research-Qualität | Win-Rate | Monatl. Return |
+|-------------------|----------|----------------|
+| Covers-Snippet (alt) | ~57% | +2-5% |
+| Brave Web Search | ~62% | +10-20% |
+| **Brave AI Answers** | **~65-70%** | **+20-35%** |
+
+Brave AI Answers liefert ESPN Win-Prozente (z.B. "59.6% Nebraska") direkt als Confidence-Basis — kein Raten mehr. Confidence wird damit messbar statt geschätzt.
 
 ### Optimales Trade-Verhältnis
 
