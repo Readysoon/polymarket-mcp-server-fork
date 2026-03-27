@@ -544,49 +544,83 @@ for _attempt in range(6):  # 6×5s = 30s (FOK fills instantly or rejects)
         break
     print(f"On-chain check {_attempt+1}/6 — not yet...")
 
-# ── RETRY at +5¢ if unconfirmed ───────────────────────────────────────────────
+# ── RETRY in 1¢ steps with Kelly recalculation ────────────────────────────────
 
 if not _onchain_confirmed:
-    _retry_price = round(best_ask + 0.05, 3)
-    _ev_ok       = confidence >= _retry_price + 0.08
-    print(f"Unconfirmed — EV re-check at +5¢: {confidence:.2f} >= {_retry_price + 0.08:.3f} → {'TRADE' if _ev_ok else 'SKIP'}")
+    _retry_price = round(best_ask + 0.01, 3)
 
-    if not _ev_ok:
-        queue_error(f"Unmatched at {best_ask}, EV insufficient at +5¢ ({_retry_price})",
-                    f"condition_id={CONDITION_ID}")
-        sys.exit(1)
+    while not _onchain_confirmed:
+        # Recalculate Kelly bet at new price
+        _p = confidence
+        _b = (1 - _retry_price) / _retry_price
+        _kp = max(0, (_p * _b - (1 - _p)) / _b)
+        _new_bet = round(max(2.50, _kp * 0.5 * total_balance), 2)
 
-    print(f"Retrying at {_retry_price:.3f}...")
-    result = mcporter('create_market_order', market_id=CONDITION_ID, side=trade_side, size=round(float(bet_size), 2))
-    best_ask = _retry_price  # update for journal
+        # EV check: must still have minimum edge
+        _ev_ok = confidence >= _retry_price + 0.08
+        print(f"Retry at {_retry_price:.3f}: Kelly ${_new_bet:.2f} | EV={'✅' if _ev_ok else '❌ STOP'}")
 
-    for _attempt2 in range(6):
-        _time.sleep(5)
-        try:
-            _act_r2 = httpx.get(
-                f"https://data-api.polymarket.com/activity?user={_ADDR}&limit=20", timeout=10
+        if not _ev_ok:
+            queue_error(f"Unmatched — EV exhausted at {_retry_price}",
+                        f"condition_id={CONDITION_ID} last_price={_retry_price}")
+            sys.exit(1)
+
+        # Place retry order
+        bet_size = _new_bet
+        _raw_shares2 = float(bet_size) / _retry_price
+        _best_shares2 = None
+        for _q2 in range(max(1, int(_raw_shares2 * 4) - 8), int(_raw_shares2 * 4) + 9):
+            _ts2 = round(_q2 / 4, 2)
+            _tc2 = _ts2 * _retry_price
+            if abs(_tc2 - round(_tc2, 2)) < 1e-9:
+                if _best_shares2 is None or abs(_ts2 - _raw_shares2) < abs(_best_shares2 - _raw_shares2):
+                    _best_shares2 = _ts2
+        if _best_shares2 is None:
+            _best_shares2 = round(_raw_shares2 / 0.25) * 0.25
+        bet_size = round(_best_shares2 * _retry_price, 2)
+
+        # Place order
+        async def _retry_order():
+            from polymarket_mcp.auth.client import PolymarketClient
+            _c = PolymarketClient(
+                private_key=os.environ['POLYGON_PRIVATE_KEY'],
+                address=os.environ['POLYGON_ADDRESS'],
+                api_key=os.environ['POLYMARKET_API_KEY'],
+                api_secret=os.environ['POLYMARKET_API_SECRET'],
+                passphrase=os.environ['POLYMARKET_PASSPHRASE'],
+                chain_id=137
             )
-            for _act2 in _act_r2.json():
-                if (_act2.get('conditionId') == CONDITION_ID
-                        and _act2.get('type') == 'TRADE'
-                        and float(_act2.get('usdcSize', 0)) > 0):
-                    _onchain_confirmed = True
-                    _onchain_tx   = _act2.get('transactionHash')
-                    _onchain_size = float(_act2.get('usdcSize', 0))
-                    print(f"RETRY ON-CHAIN CONFIRMED: tx={_onchain_tx[:20]}... size=${_onchain_size:.2f}")
-                    break
-        except Exception as _ce2:
-            print(f"Retry on-chain check {_attempt2+1} error: {_ce2}")
-        if _onchain_confirmed:
-            break
-        print(f"Retry on-chain check {_attempt2+1}/6...")
+            _c._initialize_client()
+            return await _c.post_order(
+                token_id=ACTIVE_TOKEN,
+                price=round(_retry_price, 4),
+                size=round(float(_best_shares2), 2),
+                side='BUY',
+                order_type='FOK'
+            )
+        _r2 = asyncio.run(_retry_order())
+        best_ask = _retry_price
 
-    if not _onchain_confirmed:
-        queue_error(
-            f"Both orders unconfirmed on-chain (ask={best_ask}, retry={_retry_price})",
-            f"order_id={result.get('order_id')} bet_size={bet_size}"
-        )
-        sys.exit(1)
+        # Check on-chain
+        for _a2 in range(6):
+            _time.sleep(5)
+            try:
+                _ar2 = httpx.get(f"https://data-api.polymarket.com/activity?user={_ADDR}&limit=20", timeout=10)
+                for _act2 in _ar2.json():
+                    if (_act2.get('conditionId') == CONDITION_ID
+                            and _act2.get('type') == 'TRADE'
+                            and float(_act2.get('usdcSize', 0)) > 0):
+                        _onchain_confirmed = True
+                        _onchain_tx = _act2.get('transactionHash')
+                        _onchain_size = float(_act2.get('usdcSize', 0))
+                        print(f"RETRY CONFIRMED at {_retry_price}: tx={_onchain_tx[:20]}... ${_onchain_size:.2f}")
+                        break
+            except: pass
+            if _onchain_confirmed:
+                break
+
+        if not _onchain_confirmed:
+            _retry_price = round(_retry_price + 0.01, 3)  # try next cent
 
 
 # ── Write journal entry ───────────────────────────────────────────────────────
