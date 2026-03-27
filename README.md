@@ -229,13 +229,15 @@ EV pro Trade: +$1.45 × ($7/$10) = +$1.02
 
 **Fazit:** 20-35% monatlich ist realistisch mit Brave AI Answers:
 
-| Research-Qualität | Win-Rate | Monatl. Return |
-|-------------------|----------|----------------|
-| Covers-Snippet (alt) | ~57% | +2-5% |
-| Brave Web Search | ~62% | +10-20% |
-| **Brave AI Answers** | **~65-70%** | **+20-35%** |
+Der entscheidende Vorteil von Brave AI Answers: **Confidence wird messbar statt geschätzt.**
 
-Brave AI Answers liefert ESPN Win-Prozente (z.B. "59.6% Nebraska") direkt als Confidence-Basis — kein Raten mehr. Confidence wird damit messbar statt geschätzt.
+| Research-Qualität | Confidence-Qualität | Erwartetes Ergebnis |
+|-------------------|---------------------|---------------------|
+| Covers-Snippet (alt) | Oft geraten | Viele Fehleinschätzungen → schlechter EV |
+| Brave Web Search | Snippets, wenig Kontext | Bessere Basis, aber lückenhaft |
+| **Brave AI Answers** | ESPN Win-% direkt | Confidence entspricht echten Daten |
+
+Brave AI Answers liefert z.B. "ESPN Analytics: 59.6% Nebraska" → wir verwenden 59.6% direkt als Confidence statt zu raten. Das führt zu **weniger aber besseren Trades** und damit positivem EV.
 
 ### Optimales Trade-Verhältnis
 
