@@ -466,11 +466,29 @@ if TRADE_SIDE == 'NO' and NO_TOKEN:
     _no_result = asyncio.run(_place_no_order())
     result = {'success': _no_result.get('success', False), 'order_id': _no_result.get('orderID'), **_no_result}
 else:
-    result = mcporter('create_market_order',
-        market_id=CONDITION_ID,
-        side='BUY',
-        size=round(float(bet_size), 2)
-    )
+    # Use post_order directly with pre-rounded shares (avoids mcporter internal rounding issues)
+    import asyncio, sys as _sys
+    _sys.path.insert(0, WORKSPACE + '/src')
+    async def _place_yes_order():
+        from polymarket_mcp.auth.client import PolymarketClient
+        _client = PolymarketClient(
+            private_key=os.environ['POLYGON_PRIVATE_KEY'],
+            address=os.environ['POLYGON_ADDRESS'],
+            api_key=os.environ['POLYMARKET_API_KEY'],
+            api_secret=os.environ['POLYMARKET_API_SECRET'],
+            passphrase=os.environ['POLYMARKET_PASSPHRASE'],
+            chain_id=137
+        )
+        _client._initialize_client()
+        return await _client.post_order(
+            token_id=YES_TOKEN,
+            price=round(best_ask, 4),
+            size=round(float(_best_shares), 2),
+            side='BUY',
+            order_type='FOK'
+        )
+    _yes_result = asyncio.run(_place_yes_order())
+    result = {'success': _yes_result.get('success', False), 'order_id': _yes_result.get('orderID'), **_yes_result}
 
 if not (result.get('success') or result.get('order_id')):
     err_msg = str(result.get('error', result))
