@@ -85,8 +85,18 @@ flyctl secrets set KEY=VALUE --app polymarket-mcp-dashboard
 - Verwaltet Scanner-Crons, Watcher-Jobs, antwortet auf Fragen
 - Memory in `/home/node/.openclaw/workspace/MEMORY.md`
 
+## 🕐 Aktive Cron-Jobs
+
+| Job | Intervall | Aufgabe |
+|-----|-----------|---------|
+| **Polymarket Runner** | alle 15 Min | Redeem + Scan + Trade (still) |
+| **Live Monitor** | alle 5 Min | ESPN Win-% check + Auto Stop-Loss (<30%) |
+| **Summary** | alle 2h | Zusammenfassung per Telegram |
+
+---
+
 ### Polymarket Runner (aktives System)
-Läuft alle **2 Stunden** (Europe/Vienna). Führt folgende Schritte aus:
+Läuft alle **15 Minuten** (Europe/Vienna). Führt folgende Schritte aus:
 
 1. 💰 **Redeem** — löst gewonnene Positionen automatisch ein
 2. 🎯 **Brave Top Picks** (**1 Anfrage**) — fragt Brave AI Answers nach den stärksten Sport-Picks des Tages mit Experten-Konsens, Win-Wahrscheinlichkeiten und klarer Seite (YES/NO/OVER/UNDER)
