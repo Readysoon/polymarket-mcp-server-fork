@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 
 WORKSPACE = os.environ.get('MW_WORKSPACE', '/home/node/.openclaw/workspace')
 TRADING_DIR = f'{WORKSPACE}/trading'
-STOP_LOSS_THRESHOLD = 0.30  # sell if ESPN win prob drops below 30%
+STOP_LOSS_THRESHOLD = 0.22  # sell if ESPN win prob drops below 22%
 
 # ── Load open positions from journal ─────────────────────────────────────────
 try:
