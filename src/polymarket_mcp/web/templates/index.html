@@ -781,7 +781,7 @@
                     ${tileUrl ? `onclick="window.open('${tileUrl}','_blank')"` : ''}>
                     <div>
                         <div style="font-size:0.78rem;font-weight:600;color:#e5e7eb;line-height:1.2;margin-bottom:4px;">${pos.market}</div>
-                        <div style="font-size:0.65rem;color:#9ca3af;">${pos.outcome} ${badge}</div>
+                        <div style="font-size:0.65rem;color:#9ca3af;">${pos.outcome} ${badge}${pos.espn_wp ? ` <span style="color:#60a5fa;font-weight:600;">ESPN ${pos.espn_wp}%</span>` : ''}</div>
                     </div>
                     <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:6px;">
                         <div style="font-size:0.65rem;color:#6b7280;">${pos.shares.toFixed(1)} @ $${pos.current_price.toFixed(2)}</div>
@@ -814,8 +814,27 @@
                 pnlEl.textContent = (pnl >= 0 ? '+$' : '-$') + Math.abs(pnl).toFixed(2);
                 pnlEl.style.color = pnl >= 0 ? '#10b981' : '#ef4444';
 
-                // Store and render
-                allPositions = data.positions || [];
+                // Load ESPN live win probabilities and attach to positions
+                let espnData = {};
+                try {
+                    const espnRes = await fetch('/api/live-winprob');
+                    espnData = await espnRes.json();
+                } catch(e) {}
+
+                allPositions = (data.positions || []).map(pos => {
+                    // Match position to ESPN game by checking if team names appear in game name
+                    let espn_wp = null;
+                    for (const [gameName, gameData] of Object.entries(espnData)) {
+                        for (const [teamName, teamData] of Object.entries(gameData.teams || {})) {
+                            if (pos.market && pos.market.toLowerCase().includes(teamName.toLowerCase())) {
+                                espn_wp = teamData.win_pct;
+                                break;
+                            }
+                        }
+                        if (espn_wp !== null) break;
+                    }
+                    return { ...pos, espn_wp };
+                });
                 renderTreemap();
 
             } catch (error) {

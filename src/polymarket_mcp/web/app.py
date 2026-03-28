@@ -612,6 +612,55 @@ async def get_scan_results(date: Optional[str] = None):
         return JSONResponse({"results": [], "error": str(e)})
 
 
+@app.get("/api/live-winprob")
+async def get_live_winprob():
+    """Get ESPN live win probabilities for active sports games."""
+    import httpx as _httpx
+    results = {}
+    try:
+        sports = [
+            ("nba", "basketball"),
+            ("nhl", "hockey"),
+        ]
+        async with _httpx.AsyncClient() as hc:
+            for league, sport in sports:
+                r = await hc.get(
+                    f"https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/scoreboard",
+                    timeout=8.0
+                )
+                if r.status_code != 200:
+                    continue
+                for event in r.json().get("events", []):
+                    comp = event.get("competitions", [{}])[0]
+                    status = event.get("status", {})
+                    desc = status.get("type", {}).get("description", "")
+                    if desc not in ("In Progress", "Halftime"):
+                        continue
+                    situation = comp.get("situation", {})
+                    prob = situation.get("lastPlay", {}).get("probability", {})
+                    if not prob:
+                        continue
+                    teams = {}
+                    for c in comp.get("competitors", []):
+                        name = c["team"]["shortDisplayName"]
+                        score = c.get("score", "?")
+                        home = c.get("homeAway", "") == "home"
+                        win_pct = prob.get("homeWinPercentage" if home else "awayWinPercentage", None)
+                        teams[name] = {"score": score, "win_pct": round(win_pct * 100, 1) if win_pct is not None else None}
+                    game_name = event.get("name", "")
+                    clock = status.get("displayClock", "")
+                    period = status.get("period", "")
+                    results[game_name] = {
+                        "teams": teams,
+                        "clock": clock,
+                        "period": period,
+                        "league": league.upper()
+                    }
+    except Exception as e:
+        logger.error(f"ESPN live win prob error: {e}")
+    return JSONResponse(results)
+
+
 @app.get("/api/balance-history")
 async def get_balance_history():
     """Get balance history for charting."""
