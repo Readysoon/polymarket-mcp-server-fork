@@ -91,10 +91,10 @@ for p in redeemable:
                 bytes.fromhex(condition_id[2:]), [index_set]
             ).build_transaction({'from': account.address, 'nonce': nonce, 'gas': 200000, 'gasPrice': gas_price, 'chainId': 137})
         else:
-            # Normal market: redeem with native USDC
-            bal_before = usdc_contract.functions.balanceOf(account.address).call()
+            # Normal market: redeem with USDC.e (Polymarket uses USDC.e as collateral)
+            bal_before = usdce_contract.functions.balanceOf(account.address).call()
             tx = ctf.functions.redeemPositions(
-                w3.to_checksum_address(USDC), b'\x00'*32,
+                w3.to_checksum_address(USDC_E), b'\x00'*32,
                 bytes.fromhex(condition_id[2:]), [index_set]
             ).build_transaction({'from': account.address, 'nonce': nonce, 'gas': 200000, 'gasPrice': gas_price, 'chainId': 137})
 
@@ -136,10 +136,10 @@ for p in redeemable:
                 else:
                     print(f"REDEEM_ZERO: {title} | no wcol gained")
             else:
-                bal_after = usdc_contract.functions.balanceOf(account.address).call()
+                bal_after = usdce_contract.functions.balanceOf(account.address).call()
                 received = (bal_after - bal_before) / 1e6
                 if received > 0:
-                    print(f"REDEEMED: {title} | +${received:.2f} USDC | tx={tx_hash.hex()[:16]}...")
+                    print(f"REDEEMED: {title} | +${received:.2f} USDC.e | tx={tx_hash.hex()[:16]}...")
                     redeemed.append({'title': title, 'value': received, 'tx': tx_hash.hex()})
                 else:
                     print(f"REDEEM_ZERO: {title} | tx confirmed but $0 received (market not resolved yet)")
