@@ -547,6 +547,22 @@ for _attempt in range(6):  # 6×5s = 30s (FOK fills instantly or rejects)
 # ── RETRY in 1¢ steps with Kelly recalculation ────────────────────────────────
 
 if not _onchain_confirmed:
+    # Extra check before retry: wait 15s and check again (delayed on-chain indexing)
+    _time.sleep(15)
+    try:
+        _extra_r = _httpx.get(f"https://data-api.polymarket.com/activity?user={_ADDR}&limit=20", timeout=10)
+        for _ea in _extra_r.json():
+            if (_ea.get('conditionId') == CONDITION_ID
+                    and _ea.get('type') == 'TRADE'
+                    and float(_ea.get('usdcSize', 0)) > 0):
+                _onchain_confirmed = True
+                _onchain_tx = _ea.get('transactionHash')
+                _onchain_size = float(_ea.get('usdcSize', 0))
+                print(f"LATE ON-CHAIN CONFIRMED: tx={_onchain_tx[:20]}... ${_onchain_size:.2f}")
+                break
+    except: pass
+
+if not _onchain_confirmed:
     _retry_price = round(best_ask + 0.01, 3)
 
     while not _onchain_confirmed:
