@@ -12,10 +12,12 @@ from datetime import datetime, timezone
 WORKSPACE = os.environ.get('MW_WORKSPACE', '/home/node/.openclaw/workspace')
 TRADING_DIR = f'{WORKSPACE}/trading'
 STOP_LOSS_THRESHOLD = 0.22   # sell if our ESPN win prob drops below 22%
-BUY_ESPN_THRESHOLD  = 0.90   # buy if ESPN win prob >= 90%
 BUY_MAX_PRICE       = 0.80   # only buy if Polymarket price < 80¢ (min 10% edge)
 BUY_MIN_BET         = 2.50
-BUY_MAX_BET         = 15.00
+BUY_MAX_BET         = 25.00
+
+# 3 buy tiers per game — buy once per tier
+BUY_TIERS = [0.90, 0.95, 0.98]  # ESPN thresholds
 
 TELEGRAM_BOT = 'https://api.telegram.org/bot8599638540:AAFVTzaLBWQmStBfdd3xSlPEJJQuMH4cEBI/sendMessage'
 CHAT_ID = '866661912'
@@ -98,8 +100,14 @@ try:
 except:
     watchlist = []
 
-# Track already open condition_ids to avoid duplicate buys
-open_cids = {t.get('condition_id') for t in journal.get('trades', [])}
+# Track which condition_ids + tiers have already been bought
+# Key: (condition_id, tier_index) → True
+bought_tiers = set()
+for t in journal.get('trades', []):
+    cid = t.get('condition_id', '')
+    tier = t.get('live_buy_tier')
+    if cid and tier is not None:
+        bought_tiers.add((cid, tier))
 
 # ── Get wallet balance ────────────────────────────────────────────────────────
 def get_balance():
@@ -215,20 +223,26 @@ for trade in open_trades:
             print(f'Stop-loss error: {e}')
 
 # ── 2. LIVE BUY: scan all live ESPN games for high-confidence opportunities ───
-already_bought = set()  # avoid double-buy in same run
+bought_this_run = set()  # (cid, tier_idx) — avoid double-buy in same run
 
 for event in espn_events:
     teams = event.get('teams', [])
     for team in teams:
         wp = espn_data.get(team, 0)
-        if wp < BUY_ESPN_THRESHOLD:
+
+        # Find highest applicable tier
+        active_tier_idx = None
+        for i, threshold in reversed(list(enumerate(BUY_TIERS))):
+            if wp >= threshold:
+                active_tier_idx = i
+                break
+        if active_tier_idx is None:
             continue
 
         # Find matching market in watchlist
         market = None
         for m in watchlist:
-            q = m.get('question', '').lower()
-            if word_match(team, q):
+            if word_match(team, m.get('question', '')):
                 market = m
                 break
         if not market:
@@ -236,17 +250,17 @@ for event in espn_events:
             continue
 
         cid = market.get('condition_id', '')
-        if cid in open_cids or cid in already_bought:
-            print(f'[LIVEBUY] {team} — already in portfolio, skip')
+
+        # Check if this tier (or higher) already bought
+        if (cid, active_tier_idx) in bought_tiers or (cid, active_tier_idx) in bought_this_run:
+            print(f'[LIVEBUY] {team} tier={active_tier_idx} — already bought at this tier, skip')
             continue
 
         # Check current Polymarket price
         yes_price = float(market.get('yes_price') or market.get('amm_ask') or 1.0)
         no_price  = float(market.get('no_price')  or 1 - yes_price)
 
-        # Determine which token to buy
-        # If ESPN team matches YES side (team name in question first): buy YES
-        # Simple heuristic: if team appears before "vs" → YES side
+        # Determine buy side: team before "vs" → YES, after → NO
         q = market.get('question', '')
         before_vs = q.lower().split(' vs')[0] if ' vs' in q.lower() else q.lower()
         if word_match(team, before_vs):
@@ -259,30 +273,41 @@ for event in espn_events:
             token_id  = market.get('no_token_id') or (market.get('clob_token_ids', [None, None])[1])
 
         if buy_price >= BUY_MAX_PRICE:
-            print(f'[LIVEBUY] {team} ESPN={wp:.1%} Polymarket={buy_price:.2f} — price too high (>{BUY_MAX_PRICE}), skip')
+            print(f'[LIVEBUY] {team} ESPN={wp:.1%} price={buy_price:.2f} — too high, skip')
             continue
 
         edge = wp - buy_price
-        print(f'[LIVEBUY] {team} ESPN={wp:.1%} Poly={buy_price:.2f} edge={edge:.1%} — OPPORTUNITY!')
+        if edge < 0.10:
+            print(f'[LIVEBUY] {team} edge={edge:.1%} — insufficient, skip')
+            continue
 
-        # Kelly sizing (quarter Kelly)
+        # Divergence multiplier: bigger edge = more money
+        if edge >= 0.35:
+            div_mult = 2.0
+        elif edge >= 0.20:
+            div_mult = 1.5
+        else:
+            div_mult = 1.0
+
+        # Quarter Kelly × divergence multiplier
         b = (1 - buy_price) / buy_price
         kelly = max(0, (wp * b - (1 - wp)) / b)
-        bet = round(min(BUY_MAX_BET, max(BUY_MIN_BET, kelly * 0.25 * bankroll)), 2)
+        bet = round(min(BUY_MAX_BET, max(BUY_MIN_BET, kelly * 0.25 * bankroll * div_mult)), 2)
+
+        print(f'[LIVEBUY] {team} ESPN={wp:.1%} Poly={buy_price:.2f} edge={edge:.1%} tier={active_tier_idx} mult={div_mult}x bet=${bet:.2f}')
+
         if bankroll < bet + 2:
             print(f'[LIVEBUY] Insufficient bankroll (${bankroll:.2f})')
             continue
-
         if not token_id:
-            print(f'[LIVEBUY] No token_id found, skip')
+            print(f'[LIVEBUY] No token_id, skip')
             continue
 
         try:
             result = asyncio.run(buy_position(token_id, buy_price, bet))
             print(f'BUY result: {result}')
             if result.get('success') or result.get('orderID'):
-                already_bought.add(cid)
-                # Log to journal
+                bought_this_run.add((cid, active_tier_idx))
                 journal['trades'].append({
                     'bot_id': 'live_monitor',
                     'timestamp': now.isoformat(),
@@ -299,10 +324,11 @@ for event in espn_events:
                     'outcome': None,
                     'pnl': None,
                     'order_id': result.get('orderID', ''),
-                    'note': f'LIVE BUY: ESPN {wp:.1%} vs Polymarket {buy_price:.2f} (edge {edge:.1%})',
+                    'live_buy_tier': active_tier_idx,
+                    'note': f'LIVE BUY tier{active_tier_idx}: ESPN {wp:.1%} vs Poly {buy_price:.2f} edge={edge:.1%} mult={div_mult}x',
                 })
                 json.dump(journal, open(f'{TRADING_DIR}/journal.json', 'w'), indent=2)
-                msg = f'⚡ LIVE BUY: {market["question"][:40]} | {buy_side} @{buy_price:.2f} | ESPN {wp:.1%} | ${bet:.2f}'
+                msg = f'⚡ LIVE BUY T{active_tier_idx+1}: {q[:35]} | {buy_side} @{buy_price:.2f} | ESPN {wp:.1%} | ${bet:.2f}'
                 print(msg)
                 send_telegram(msg)
         except Exception as e:
