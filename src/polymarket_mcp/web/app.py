@@ -338,6 +338,7 @@ async def get_portfolio():
                 positions.append({
                     "market": pos.get("title", pos.get("conditionId", "")[:20]),
                     "outcome": pos.get("outcome", "Yes"),
+                    "condition_id": pos.get("conditionId", ""),
                     "shares": round(size, 4),
                     "avg_price": round(avg_price, 4),
                     "current_price": round(cur_price, 4),
