@@ -661,6 +661,26 @@ async def get_live_winprob():
     return JSONResponse(results)
 
 
+@app.get("/api/journal-meta")
+async def get_journal_meta():
+    """Return bot_id and live_buy_tier per condition_id from journal."""
+    try:
+        journal_path = Path(TRADING_DIR) / "journal.json"
+        journal = json.loads(journal_path.read_text()) if journal_path.exists() else {}
+        meta = {}
+        for t in journal.get("trades", []):
+            cid = t.get("condition_id")
+            if cid:
+                meta[cid] = {
+                    "bot_id": t.get("bot_id"),
+                    "live_buy_tier": t.get("live_buy_tier"),
+                }
+        return JSONResponse(meta)
+    except Exception as e:
+        logger.error(f"Journal meta error: {e}")
+        return JSONResponse({})
+
+
 @app.get("/api/balance-history")
 async def get_balance_history():
     """Get balance history for charting."""

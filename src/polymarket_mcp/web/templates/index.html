@@ -777,13 +777,43 @@
                 // Span 2 columns for large value positions
                 const span = pos.value >= 4 ? 'grid-column:span 2;' : '';
                 const minH = pos.value >= 4 ? '100px' : '80px';
-                return `<div style="background:${bg};border:${border};border-radius:8px;padding:10px;cursor:${tileUrl?'pointer':'default'};min-height:${minH};display:flex;flex-direction:column;justify-content:space-between;${span}"
+                // ESPN indicators
+                const espnWp = pos.espn_wp;
+                const isStopLossRisk = espnWp !== null && espnWp < 22;
+                const isLiveBuy = pos.bot_id === 'live_monitor';
+                const liveTier = pos.live_buy_tier != null ? pos.live_buy_tier + 1 : null;
+
+                let espnBar = '';
+                if (espnWp !== null) {
+                    const barColor = espnWp >= 60 ? '#10b981' : espnWp >= 35 ? '#f59e0b' : '#ef4444';
+                    const barWidth = Math.round(espnWp);
+                    const espnLabel = isStopLossRisk
+                        ? `<span style="color:#ef4444;font-weight:700;font-size:0.6rem;">⚠️ STOP-LOSS RISK</span>`
+                        : `<span style="color:${barColor};font-size:0.6rem;font-weight:600;">ESPN ${espnWp.toFixed(0)}%</span>`;
+                    espnBar = `
+                        <div style="margin:4px 0 2px;">
+                            ${espnLabel}
+                            <div style="height:3px;background:#1a1a2e;border-radius:2px;margin-top:2px;">
+                                <div style="height:100%;width:${barWidth}%;background:${barColor};border-radius:2px;transition:width 0.3s;"></div>
+                            </div>
+                        </div>`;
+                }
+
+                const liveBuyBadge = isLiveBuy
+                    ? `<span style="background:rgba(99,102,241,0.25);color:#a5b4fc;font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:3px;margin-left:4px;">⚡ LIVE T${liveTier||'?'}</span>`
+                    : '';
+
+                const stopLossBorder = isStopLossRisk
+                    ? 'box-shadow:0 0 8px rgba(239,68,68,0.4);' : '';
+
+                return `<div style="background:${bg};border:${border};${stopLossBorder}border-radius:8px;padding:10px;cursor:${tileUrl?'pointer':'default'};min-height:${minH};display:flex;flex-direction:column;justify-content:space-between;${span}"
                     ${tileUrl ? `onclick="window.open('${tileUrl}','_blank')"` : ''}>
                     <div>
-                        <div style="font-size:0.78rem;font-weight:600;color:#e5e7eb;line-height:1.2;margin-bottom:4px;">${pos.market}</div>
-                        <div style="font-size:0.65rem;color:#9ca3af;">${pos.outcome} ${badge}${pos.espn_wp ? ` <span style="color:#60a5fa;font-weight:600;">ESPN ${pos.espn_wp}%</span>` : ''}</div>
+                        <div style="font-size:0.78rem;font-weight:600;color:#e5e7eb;line-height:1.2;margin-bottom:2px;">${pos.market}</div>
+                        <div style="font-size:0.65rem;color:#9ca3af;">${pos.outcome} ${badge}${liveBuyBadge}</div>
+                        ${espnBar}
                     </div>
-                    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:6px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:4px;">
                         <div style="font-size:0.65rem;color:#6b7280;">${pos.shares.toFixed(1)} @ $${pos.current_price.toFixed(2)}</div>
                         <div style="font-size:0.85rem;font-weight:700;" class="${pnlCls}">${pnlStr}</div>
                     </div>
@@ -821,19 +851,33 @@
                     espnData = await espnRes.json();
                 } catch(e) {}
 
+                // Load journal meta (bot_id, live_buy_tier) per condition_id
+                let journalMeta = {};
+                try {
+                    const jRes = await fetch('/api/journal-meta');
+                    journalMeta = await jRes.json();
+                } catch(e) {}
+
                 allPositions = (data.positions || []).map(pos => {
-                    // Match position to ESPN game by checking if team names appear in game name
+                    // Match ESPN win prob — use outcome team if available
                     let espn_wp = null;
+                    const outcomeTeam = (pos.outcome || '').toLowerCase();
                     for (const [gameName, gameData] of Object.entries(espnData)) {
                         for (const [teamName, teamData] of Object.entries(gameData.teams || {})) {
-                            if (pos.market && pos.market.toLowerCase().includes(teamName.toLowerCase())) {
+                            const tl = teamName.toLowerCase();
+                            const matches = outcomeTeam
+                                ? (tl.includes(outcomeTeam) || outcomeTeam.includes(tl))
+                                : (pos.market && pos.market.toLowerCase().includes(tl));
+                            if (matches && teamData.win_pct !== null) {
                                 espn_wp = teamData.win_pct;
                                 break;
                             }
                         }
                         if (espn_wp !== null) break;
                     }
-                    return { ...pos, espn_wp };
+                    // Attach journal meta
+                    const meta = journalMeta[pos.condition_id] || {};
+                    return { ...pos, espn_wp, bot_id: meta.bot_id, live_buy_tier: meta.live_buy_tier };
                 });
                 renderTreemap();
 
