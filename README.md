@@ -89,9 +89,43 @@ flyctl secrets set KEY=VALUE --app polymarket-mcp-dashboard
 
 | Job | Intervall | Aufgabe |
 |-----|-----------|---------|
-| **Polymarket Runner** | alle 15 Min | Redeem + Scan + Trade (still) |
-| **Live Monitor** | alle 5 Min | ESPN Win-% check + Auto Stop-Loss (<30%) |
+| **Stop-Loss & Redeem** | alle 5 Min | ESPN Win-% check + Auto Stop-Loss + Redeem |
 | **Summary** | alle 2h | Zusammenfassung per Telegram |
+
+---
+
+### Stop-Loss & Redeem Agent (alle 5 Minuten)
+
+Läuft nur wenn aktuell **offene Spiele** im Journal sind (Early-Exit sonst).
+
+**Schritt 1 — Live Monitor (Stop-Loss + Live Buy):**
+
+Holt ESPN Win-Wahrscheinlichkeiten für alle laufenden NBA/NHL/NCAAB Spiele.
+
+**Stop-Loss:** Wenn unsere Gewinnchance unter 22% fällt → Position sofort verkaufen.
+- 📱 Telegram: `🛑 STOP-LOSS: [Markt] | $[Betrag] zurück | PnL: $[PnL]`
+
+**Live Buy (ESPN Divergenz):** Wenn ESPN ≥ 90% UND Polymarket < 80¢ (mind. 10% Edge) → kaufen.
+Bis zu **3 Stufen pro Spiel** (je einmal):
+
+| Stufe | ESPN Schwelle | Sizing |
+|-------|--------------|--------|
+| T1 | ≥ 90% | Quarter Kelly × Divergenz-Mult |
+| T2 | ≥ 95% | Quarter Kelly × Divergenz-Mult |
+| T3 | ≥ 98% | Quarter Kelly × Divergenz-Mult |
+
+**Divergenz-Multiplikator** (Edge = ESPN% − Polymarket-Preis):
+| Edge | Multiplikator |
+|------|--------------|
+| 10–19% | ×1.0 |
+| 20–34% | ×1.5 |
+| ≥ 35% | ×2.0 |
+
+Max Einsatz: $25 pro Kauf. Min: $2.50.
+- 📱 Telegram: `⚡ LIVE BUY T[N]: [Markt] | [Seite] @[Preis]¢ | ESPN [%] | $[Betrag]`
+
+**Schritt 2 — Redeem:** Löst gewonnene Positionen automatisch ein.
+- 📱 Telegram bei Gewinn: `✅ WON: [Markt] | +$XX`
 
 ---
 
