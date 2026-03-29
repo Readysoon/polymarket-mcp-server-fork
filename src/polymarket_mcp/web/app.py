@@ -296,9 +296,23 @@ async def get_portfolio():
             except Exception:
                 raw_positions = []
 
+            # Load journal to filter out sold/closed positions
+            sold_cids = set()
+            try:
+                journal_path = Path(TRADING_DIR) / "journal.json"
+                journal = json.loads(journal_path.read_text()) if journal_path.exists() else {}
+                for t in journal.get("trades", []):
+                    if t.get("status") in ("SOLD", "LOST", "WON_CLOSED", "position_sold"):
+                        sold_cids.add(t.get("condition_id", ""))
+            except Exception:
+                pass
+
             for pos in raw_positions:
                 size = float(pos.get("size", 0))
                 if size <= 0:
+                    continue
+                # Skip positions that are sold/closed per journal
+                if pos.get("conditionId", "") in sold_cids:
                     continue
 
                 market_url = ""
