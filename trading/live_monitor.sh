@@ -121,8 +121,20 @@ def get_balance():
 bankroll = get_balance()
 print(f'Bankroll: ${bankroll:.2f}')
 
-# ── Helper: sell position ─────────────────────────────────────────────────────
-async def sell_position(token, shares, sell_price):
+# ── Helper: round shares to valid increment ───────────────────────────────────
+def round_shares(raw, price):
+    best = None
+    for q in range(max(1, int(raw * 4) - 8), int(raw * 4) + 9):
+        ts = round(q / 4, 2)
+        tc = ts * price
+        if abs(tc - round(tc, 2)) < 1e-9:
+            if best is None or abs(ts - raw) < abs(best - raw):
+                best = ts
+    return round(best if best is not None else round(raw / 0.25) * 0.25, 2)
+
+# ── Helper: sell position (aggressive FOK ladder) ─────────────────────────────
+async def sell_position(token, shares, cur_price):
+    """Try to sell at progressively lower prices until filled."""
     sys.path.insert(0, f'{WORKSPACE}/src')
     from polymarket_mcp.auth.client import PolymarketClient
     client = PolymarketClient(
@@ -134,18 +146,33 @@ async def sell_position(token, shares, sell_price):
         chain_id=137
     )
     client._initialize_client()
-    raw = shares
-    best = None
-    for q in range(max(1, int(raw * 4) - 8), int(raw * 4) + 9):
-        ts = round(q / 4, 2)
-        tc = ts * sell_price
-        if abs(tc - round(tc, 2)) < 1e-9:
-            if best is None or abs(ts - raw) < abs(best - raw):
-                best = ts
-    if best is None:
-        best = round(raw / 0.25) * 0.25
-    return await client.post_order(token_id=token, price=sell_price,
-                                   size=round(best, 2), side='SELL', order_type='FOK')
+
+    # Stufenweise: bid-0.01 → bid-0.03 → bid-0.05 → bid (market)
+    offsets = [0.01, 0.03, 0.05, 0.00]
+    for i, offset in enumerate(offsets):
+        price = max(0.01, round(cur_price - offset, 3))
+        size = round_shares(shares, price)
+        order_type = 'FOK'
+        print(f'SELL attempt {i+1}/4: price={price:.3f} size={size} ({order_type})')
+        try:
+            result = await client.post_order(
+                token_id=token, price=price, size=size,
+                side='SELL', order_type=order_type
+            )
+            status = result.get('status', '')
+            success = result.get('success') or result.get('orderID') or status in ('matched', 'delayed')
+            print(f'  → {status} | success={success}')
+            if success and status != 'unmatched':
+                return result
+            # unmatched or no fill → try lower price
+        except Exception as e:
+            print(f'  → error: {e}')
+            # orderbook gone or other error → abort
+            if 'does not exist' in str(e) or 'orderbook' in str(e).lower():
+                print('  → orderbook closed, aborting')
+                return {'success': False, 'error': str(e)}
+
+    return {'success': False, 'error': 'All sell attempts failed'}
 
 # ── Helper: buy position ──────────────────────────────────────────────────────
 async def buy_position(token_id, price, size_usd):
@@ -202,9 +229,8 @@ for trade in open_trades:
             cur_price = float(pos.get('curPrice', 0))
             cur_value = float(pos.get('currentValue', 0))
             token     = pos.get('asset', '')
-            sell_price = round(cur_price - 0.01, 3)
 
-            result = asyncio.run(sell_position(token, shares, sell_price))
+            result = asyncio.run(sell_position(token, shares, cur_price))
             print(f'SELL result: {result}')
 
             if result.get('success') or result.get('status') in ('matched', 'delayed'):
