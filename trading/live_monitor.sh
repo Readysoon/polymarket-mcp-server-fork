@@ -69,24 +69,42 @@ for trade in open_trades:
     side = trade.get('trade_side', 'YES')
     condition_id = trade.get('condition_id', '')
 
-    # Find matching ESPN team
+    # Find ALL matching ESPN teams in this question
+    # For YES: we win if the matched team wins → use their win prob directly
+    # For NO: we win if the YES-team loses → find the team that corresponds to our outcome
+    # The journal stores 'outcome' field (e.g. "Hornets") = team we're backing
+    outcome_team = trade.get('outcome', None)  # e.g. "Hornets" for a NO trade on Celtics vs Hornets
+
     matched_team = None
     matched_wp = None
-    for team, wp in espn_data.items():
-        if team in question.lower():
-            matched_team = team
-            matched_wp = wp
-            break
+
+    if outcome_team:
+        # Try to match the outcome team directly (the team we need to WIN)
+        outcome_lower = outcome_team.lower()
+        for team, wp in espn_data.items():
+            if team in outcome_lower or outcome_lower in team:
+                matched_team = team
+                matched_wp = wp
+                our_wp = wp  # we win if outcome_team wins, regardless of YES/NO
+                break
+
+    if matched_wp is None:
+        # Fallback: match any team in question
+        all_matches = [(team, wp) for team, wp in espn_data.items() if team in question.lower()]
+        if not all_matches:
+            continue
+        if side == 'YES':
+            # Use first match (the team we're backing)
+            matched_team, matched_wp = all_matches[0]
+            our_wp = matched_wp
+        else:
+            # For NO, we win if the YES-team loses → use 1 - YES-team's win prob
+            # But only if we couldn't find outcome_team above
+            matched_team, matched_wp = all_matches[0]
+            our_wp = 1 - matched_wp
 
     if matched_wp is None:
         continue
-
-    # For YES trade: we win if team wins → check team's win prob
-    # For NO trade: we win if team loses → check team's LOSS prob (1 - win_prob)
-    if side == 'YES':
-        our_wp = matched_wp
-    else:
-        our_wp = 1 - matched_wp
 
     print(f'{question[:45]} | side={side} | ESPN {matched_team}={matched_wp:.1%} | our_wp={our_wp:.1%}')
 
