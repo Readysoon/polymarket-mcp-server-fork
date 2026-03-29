@@ -858,16 +858,22 @@
                     journalMeta = await jRes.json();
                 } catch(e) {}
 
+                // Word-boundary match (no substring bugs like "nets" in "hornets")
+                function wordMatch(needle, haystack) {
+                    if (!needle || !haystack) return false;
+                    try {
+                        return new RegExp('\\b' + needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i').test(haystack);
+                    } catch(e) { return false; }
+                }
+
                 allPositions = (data.positions || []).map(pos => {
-                    // Match ESPN win prob — use outcome team if available
                     let espn_wp = null;
                     const outcomeTeam = (pos.outcome || '').toLowerCase();
                     for (const [gameName, gameData] of Object.entries(espnData)) {
                         for (const [teamName, teamData] of Object.entries(gameData.teams || {})) {
-                            const tl = teamName.toLowerCase();
                             const matches = outcomeTeam
-                                ? (tl.includes(outcomeTeam) || outcomeTeam.includes(tl))
-                                : (pos.market && pos.market.toLowerCase().includes(tl));
+                                ? (wordMatch(teamName, outcomeTeam) || wordMatch(outcomeTeam, teamName))
+                                : wordMatch(teamName, pos.market || '');
                             if (matches && teamData.win_pct !== null) {
                                 espn_wp = teamData.win_pct;
                                 break;
@@ -875,7 +881,6 @@
                         }
                         if (espn_wp !== null) break;
                     }
-                    // Attach journal meta
                     const meta = journalMeta[pos.condition_id] || {};
                     return { ...pos, espn_wp, bot_id: meta.bot_id, live_buy_tier: meta.live_buy_tier };
                 });
