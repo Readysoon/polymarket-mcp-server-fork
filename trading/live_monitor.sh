@@ -78,28 +78,30 @@ for trade in open_trades:
     matched_team = None
     matched_wp = None
 
+    import re
+
+    def word_match(team_name, text):
+        """Match team name as a whole word (not substring of another word)."""
+        return bool(re.search(r'\b' + re.escape(team_name) + r'\b', text, re.IGNORECASE))
+
     if outcome_team:
         # Try to match the outcome team directly (the team we need to WIN)
-        outcome_lower = outcome_team.lower()
         for team, wp in espn_data.items():
-            if team in outcome_lower or outcome_lower in team:
+            if word_match(team, outcome_team) or word_match(outcome_team, team):
                 matched_team = team
                 matched_wp = wp
                 our_wp = wp  # we win if outcome_team wins, regardless of YES/NO
                 break
 
     if matched_wp is None:
-        # Fallback: match any team in question
-        all_matches = [(team, wp) for team, wp in espn_data.items() if team in question.lower()]
+        # Fallback: word-match any team in question
+        all_matches = [(team, wp) for team, wp in espn_data.items() if word_match(team, question)]
         if not all_matches:
             continue
         if side == 'YES':
-            # Use first match (the team we're backing)
             matched_team, matched_wp = all_matches[0]
             our_wp = matched_wp
         else:
-            # For NO, we win if the YES-team loses → use 1 - YES-team's win prob
-            # But only if we couldn't find outcome_team above
             matched_team, matched_wp = all_matches[0]
             our_wp = 1 - matched_wp
 
