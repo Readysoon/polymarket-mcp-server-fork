@@ -42,6 +42,16 @@ ACTIVE_TOKEN  = NO_TOKEN if TRADE_SIDE == 'NO' and NO_TOKEN else YES_TOKEN
 
 now = datetime.now(timezone.utc)
 
+# ── Paper Trading Mode ────────────────────────────────────────────────────────
+try:
+    _cfg = json.load(open(f'{TRADING_DIR}/config.json'))
+    PAPER_TRADING = _cfg.get('paper_trading', False)
+except:
+    PAPER_TRADING = False
+
+if PAPER_TRADING:
+    print('📝 PAPER TRADING MODE — kein echtes Geld wird eingesetzt')
+
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -439,9 +449,16 @@ except:
     pass
 
 
-# ── Place FOK order ───────────────────────────────────────────────────────────
-# For NO side: buy the NO token directly (it's always a BUY order on the token)
-if TRADE_SIDE == 'NO' and NO_TOKEN:
+# ── Place FOK order (or simulate in Paper Trading mode) ──────────────────────
+if PAPER_TRADING:
+    print(f"📝 PAPER TRADE: {QUESTION[:50]} | {TRADE_SIDE} @{best_ask:.3f} | {_best_shares:.2f} shares | ${bet_size:.2f}")
+    result = {
+        'success': True,
+        'orderID': f'PAPER-{CONDITION_ID[:16]}',
+        'status': 'paper',
+        'paper': True,
+    }
+elif TRADE_SIDE == 'NO' and NO_TOKEN:
     # For NO token: use post_order directly (same as SELL orders use)
     import asyncio, sys as _sys
     _sys.path.insert(0, WORKSPACE + '/src')
@@ -465,7 +482,7 @@ if TRADE_SIDE == 'NO' and NO_TOKEN:
         )
     _no_result = asyncio.run(_place_no_order())
     result = {'success': _no_result.get('success', False), 'order_id': _no_result.get('orderID'), **_no_result}
-else:
+elif not PAPER_TRADING:
     # Use post_order directly with pre-rounded shares (avoids mcporter internal rounding issues)
     import asyncio, sys as _sys
     _sys.path.insert(0, WORKSPACE + '/src')
@@ -517,11 +534,14 @@ if not (result.get('success') or result.get('order_id')):
 import time as _time
 
 _ADDR = os.environ.get('POLYGON_ADDRESS', '')
-_onchain_confirmed = False
-_onchain_tx        = None
-_onchain_size      = None
+_onchain_confirmed = PAPER_TRADING  # Paper trades skip on-chain check
+_onchain_tx        = result.get('orderID') if PAPER_TRADING else None
+_onchain_size      = bet_size if PAPER_TRADING else None
 
-print(f"Waiting for on-chain confirmation ({CONDITION_ID[:20]}...)...")
+if PAPER_TRADING:
+    print(f"📝 PAPER: on-chain check skipped")
+else:
+    print(f"Waiting for on-chain confirmation ({CONDITION_ID[:20]}...)...")
 
 for _attempt in range(6):  # 6×5s = 30s (FOK fills instantly or rejects)
     _time.sleep(5)

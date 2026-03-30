@@ -12,6 +12,16 @@ from datetime import datetime, timezone
 WORKSPACE = os.environ.get('MW_WORKSPACE', '/home/node/.openclaw/workspace')
 TRADING_DIR = f'{WORKSPACE}/trading'
 STOP_LOSS_THRESHOLD = 0.22   # sell if our ESPN win prob drops below 22%
+
+# Paper trading mode
+try:
+    _cfg = json.load(open(f'{TRADING_DIR}/config.json'))
+    PAPER_TRADING = _cfg.get('paper_trading', False)
+except:
+    PAPER_TRADING = False
+if PAPER_TRADING:
+    print('📝 PAPER TRADING MODE — kein echtes Geld')
+
 BUY_MAX_PRICE       = 0.80   # only buy if Polymarket price < 80¢ (min 10% edge)
 BUY_MIN_BET         = 2.50
 BUY_MAX_BET         = 25.00
@@ -230,10 +240,14 @@ for trade in open_trades:
             cur_value = float(pos.get('currentValue', 0))
             token     = pos.get('asset', '')
 
-            result = asyncio.run(sell_position(token, shares, cur_price))
+            if PAPER_TRADING:
+                result = {'success': True, 'status': 'paper', 'paper': True}
+                print(f'📝 PAPER STOP-LOSS: würde {shares} shares @ {cur_price:.3f} verkaufen')
+            else:
+                result = asyncio.run(sell_position(token, shares, cur_price))
             print(f'SELL result: {result}')
 
-            if result.get('success') or result.get('status') in ('matched', 'delayed'):
+            if result.get('success') or result.get('status') in ('matched', 'delayed', 'paper'):
                 pnl = round(cur_value - (trade.get('size_usd') or 0), 2)
                 for t in journal['trades']:
                     if t.get('condition_id') == condition_id:
@@ -330,7 +344,11 @@ for event in espn_events:
             continue
 
         try:
-            result = asyncio.run(buy_position(token_id, buy_price, bet))
+            if PAPER_TRADING:
+                result = {'success': True, 'orderID': f'PAPER-{cid[:16]}', 'status': 'paper', 'paper': True}
+                print(f'📝 PAPER LIVE BUY: würde {buy_side} @{buy_price:.3f} für ${bet:.2f} kaufen')
+            else:
+                result = asyncio.run(buy_position(token_id, buy_price, bet))
             print(f'BUY result: {result}')
             if result.get('success') or result.get('orderID'):
                 bought_this_run.add((cid, active_tier_idx))
