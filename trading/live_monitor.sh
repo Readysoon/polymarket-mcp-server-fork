@@ -62,13 +62,14 @@ except Exception as e:
 # ── Fetch ESPN live win probabilities ─────────────────────────────────────────
 def get_espn_winprob():
     results = {}      # team_lower → win_pct
-    game_teams = {}   # team_lower → (condition_or_title, other_team, end_dt)
     events_raw = []
 
+    # Punkt 4: MLB hinzugefügt
     sports = [
         ('nba',   'basketball'),
         ('nhl',   'hockey'),
         ('ncaab', 'basketball/college-basketball'),
+        ('mlb',   'baseball'),
     ]
     for league, sport in sports:
         try:
@@ -79,7 +80,7 @@ def get_espn_winprob():
             for event in r.json().get('events', []):
                 comp  = event.get('competitions', [{}])[0]
                 desc  = event.get('status', {}).get('type', {}).get('description', '')
-                if desc not in ('In Progress', 'Halftime'):
+                if desc not in ('In Progress', 'Halftime', 'In Progress - Rain Delay'):
                     continue
                 prob = comp.get('situation', {}).get('lastPlay', {}).get('probability', {})
                 if not prob:
@@ -100,6 +101,24 @@ def get_espn_winprob():
         except Exception as e:
             print(f'ESPN {league} error: {e}')
     return results, events_raw
+
+# Punkt 2: CLOB Live-Preis abfragen
+def get_clob_price(token_id):
+    """Get live bid/ask from Polymarket CLOB for accurate pricing."""
+    try:
+        r = httpx.get(
+            f'https://clob.polymarket.com/book?token_id={token_id}',
+            timeout=5
+        )
+        data = r.json()
+        bids = data.get('bids', [])
+        asks = data.get('asks', [])
+        best_bid = float(bids[0]['price']) if bids else None
+        best_ask = float(asks[0]['price']) if asks else None
+        mid = round((best_bid + best_ask) / 2, 4) if best_bid and best_ask else None
+        return best_bid, best_ask, mid
+    except:
+        return None, None, None
 
 espn_data, espn_events = get_espn_winprob()
 if not espn_data:
@@ -397,6 +416,13 @@ for event in espn_events:
             buy_side  = 'NO'
             buy_price = no_price
             token_id  = market.get('no_token_id') or (market.get('clob_token_ids', [None, None])[1])
+
+        # Punkt 2: CLOB Live-Preis für genaueres Pricing
+        if token_id:
+            clob_bid, clob_ask, clob_mid = get_clob_price(token_id)
+            if clob_ask is not None:
+                print(f'[CLOB] {team}: bid={clob_bid:.3f} ask={clob_ask:.3f} mid={clob_mid:.3f} (cached={buy_price:.3f})')
+                buy_price = clob_ask  # Kaufe zum Ask-Preis (realer Marktpreis)
 
         if buy_price >= BUY_MAX_PRICE:
             print(f'[LIVEBUY] {team} ESPN={wp:.1%} price={buy_price:.2f} — too high, skip')
