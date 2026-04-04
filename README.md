@@ -89,24 +89,32 @@ flyctl secrets set KEY=VALUE --app polymarket-mcp-dashboard
 
 | Job | Intervall | Aufgabe |
 |-----|-----------|---------|
-| **Stop-Loss & Redeem** | alle 5 Min | ESPN Win-% check + Auto Stop-Loss + Redeem |
-| **Summary** | alle 2h | Zusammenfassung per Telegram |
+| **Live Monitor** | alle 2 Min | ESPN Live-Buy + Stop-Loss + Redeem |
+| **Trading** | alle 2h | Brave Picks + Pre-Game Trades |
+| **Watchlist Scanner** | alle 6h | Polymarket-Märkte direkt laden (kein Brave) |
+| **Wochenbericht** | Mo 10:00 | Summary per Telegram |
 
 ---
 
-### Stop-Loss & Redeem Agent (alle 5 Minuten)
+## 🎯 ESPN Live-Buy System (Hauptstrategie)
 
-Läuft nur wenn aktuell **offene Spiele** im Journal sind (Early-Exit sonst).
+**Prinzip:** ESPN Live-Win-% zeigt 94% → Polymarket-Preis noch bei 50¢ → Latenz-Arbitrage kaufen.
 
-**Schritt 1 — Live Monitor (Stop-Loss + Live Buy):**
+### Funnel (alle 2 Minuten)
 
-Holt ESPN Win-Wahrscheinlichkeiten für alle laufenden NBA/NHL/NCAAB Spiele.
+```
+ESPN Scoreboard (NBA/NHL/NCAAB/MLB)
+→ 8 Teams in laufenden Spielen
+→ Gezielte Polymarket-Suche pro Team
+→ ~8 Märkte (Moneyline only, kein Spread/O/U)
+→ 2-3 Kandidaten (ESPN ≥ 90%)
+→ 1-2 (nach Spielende-Check + Edge-Check ≥10%)
+→ Claude AI entscheidet YES/NO Token
+→ Quarter Kelly Sizing
+→ Trade via CLOB Live-Preis
+```
 
-**Stop-Loss:** Wenn unsere Gewinnchance unter 22% fällt → Position sofort verkaufen.
-- 📱 Telegram: `🛑 STOP-LOSS: [Markt] | $[Betrag] zurück | PnL: $[PnL]`
-
-**Live Buy (ESPN Divergenz):** Wenn ESPN ≥ 90% UND Polymarket < 80¢ (mind. 10% Edge) → kaufen.
-Bis zu **3 Stufen pro Spiel** (je einmal):
+### 3 Kaufstufen pro Spiel (je einmal)
 
 | Stufe | ESPN Schwelle | Sizing |
 |-------|--------------|--------|
@@ -114,52 +122,91 @@ Bis zu **3 Stufen pro Spiel** (je einmal):
 | T2 | ≥ 95% | Quarter Kelly × Divergenz-Mult |
 | T3 | ≥ 98% | Quarter Kelly × Divergenz-Mult |
 
-**Divergenz-Multiplikator** (Edge = ESPN% − Polymarket-Preis):
+### Divergenz-Multiplikator (Edge = ESPN% − CLOB-Preis)
+
 | Edge | Multiplikator |
 |------|--------------|
 | 10–19% | ×1.0 |
 | 20–34% | ×1.5 |
 | ≥ 35% | ×2.0 |
 
-Max Einsatz: $25 pro Kauf. Min: $2.50.
-- 📱 Telegram: `⚡ LIVE BUY T[N]: [Markt] | [Seite] @[Preis]¢ | ESPN [%] | $[Betrag]`
+Kein fixer Cap — Quarter Kelly bestimmt die Größe.
 
-**Schritt 2 — Redeem:** Löst gewonnene Positionen automatisch ein.
-- 📱 Telegram bei Gewinn: `✅ WON: [Markt] | +$XX`
+### Stop-Loss
+- ESPN Win-% unserer Seite < 22% → sofort verkaufen (FOK-Ladder: bid-1¢ → bid-3¢ → bid-5¢ → bid)
+- Journal wird automatisch auf `SOLD` gesetzt
+
+### Benachrichtigungen (stumm außer Wochenbericht)
+- Trades: kein Telegram
+- Stop-Loss: kein Telegram
+- Wochenbericht montags: W/L diese Woche + Gesamt + Positionen + Bankroll
 
 ---
 
-### Polymarket Runner (aktives System)
-Läuft alle **15 Minuten** (Europe/Vienna). Führt folgende Schritte aus:
+## 📊 Pre-Game Trading (Dimers/Moneypuck)
 
-1. 💰 **Redeem** — löst gewonnene Positionen automatisch ein
-2. 🎯 **Brave Top Picks** (**1 Anfrage**) — fragt Brave AI Answers nach den stärksten Sport-Picks des Tages mit Experten-Konsens, Win-Wahrscheinlichkeiten und klarer Seite (YES/NO/OVER/UNDER)
-3. 🔍 **Scanner** — holt alle aktiven Polymarket-Märkte als Lookup-Tabelle
-4. 🔗 **Matching** — Brave-Picks werden mit Polymarket-Märkten gematcht. Kein Match = SKIP (kein weiteres Research)
-5. 💵 **Kelly-Sizing + EV-Check** — nur bei positivem EV wird getraded, Betgröße dynamisch nach Confidence/Preis/Bankroll
-4. 💵 **Kapital aufteilen** — nach Confidence gewichtet (80%+ → 30%, 70-79% → 20%, 65-69% → 10%)
-5. ⚡ **Sofort kaufen** — wenn EV positiv (confidence ≥ preis + 8%)
-6. 📱 **Pflichtbericht** — sendet nach jedem Run eine Zusammenfassung per Telegram
+Läuft alle **2 Stunden**.
 
-**EV-Formel:** `confidence/100 >= current_price + 0.08`
+**Erlaubte Märkte:** Nur `[Team A] vs. [Team B]` Moneyline ✅
+**Verboten:** Spread, O/U, Crypto, Politik ❌
 
-**Position Sizing — dynamisch nach drei Faktoren:**
+**Quellen:**
+- NBA: Dimers / FanDuel / numberFire (via Brave AI)
+- NHL: Moneypuck (via Brave AI)
 
-Je größer der Einsatz, wenn:
-- 📉 **Preis niedrig** (z.B. 40¢ statt 70¢) — mehr Gewinnpotenzial pro Dollar
-- 📊 **Confidence hoch** (z.B. 88% statt 65%) — stärkerer Edge über den Markt
-- 💰 **Bankroll groß** — absoluter Betrag skaliert automatisch mit
+**Sizing:** Quarter Kelly, EV-Check: `conf/100 >= preis + 0.08`
 
-Beispiele bei $30 Bankroll:
-| Confidence | Preis | Einsatz |
+**EV-Beispiele:**
+| Confidence | Preis | Einsatz ($150 Bankroll) |
 |------------|-------|---------|
-| 65% | 52¢ | ~$4.00 |
-| 72% | 55¢ | ~$5.50 |
-| 88% | 52¢ | ~$11.60 |
+| 65% | 52¢ | ~$4 |
+| 72% | 55¢ | ~$6 |
+| 85% | 52¢ | ~$14 |
 
-Bei $100 Bankroll einfach ~3.3× multiplizieren. Kein fixer Cap — das System setzt mehr ein wenn alles stimmt, wenig wenn das Signal schwach ist. Min: $2.50.
+---
 
-**Bankroll:** Wallet USDC.e Balance via Polygon RPC (nicht Polymarket-internes Cash)
+## 💾 Paper Trading
+
+Aktiv seit 30.03.2026. Alle Trades werden simuliert, kein echtes Geld bewegt.
+
+- Bankroll-Tracking: `trading/paper_bankroll.json`
+- Outcomes werden via Polymarket-API resolved
+- Umschalten: `"paper_trading": false` in `trading/config.json`
+
+**Performance (Stand 04.04.2026):**
+- Paper PnL: +$152.47
+- Paper Bankroll: $301.65 (Start: $149.18)
+
+---
+
+## 📁 Scripts
+
+| Script | Beschreibung |
+|--------|-------------|
+| `trading/live_monitor.sh` | ESPN Live-Monitor: Stop-Loss + Live-Buy |
+| `trading/market_watcher.sh` | Pre-Game Trade Execution |
+| `trading/redeem.sh` | Auto-Redeem + Journal-Update |
+| `trading/scanner.sh` | Polymarket Markt-Scanner |
+| `trading/journal.json` | Trade-History (echt + paper) |
+| `trading/paper_bankroll.json` | Paper Bankroll History |
+| `trading/config.json` | Trading-Parameter + Paper-Mode |
+
+---
+
+## ⚙️ Trading Config (`config.json`)
+
+```json
+{
+  "paper_trading": true,
+  "min_yes_price": 0.35,
+  "max_yes_price": 0.80,
+  "max_spread": 0.05,
+  "min_bet_usd": 2.50,
+  "stop_loss_threshold": 0.22
+}
+```
+
+**Bankroll:** Paper-Bankroll aus `paper_bankroll.json` (Paper-Modus) oder Wallet USDC.e via Polygon RPC (echter Modus)
 
 ### Web Dashboard
 - Läuft auf Fly.io: `polymarket-mcp-dashboard.fly.dev`
