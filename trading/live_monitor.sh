@@ -497,16 +497,10 @@ for event in espn_events:
 
         print(f'[SIDE] {team} ESPN={wp:.1%} | YES={yes_mid:.3f} NO={no_mid:.3f} → Claude says: {buy_side} @{buy_price:.3f}')
 
-        # Spielende-Check: kein Kauf wenn Markt schon abgelaufen
-        end_dt = market.get('end_datetime', '')
-        if end_dt:
-            try:
-                end_ts = datetime.fromisoformat(end_dt.replace('Z', '+00:00'))
-                if end_ts <= now:
-                    print(f'[LIVEBUY] {team} — market already ended ({end_dt}), skip')
-                    continue
-            except:
-                pass
+        # KEIN end_datetime Check mehr — Polymarket setzt end_datetime = Tip-Off,
+        # aber der CLOB bleibt während des Spiels aktiv (P2P Trading möglich).
+        # ESPN gibt uns nur live Teams wenn das Spiel wirklich läuft (status "In Progress").
+        # Ein Final/ended Spiel erscheint nicht mehr in get_espn_winprob() → natürlicher Filter.
 
         if buy_price >= BUY_MAX_PRICE:
             print(f'[LIVEBUY] {team} ESPN={wp:.1%} price={buy_price:.2f} — too high, skip')
