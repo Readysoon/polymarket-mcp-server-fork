@@ -64,12 +64,10 @@ def get_espn_winprob():
     results = {}      # team_lower → win_pct
     events_raw = []
 
-    # Punkt 4: MLB hinzugefügt
+    # NBA + NHL only — MLB/NCAAB haben kaum Polymarket-Volumen
     sports = [
-        ('nba',   'basketball'),
-        ('nhl',   'hockey'),
-        ('ncaab', 'basketball/college-basketball'),
-        ('mlb',   'baseball'),
+        ('nba', 'basketball'),
+        ('nhl', 'hockey'),
     ]
     for league, sport in sports:
         try:
@@ -188,15 +186,24 @@ def fetch_markets_for_teams(live_teams):
     print(f'Markets fetched for {len(live_teams)} live teams: {len(markets)} found')
     return markets
 
-# Get live team names from ESPN data, then fetch only those markets
-live_team_names = list(espn_data.keys())  # e.g. ['thunder', 'lakers', 'spurs', ...]
-# Use display names for better search results
+# Get live team names — only teams with ESPN >= 85% (likely candidates)
+# Cap at 10 teams to avoid Polymarket rate limits
 live_teams_display = []
 for event in espn_events:
     for team in event.get('teams', []):
-        if team not in live_teams_display:
+        wp = espn_data.get(team, 0)
+        if wp >= 0.85 and team not in live_teams_display:
             live_teams_display.append(team)
 
+# If no team is at 85%+, fetch all live teams (capped at 10)
+if not live_teams_display:
+    for event in espn_events:
+        for team in event.get('teams', []):
+            if team not in live_teams_display:
+                live_teams_display.append(team)
+    live_teams_display = live_teams_display[:10]
+
+print(f'Teams to search (ESPN ≥85% or top 10): {live_teams_display}')
 watchlist = fetch_markets_for_teams(live_teams_display)
 
 # Track which condition_ids + tiers have already been bought
