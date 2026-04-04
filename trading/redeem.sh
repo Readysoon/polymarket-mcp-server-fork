@@ -9,6 +9,79 @@ from web3 import Web3
 
 PRIVATE_KEY = os.environ.get('POLYGON_PRIVATE_KEY', '')
 ADDRESS = os.environ.get('POLYGON_ADDRESS', '')
+
+# Paper trading check
+import json as _json
+TRADING_DIR = '/home/node/.openclaw/workspace/trading'
+try:
+    _cfg = _json.load(open(f'{TRADING_DIR}/config.json'))
+    PAPER_TRADING = _cfg.get('paper_trading', False)
+except:
+    PAPER_TRADING = False
+
+if PAPER_TRADING:
+    # Paper mode: simulate redemption from journal
+    from datetime import datetime, timezone as _tz
+    now_p = datetime.now(_tz.utc)
+    journal = _json.load(open(f'{TRADING_DIR}/journal.json'))
+    pb_path = f'{TRADING_DIR}/paper_bankroll.json'
+    pb = _json.load(open(pb_path)) if __import__('os').path.exists(pb_path) else {'current_balance': 149.18, 'paper_pnl': 0.0, 'history': []}
+    redeemed_paper = []
+    for t in journal.get('trades', []):
+        if not t.get('paper'): continue
+        if t.get('status') not in ('open', 'OPEN'): continue
+        end = t.get('end_datetime', '')
+        if end and datetime.fromisoformat(end.replace('Z','+00:00')) > now_p: continue
+        # Mark as needing resolution - check actual outcome via API
+        cid = t.get('condition_id', '')
+        try:
+            r = __import__('httpx').get(f'https://data-api.polymarket.com/markets/{cid}', timeout=5)
+            mkt = r.json()
+            resolved = mkt.get('resolved', False)
+            winning_outcome = None
+            if resolved:
+                for o in mkt.get('outcomes', []):
+                    if o.get('winner'):
+                        winning_outcome = o.get('value', '').lower()
+                        break
+        except:
+            resolved = False
+            winning_outcome = None
+
+        if resolved and winning_outcome:
+            side = t.get('trade_side', 'YES')
+            question = t.get('question', '')[:50]
+            size = t.get('size_usd', 0)
+            price = t.get('entry_price', 0.5)
+            shares = size / price
+            if (side == 'YES' and winning_outcome in ('yes', '1', 'true')) or \
+               (side == 'NO' and winning_outcome in ('no', '0', 'false')):
+                pnl = round(shares - size, 2)
+                t['status'] = 'WON'
+                t['pnl'] = pnl
+                t['outcome'] = 'won'
+                t['resolved_at'] = now_p.isoformat()
+                pb['current_balance'] = round(pb.get('current_balance', 0) + shares, 2)
+                pb['paper_pnl'] = round(pb.get('paper_pnl', 0) + pnl, 2)
+                pb.setdefault('history', []).append({'t': now_p.isoformat(), 'balance': pb['current_balance'], 'event': 'paper_redeem', 'question': question, 'pnl': pnl})
+                redeemed_paper.append(f'{question} +${pnl:.2f}')
+                print(f'PAPER REDEEMED WON: {question} | +${pnl:.2f}')
+            else:
+                t['status'] = 'LOST'
+                t['pnl'] = -size
+                t['outcome'] = 'lost'
+                t['resolved_at'] = now_p.isoformat()
+                print(f'PAPER RESOLVED LOST: {question} | -${size:.2f}')
+
+    _json.dump(journal, open(f'{TRADING_DIR}/journal.json', 'w'), indent=2)
+    pb['updated_at'] = now_p.isoformat()
+    _json.dump(pb, open(pb_path, 'w'), indent=2)
+    if redeemed_paper:
+        print(f'PAPER REDEEM_DONE: {len(redeemed_paper)} positions resolved')
+    else:
+        print('PAPER REDEEM: nothing resolved yet')
+    exit(0)
+
 USDC   = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"   # native USDC
 USDC_E = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"   # bridged USDC.e
 CTF    = "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
@@ -153,6 +226,27 @@ if redeemed:
     print(f"REDEEM_DONE: {len(redeemed)} positions redeemed, ~${total:.2f} USDC.e freed")
     for r in redeemed:
         print(f"NOTIFY: Redeemed '{r['title']}' — ${r['value']:.2f} USDC.e back in wallet")
+
+    # Update journal status for redeemed positions
+    try:
+        from datetime import datetime, timezone as _tz2
+        import json as _j2
+        _journal = _j2.load(open(f'{TRADING_DIR}/journal.json'))
+        _redeemed_titles = {r['title'].lower() for r in redeemed}
+        for _t in _journal.get('trades', []):
+            _q = _t.get('question', '')[:50].lower()
+            if _q in _redeemed_titles and _t.get('status') == 'open':
+                _match = next((r for r in redeemed if r['title'].lower() == _q), None)
+                if _match:
+                    _t['status'] = 'WON'
+                    _t['outcome'] = 'won'
+                    _t['pnl'] = round(_match['value'] - _t.get('size_usd', 0), 2)
+                    _t['resolved_at'] = datetime.now(_tz2.utc).isoformat()
+                    _t['redeem_amount'] = _match['value']
+        _j2.dump(_journal, open(f'{TRADING_DIR}/journal.json', 'w'), indent=2)
+        print(f'Journal updated for {len(redeemed)} redeemed positions')
+    except Exception as _je:
+        print(f'Journal update error: {_je}')
 
 # Auto-swap USDC (native) → USDC.e via Uniswap V3
 # (py-clob-client needs USDC.e for trading; native USDC can't be used directly)
