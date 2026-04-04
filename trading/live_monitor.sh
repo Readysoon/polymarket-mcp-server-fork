@@ -64,10 +64,9 @@ def get_espn_winprob():
     results = {}      # team_lower → win_pct
     events_raw = []
 
-    # NBA + NHL only — MLB/NCAAB haben kaum Polymarket-Volumen
+    # NBA only — nur NBA hat zuverlässige Live-Win-Probabilities
     sports = [
         ('nba', 'basketball'),
-        ('nhl', 'hockey'),
     ]
     for league, sport in sports:
         try:
