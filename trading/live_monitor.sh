@@ -259,6 +259,27 @@ for trade in open_trades:
                 msg = f'🛑 STOP-LOSS: {question[:40]} | ${cur_value:.2f} zurück | PnL: ${pnl:.2f}'
                 print(f'STOP-LOSS SOLD: {msg}')
                 send_telegram(msg)
+
+                # Paper bankroll: Geld zurückbuchen
+                if PAPER_TRADING:
+                    try:
+                        import os as _os
+                        pb_path = f'{TRADING_DIR}/paper_bankroll.json'
+                        pb = json.load(open(pb_path)) if _os.path.exists(pb_path) else {'current_balance': 151.91, 'paper_pnl': 0.0, 'history': []}
+                        pb['current_balance'] = round(pb.get('current_balance', 151.91) + cur_value, 2)
+                        pb['paper_pnl'] = round(pb.get('paper_pnl', 0) + pnl, 2)
+                        pb.setdefault('history', []).append({
+                            't': now.isoformat(),
+                            'balance': pb['current_balance'],
+                            'event': 'paper_stop_loss',
+                            'question': question[:50],
+                            'pnl': pnl,
+                            'returned': cur_value,
+                        })
+                        pb['updated_at'] = now.isoformat()
+                        json.dump(pb, open(pb_path, 'w'), indent=2)
+                    except Exception as _pe:
+                        print(f'Paper bankroll stop-loss update error: {_pe}')
         except Exception as e:
             print(f'Stop-loss error: {e}')
 
@@ -372,6 +393,31 @@ for event in espn_events:
                     'note': f'LIVE BUY tier{active_tier_idx}: ESPN {wp:.1%} vs Poly {buy_price:.2f} edge={edge:.1%} mult={div_mult}x',
                 })
                 json.dump(journal, open(f'{TRADING_DIR}/journal.json', 'w'), indent=2)
+
+                # Paper bankroll update
+                if PAPER_TRADING:
+                    try:
+                        import os as _os
+                        pb_path = f'{TRADING_DIR}/paper_bankroll.json'
+                        pb = json.load(open(pb_path)) if _os.path.exists(pb_path) else {'current_balance': 151.91, 'paper_pnl': 0.0, 'history': []}
+                        pb['current_balance'] = round(pb.get('current_balance', 151.91) - bet, 2)
+                        pb.setdefault('history', []).append({
+                            't': now.isoformat(),
+                            'balance': pb['current_balance'],
+                            'event': 'paper_live_buy',
+                            'question': market.get('question','')[:50],
+                            'side': buy_side,
+                            'tier': active_tier_idx + 1,
+                            'espn_wp': round(wp * 100, 1),
+                            'price': buy_price,
+                            'size_usd': bet,
+                        })
+                        pb['updated_at'] = now.isoformat()
+                        json.dump(pb, open(pb_path, 'w'), indent=2)
+                        print(f'📝 Paper Bankroll: ${pb["current_balance"]:.2f} (invested ${bet:.2f})')
+                    except Exception as _pe:
+                        print(f'Paper bankroll update error: {_pe}')
+
                 msg = f'⚡ LIVE BUY T{active_tier_idx+1}: {q[:35]} | {buy_side} @{buy_price:.2f} | ESPN {wp:.1%} | ${bet:.2f}'
                 print(msg)
                 send_telegram(msg)

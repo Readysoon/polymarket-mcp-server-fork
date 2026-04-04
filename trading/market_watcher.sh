@@ -672,6 +672,7 @@ trade = {
     'timestamp': now.isoformat(),
     'question': QUESTION,
     'condition_id': CONDITION_ID,
+    'trade_side': TRADE_SIDE,
     'entry_price': best_ask,
     'spread_at_entry': round(spread, 4),
     'mid_at_entry': round(mid, 4),
@@ -681,7 +682,7 @@ trade = {
     'max_payout': round(bet_size / best_ask, 2),
     'max_return_pct': round((1.0 - best_ask) / best_ask * 100, 1),
     'end_datetime': END_DATETIME,
-    'order_id': result.get('order_id'),
+    'order_id': result.get('order_id') or result.get('orderID'),
     'confidence_pct': research_confidence,
     'research_summary': research_summary,
     'status': 'open',
@@ -689,13 +690,35 @@ trade = {
     'pnl': None,
     'pnl_pct': None,
     'resolved_at': None,
-    'redeem_amount': None
+    'redeem_amount': None,
+    'paper': PAPER_TRADING,
 }
 journal.setdefault('trades', []).append(trade)
 with open(f'{TRADING_DIR}/journal.json', 'w') as f:
     json.dump(journal, f, indent=2)
 
-print(f"TRADED: {QUESTION[:50]} @ {best_ask:.2f} ${bet_size:.2f} ({_best_shares:.2f} shares)")
-send_telegram(f"✅ TRADED: {QUESTION[:50]}\n{trade_side} ${bet_size:.2f} @ {best_ask:.2f}¢")
+# ── Paper Bankroll Update ─────────────────────────────────────────────────────
+if PAPER_TRADING:
+    try:
+        pb_path = f'{TRADING_DIR}/paper_bankroll.json'
+        pb = json.load(open(pb_path)) if __import__('os').path.exists(pb_path) else {'current_balance': 151.91, 'paper_pnl': 0.0, 'history': []}
+        pb['current_balance'] = round(pb.get('current_balance', 151.91) - bet_size, 2)
+        pb.setdefault('history', []).append({
+            't': now.isoformat(),
+            'balance': pb['current_balance'],
+            'event': 'paper_trade',
+            'question': QUESTION[:50],
+            'side': TRADE_SIDE,
+            'price': best_ask,
+            'size_usd': bet_size,
+            'shares': round(bet_size / best_ask, 2),
+        })
+        pb['updated_at'] = now.isoformat()
+        json.dump(pb, open(pb_path, 'w'), indent=2)
+        print(f"📝 Paper Bankroll: ${pb['current_balance']:.2f} (invested ${bet_size:.2f})")
+    except Exception as _pe:
+        print(f"Paper bankroll update error: {_pe}")
+
+print(f"{'📝 PAPER ' if PAPER_TRADING else ''}TRADED: {QUESTION[:50]} @ {best_ask:.2f} ${bet_size:.2f} ({_best_shares:.2f} shares)")
 
 PYEOF

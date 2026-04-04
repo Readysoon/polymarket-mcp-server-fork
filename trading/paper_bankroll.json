@@ -1,0 +1,16 @@
+{
+  "start_balance": 151.91,
+  "current_balance": 149.18,
+  "real_pnl": -2.73,
+  "paper_pnl": 0.0,
+  "note": "Paper bankroll initialisiert. Trades ab jetzt werden hier geloggt.",
+  "updated_at": "2026-04-04T09:53:13.373531+00:00",
+  "history": [
+    {
+      "t": "2026-04-04T09:53:13.373624+00:00",
+      "balance": 149.18,
+      "event": "init",
+      "note": "Start: Deposit $151.91 + echte PnL $-2.73"
+    }
+  ]
+}
