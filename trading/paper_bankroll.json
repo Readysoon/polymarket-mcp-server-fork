@@ -1,16 +1,158 @@
 {
-  "start_balance": 151.91,
-  "current_balance": 149.18,
-  "real_pnl": -2.73,
-  "paper_pnl": 0.0,
-  "note": "Paper bankroll initialisiert. Trades ab jetzt werden hier geloggt.",
-  "updated_at": "2026-04-04T09:53:13.373531+00:00",
+  "start_balance": 149.18,
+  "current_balance": 301.65,
+  "paper_pnl": 152.47,
+  "updated_at": "2026-04-04T09:55:44.663028+00:00",
   "history": [
     {
-      "t": "2026-04-04T09:53:13.373624+00:00",
+      "t": "2026-03-29T23:18:00+00:00",
       "balance": 149.18,
       "event": "init",
-      "note": "Start: Deposit $151.91 + echte PnL $-2.73"
+      "note": "Paper Trading aktiviert. Start: $151.91 Deposit + echte PnL -$2.73"
+    },
+    {
+      "t": "2026-04-03T00:07:30.128999+00:00",
+      "balance": 140.25,
+      "event": "paper_trade",
+      "question": "Spurs vs. Clippers",
+      "side": "YES",
+      "price": 0.47,
+      "size_usd": 8.93,
+      "conf": null
+    },
+    {
+      "t": "2026-04-03T00:08:02.915056+00:00",
+      "balance": 131.25,
+      "event": "paper_trade",
+      "question": "Timberwolves vs. 76ers",
+      "side": "YES",
+      "price": 0.45,
+      "size_usd": 9.0,
+      "conf": null
+    },
+    {
+      "t": "2026-04-03T00:08:45.889313+00:00",
+      "balance": 122.32,
+      "event": "paper_trade",
+      "question": "Spurs vs. Clippers",
+      "side": "YES",
+      "price": 0.47,
+      "size_usd": 8.93,
+      "conf": 58
+    },
+    {
+      "t": "2026-04-03T00:08:45.889313+00:00",
+      "balance": 113.32,
+      "event": "paper_trade",
+      "question": "Timberwolves vs. 76ers",
+      "side": "YES",
+      "price": 0.45,
+      "size_usd": 9.0,
+      "conf": 58
+    },
+    {
+      "t": "2026-04-03T02:01:46.913986+00:00",
+      "balance": 88.32,
+      "event": "paper_trade",
+      "question": "Spread: Thunder (-8.5)",
+      "side": "YES",
+      "price": 0.525,
+      "size_usd": 25.0,
+      "conf": 94.8
+    },
+    {
+      "t": "2026-04-03T03:10:10.755683+00:00",
+      "balance": 63.32,
+      "event": "paper_trade",
+      "question": "Spread: Spurs (-3.5)",
+      "side": "YES",
+      "price": 0.37,
+      "size_usd": 25.0,
+      "conf": 90.8
+    },
+    {
+      "t": "2026-04-03T03:20:08.101527+00:00",
+      "balance": 38.32,
+      "event": "paper_trade",
+      "question": "Spread: Spurs (-3.5)",
+      "side": "YES",
+      "price": 0.37,
+      "size_usd": 25.0,
+      "conf": 97.2
+    },
+    {
+      "t": "2026-04-03T03:40:10.283721+00:00",
+      "balance": 13.32,
+      "event": "paper_trade",
+      "question": "Spread: Spurs (-3.5)",
+      "side": "YES",
+      "price": 0.37,
+      "size_usd": 25.0,
+      "conf": 98.8
+    },
+    {
+      "t": "2026-04-03T05:00:00+00:00",
+      "balance": 32.32,
+      "event": "paper_won",
+      "question": "Spurs vs. Clippers",
+      "pnl": 10.07,
+      "returned": 19.0
+    },
+    {
+      "t": "2026-04-03T05:00:00+00:00",
+      "balance": 32.32,
+      "event": "paper_lost",
+      "question": "Timberwolves vs. 76ers",
+      "pnl": -9.0,
+      "returned": 0
+    },
+    {
+      "t": "2026-04-03T05:00:00+00:00",
+      "balance": 51.32,
+      "event": "paper_won",
+      "question": "Spurs vs. Clippers",
+      "pnl": 10.07,
+      "returned": 19.0
+    },
+    {
+      "t": "2026-04-03T05:00:00+00:00",
+      "balance": 51.32,
+      "event": "paper_lost",
+      "question": "Timberwolves vs. 76ers",
+      "pnl": -9.0,
+      "returned": 0
+    },
+    {
+      "t": "2026-04-03T05:00:00+00:00",
+      "balance": 98.94,
+      "event": "paper_won",
+      "question": "Spread: Thunder (-8.5)",
+      "pnl": 22.62,
+      "returned": 47.62
+    },
+    {
+      "t": "2026-04-03T05:00:00+00:00",
+      "balance": 166.51,
+      "event": "paper_won",
+      "question": "Spread: Spurs (-3.5)",
+      "pnl": 42.57,
+      "returned": 67.57
+    },
+    {
+      "t": "2026-04-03T05:00:00+00:00",
+      "balance": 234.08,
+      "event": "paper_won",
+      "question": "Spread: Spurs (-3.5)",
+      "pnl": 42.57,
+      "returned": 67.57
+    },
+    {
+      "t": "2026-04-03T05:00:00+00:00",
+      "balance": 301.65,
+      "event": "paper_won",
+      "question": "Spread: Spurs (-3.5)",
+      "pnl": 42.57,
+      "returned": 67.57
     }
   ]
 }
