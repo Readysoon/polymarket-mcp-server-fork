@@ -64,13 +64,15 @@ def get_espn_winprob():
     results = {}      # team_lower → win_pct
     events_raw = []
 
-    # ESPN-based leagues (have live win probabilities)
+    # ESPN-based leagues with reliable live win probabilities
+    # NBA: year-round | NFL: Sept-Jan | NCAA Football: Sept-Jan | NCAAB: Nov-March
     espn_sports = [
         ('nba',   'basketball'),
         ('nfl',   'football'),
         ('college-football', 'football'),
         ('ncaab', 'basketball/college-basketball'),
     ]
+    # Note: NHL excluded — no reliable live win probability source
     for league, sport in espn_sports:
         try:
             r = httpx.get(
