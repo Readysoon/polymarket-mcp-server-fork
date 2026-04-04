@@ -64,11 +64,14 @@ def get_espn_winprob():
     results = {}      # team_lower → win_pct
     events_raw = []
 
-    # NBA only — nur NBA hat zuverlässige Live-Win-Probabilities
-    sports = [
-        ('nba', 'basketball'),
+    # ESPN-based leagues (have live win probabilities)
+    espn_sports = [
+        ('nba',   'basketball'),
+        ('nfl',   'football'),
+        ('college-football', 'football'),
+        ('ncaab', 'basketball/college-basketball'),
     ]
-    for league, sport in sports:
+    for league, sport in espn_sports:
         try:
             r = httpx.get(
                 f'https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/scoreboard',
@@ -91,12 +94,30 @@ def get_espn_winprob():
                     if wp is not None:
                         results[name.lower()] = round(wp, 4)
                         teams.append(name.lower())
-                events_raw.append({
-                    'teams': teams,
-                    'league': league,
-                })
+                if teams:
+                    events_raw.append({'teams': teams, 'league': league})
         except Exception as e:
             print(f'ESPN {league} error: {e}')
+
+    # MLB via Fangraphs live win probability
+    try:
+        r = httpx.get('https://www.fangraphs.com/api/livescoreboard', timeout=8)
+        for game in r.json().get('games', []):
+            if game.get('GameStatus') != 'Inprogress':
+                continue
+            home_wp = game.get('HomeWinProbability')
+            away_wp = game.get('AwayWinProbability')
+            home_team = game.get('HomeTeamShortName', '').lower()
+            away_team = game.get('AwayTeamShortName', '').lower()
+            if home_wp is not None and home_team:
+                results[home_team] = round(float(home_wp), 4)
+            if away_wp is not None and away_team:
+                results[away_team] = round(float(away_wp), 4)
+            if home_team and away_team:
+                events_raw.append({'teams': [home_team, away_team], 'league': 'mlb'})
+    except Exception as e:
+        print(f'Fangraphs MLB error: {e}')
+
     return results, events_raw
 
 # Punkt 2: CLOB Live-Preis abfragen
