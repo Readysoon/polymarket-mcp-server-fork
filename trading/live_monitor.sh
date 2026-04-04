@@ -129,38 +129,32 @@ print(f'ESPN live: {list(espn_data.keys())}')
 
 # ── Fetch Polymarket markets only for teams currently live on ESPN ────────────
 def fetch_markets_for_teams(live_teams):
-    """Search Polymarket only for teams that are currently playing live."""
+    """Search Polymarket for live teams in parallel (faster, avoids timeouts)."""
     if not live_teams:
         return []
-    markets = []
+    import concurrent.futures
     seen_cids = set()
-    try:
-        for team in live_teams:
+    markets = []
+
+    def search_team(team):
+        try:
             r = httpx.get(
                 'https://gamma-api.polymarket.com/markets',
-                params={
-                    'active': 'true',
-                    'closed': 'false',
-                    'limit': '10',
-                    'search': team,
-                },
-                timeout=8
+                params={'active': 'true', 'closed': 'false', 'limit': '10', 'search': team},
+                timeout=6
             )
             data = r.json() if isinstance(r.json(), list) else r.json().get('markets', r.json())
+            results = []
             for m in (data if isinstance(data, list) else []):
                 q = m.get('question', '')
                 cid = m.get('conditionId', '') or m.get('condition_id', '')
-                if cid in seen_cids:
-                    continue
-                # Only moneyline: no spread/O/U
-                if ' vs. ' not in q and ' vs ' not in q:
-                    continue
+                if not cid: continue
+                if ' vs. ' not in q and ' vs ' not in q: continue
                 if any(x in q.lower() for x in ['spread', 'o/u', 'over', 'under', 'handicap', 'total', 'map', '+', 'game ']):
                     continue
-                seen_cids.add(cid)
                 yes_price = float(m.get('outcomePrices', ['0.5','0.5'])[0]) if m.get('outcomePrices') else 0.5
                 tokens = m.get('clobTokenIds', []) or m.get('clob_token_ids', [])
-                markets.append({
+                results.append({
                     'question': q,
                     'condition_id': cid,
                     'yes_price': yes_price,
@@ -170,8 +164,19 @@ def fetch_markets_for_teams(live_teams):
                     'end_datetime': m.get('endDate', '') or m.get('end_date_iso', ''),
                     'liquidity': float(m.get('liquidity', 0) or 0),
                 })
-    except Exception as e:
-        print(f'Polymarket market search error: {e}')
+            return results
+        except Exception as e:
+            print(f'Polymarket search error ({team}): {e}')
+            return []
+
+    # Parallel fetch — all teams simultaneously
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+        futures = {executor.submit(search_team, team): team for team in live_teams}
+        for future in concurrent.futures.as_completed(futures, timeout=10):
+            for m in future.result():
+                if m['condition_id'] not in seen_cids:
+                    seen_cids.add(m['condition_id'])
+                    markets.append(m)
 
     # Fallback to watchlist if nothing found
     if not markets:
