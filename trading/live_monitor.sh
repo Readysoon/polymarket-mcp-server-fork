@@ -405,24 +405,49 @@ for event in espn_events:
         yes_price = float(market.get('yes_price') or market.get('amm_ask') or 1.0)
         no_price  = float(market.get('no_price')  or 1 - yes_price)
 
-        # Determine buy side: team before "vs" → YES, after → NO
+        # Determine buy side using AI reasoning:
+        # ESPN win prob for 'team' = wp (e.g. 0.94)
+        # YES token price ≈ probability that YES-team wins
+        # If wp ≈ yes_price → team IS the YES team → buy YES
+        # If wp ≈ no_price  → team IS the NO team  → buy NO
+        # Use price proximity as the deciding factor (most reliable signal)
         q = market.get('question', '')
-        before_vs = q.lower().split(' vs')[0] if ' vs' in q.lower() else q.lower()
-        if word_match(team, before_vs):
+        yes_token_id = market.get('yes_token_id') or market.get('clob_token_ids', [None])[0]
+        no_token_id  = market.get('no_token_id') or (market.get('clob_token_ids', [None, None])[1])
+
+        # Get live CLOB prices for both tokens
+        yes_clob_bid, yes_clob_ask, yes_clob_mid = get_clob_price(yes_token_id) if yes_token_id else (None, None, None)
+        no_clob_bid,  no_clob_ask,  no_clob_mid  = get_clob_price(no_token_id)  if no_token_id  else (None, None, None)
+
+        yes_mid = yes_clob_mid if yes_clob_mid is not None else yes_price
+        no_mid  = no_clob_mid  if no_clob_mid  is not None else no_price
+
+        # Team we want to WIN has win prob = wp
+        # Token whose price is closest to wp → that's the token to buy
+        dist_yes = abs(yes_mid - wp)
+        dist_no  = abs(no_mid  - wp)
+
+        if dist_yes <= dist_no:
             buy_side  = 'YES'
-            buy_price = yes_price
-            token_id  = market.get('yes_token_id') or market.get('clob_token_ids', [None])[0]
+            buy_price = yes_clob_ask if yes_clob_ask else yes_price
+            token_id  = yes_token_id
         else:
             buy_side  = 'NO'
-            buy_price = no_price
-            token_id  = market.get('no_token_id') or (market.get('clob_token_ids', [None, None])[1])
+            buy_price = no_clob_ask if no_clob_ask else no_price
+            token_id  = no_token_id
 
-        # Punkt 2: CLOB Live-Preis für genaueres Pricing
-        if token_id:
-            clob_bid, clob_ask, clob_mid = get_clob_price(token_id)
-            if clob_ask is not None:
-                print(f'[CLOB] {team}: bid={clob_bid:.3f} ask={clob_ask:.3f} mid={clob_mid:.3f} (cached={buy_price:.3f})')
-                buy_price = clob_ask  # Kaufe zum Ask-Preis (realer Marktpreis)
+        print(f'[SIDE] {team} ESPN={wp:.1%} | YES_mid={yes_mid:.3f} NO_mid={no_mid:.3f} → {buy_side} @{buy_price:.3f}')
+
+        # Spielende-Check: kein Kauf wenn Markt schon abgelaufen
+        end_dt = market.get('end_datetime', '')
+        if end_dt:
+            try:
+                end_ts = datetime.fromisoformat(end_dt.replace('Z', '+00:00'))
+                if end_ts <= now:
+                    print(f'[LIVEBUY] {team} — market already ended ({end_dt}), skip')
+                    continue
+            except:
+                pass
 
         if buy_price >= BUY_MAX_PRICE:
             print(f'[LIVEBUY] {team} ESPN={wp:.1%} price={buy_price:.2f} — too high, skip')
