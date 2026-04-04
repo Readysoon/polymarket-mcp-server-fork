@@ -53,7 +53,11 @@ try:
                    and datetime.fromisoformat(t['end_datetime'].replace('Z','+00:00')) > now]
 except Exception as e:
     print(f'Journal error: {e}')
-    sys.exit(0)
+    journal = {'trades': []}
+    open_trades = []
+    now = datetime.now(timezone.utc)
+# Note: we no longer exit early if no open trades — ESPN live opportunities
+# can be found independently of pre-existing positions
 
 # ── Fetch ESPN live win probabilities ─────────────────────────────────────────
 def get_espn_winprob():
@@ -104,11 +108,59 @@ if not espn_data:
 
 print(f'ESPN live: {list(espn_data.keys())}')
 
-# ── Load watchlist for live buy opportunities ─────────────────────────────────
-try:
-    watchlist = json.load(open(f'{TRADING_DIR}/watchlist.json')).get('markets', [])
-except:
-    watchlist = []
+# ── Fetch live Polymarket markets (independent of watchlist/Dimers) ───────────
+def fetch_polymarket_live_markets():
+    """Fetch all active NBA/NHL moneyline markets directly from Polymarket."""
+    markets = []
+    try:
+        # Search for active sports markets
+        r = httpx.get(
+            'https://gamma-api.polymarket.com/markets',
+            params={
+                'active': 'true',
+                'closed': 'false',
+                'limit': '200',
+                'tag_slug': 'sports',
+            },
+            timeout=10
+        )
+        data = r.json() if isinstance(r.json(), list) else r.json().get('markets', r.json())
+        for m in (data if isinstance(data, list) else []):
+            q = m.get('question', '')
+            # Only moneyline: "Team A vs. Team B" format, no spread/O/U
+            if ' vs. ' not in q and ' vs ' not in q:
+                continue
+            if any(x in q.lower() for x in ['spread', 'o/u', 'over', 'under', 'handicap', 'total', 'map', '+']):
+                continue
+            slug = m.get('slug', '')
+            cid = m.get('conditionId', '') or m.get('condition_id', '')
+            yes_price = float(m.get('outcomePrices', ['0.5','0.5'])[0]) if m.get('outcomePrices') else 0.5
+            no_price = 1 - yes_price
+            tokens = m.get('clobTokenIds', []) or m.get('clob_token_ids', [])
+            markets.append({
+                'question': q,
+                'condition_id': cid,
+                'yes_price': yes_price,
+                'no_price': no_price,
+                'yes_token_id': tokens[0] if len(tokens) > 0 else '',
+                'no_token_id': tokens[1] if len(tokens) > 1 else '',
+                'end_datetime': m.get('endDate', '') or m.get('end_date_iso', ''),
+                'liquidity': float(m.get('liquidity', 0) or 0),
+                'volume_24h': float(m.get('volume24hr', 0) or 0),
+            })
+    except Exception as e:
+        print(f'Polymarket live markets error: {e}')
+    # Fallback to watchlist
+    if not markets:
+        try:
+            markets = json.load(open(f'{TRADING_DIR}/watchlist.json')).get('markets', [])
+            print(f'Fallback: using watchlist ({len(markets)} markets)')
+        except:
+            pass
+    print(f'Live markets loaded: {len(markets)}')
+    return markets
+
+watchlist = fetch_polymarket_live_markets()
 
 # Track which condition_ids + tiers have already been bought
 # Key: (condition_id, tier_index) → True
