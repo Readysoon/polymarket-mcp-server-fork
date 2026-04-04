@@ -24,7 +24,7 @@ if PAPER_TRADING:
 
 BUY_MAX_PRICE       = 0.80   # only buy if Polymarket price < 80¢ (min 10% edge)
 BUY_MIN_BET         = 2.50
-BUY_MAX_BET         = 25.00
+BUY_MAX_BET         = 99999.00  # kein Cap — Quarter Kelly bestimmt die Größe
 
 # 3 buy tiers per game — buy once per tier
 BUY_TIERS = [0.90, 0.95, 0.98]  # ESPN thresholds
