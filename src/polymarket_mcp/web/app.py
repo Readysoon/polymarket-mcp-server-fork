@@ -678,8 +678,9 @@ async def get_live_winprob():
 
 @app.get("/api/todays-games")
 async def get_todays_games():
-    """Get today's games (NBA + NFL + NCAAB + MLB) with ESPN status, Polymarket prices, and Kelly sizing."""
+    """Get today's games with ESPN status, Moneyline + Spread markets, Kelly sizing."""
     import httpx as _httpx
+    import json as _json
 
     def quarter_kelly(wp: float, price: float) -> float:
         if price <= 0 or price >= 1:
@@ -687,6 +688,12 @@ async def get_todays_games():
         b = (1 - price) / price
         kelly = (wp * b - (1 - wp)) / b
         return round(max(0.0, kelly * 0.25), 4)
+
+    def parse_json_field(val, default):
+        if isinstance(val, str):
+            try: return _json.loads(val)
+            except: return default
+        return val if val is not None else default
 
     try:
         games = []
@@ -699,8 +706,7 @@ async def get_todays_games():
         pm_tag_map = {"NBA": "nba", "NFL": "nfl", "NCAAB": "ncaab", "MLB": "mlb"}
 
         async with _httpx.AsyncClient() as hc:
-            # Fetch Polymarket events per sport
-            pm_lookups = {}
+            pm_event_lookup = {}
             for league_label, pm_tag in pm_tag_map.items():
                 try:
                     r = await hc.get(
@@ -711,33 +717,57 @@ async def get_todays_games():
                     evs = r.json() if r.status_code == 200 else []
                 except Exception:
                     evs = []
-                lookup = {}
+
                 for ev in evs:
                     title = ev.get("title", "")
                     if " vs" not in title or any(x in title for x in ["Series", "Champion", "Conference", "Division", "Season"]):
                         continue
-                    prices = {}
-                    for m in ev.get("markets", []):
-                        q = m.get("question", "").lower()
-                        if any(x in q for x in ["spread", "over", "under", "total", "point"]):
-                            continue
-                        import json as _json
-                        outcomes_raw = m.get("outcomes", [])
-                        outcomes = _json.loads(outcomes_raw) if isinstance(outcomes_raw, str) else outcomes_raw
-                        oprices_raw = m.get("outcomePrices", [])
-                        oprices = _json.loads(oprices_raw) if isinstance(oprices_raw, str) else oprices_raw
-                        if len(outcomes) == 2 and len(oprices) == 2:
-                            for i, o in enumerate(outcomes):
-                                try:
-                                    prices[o.lower()] = float(oprices[i])
-                                except Exception:
-                                    pass
-                            if prices:
-                                break
-                    lookup[title.lower()] = {"title": title, "prices": prices, "slug": ev.get("slug", "")}
-                pm_lookups[league_label] = lookup
 
-            # Fetch ESPN scoreboards
+                    moneyline_prices = {}
+                    spreads = []
+
+                    for m in ev.get("markets", []):
+                        q = m.get("question", "")
+                        q_lower = q.lower()
+                        outcomes = parse_json_field(m.get("outcomes", []), [])
+                        oprices = parse_json_field(m.get("outcomePrices", []), [])
+                        liq = float(m.get("liquidity", 0) or 0)
+                        tokens = parse_json_field(m.get("clobTokenIds", []), [])
+                        cid = m.get("conditionId", "")
+
+                        if len(outcomes) != 2 or len(oprices) < 2:
+                            continue
+                        if any(x in q_lower for x in ["o/u", "over", "under", "total", "pts", "points", "assists", "rebounds", "1h "]):
+                            continue
+
+                        try:
+                            p0 = float(oprices[0])
+                            p1 = float(oprices[1])
+                        except:
+                            continue
+
+                        if q == title:
+                            for i, o in enumerate(outcomes):
+                                moneyline_prices[o.lower()] = float(oprices[i])
+                        elif "spread" in q_lower or ((".5" in q or "-" in q) and "o/u" not in q_lower):
+                            spreads.append({
+                                "question": q,
+                                "outcomes": outcomes,
+                                "prices": [p0, p1],
+                                "yes_token_id": tokens[0] if tokens else "",
+                                "no_token_id": tokens[1] if len(tokens) > 1 else "",
+                                "condition_id": cid,
+                                "liquidity": liq,
+                            })
+
+                    spreads.sort(key=lambda x: x["liquidity"], reverse=True)
+                    pm_event_lookup[title.lower()] = {
+                        "title": title,
+                        "slug": ev.get("slug", ""),
+                        "moneyline": moneyline_prices,
+                        "spreads": spreads[:3],
+                    }
+
             for league_label, sport, league in espn_sources:
                 try:
                     url = f"https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/scoreboard"
@@ -747,8 +777,6 @@ async def get_todays_games():
                     espn_events = r.json().get("events", [])
                 except Exception:
                     continue
-
-                pm_lookup = pm_lookups.get(league_label, {})
 
                 for event in espn_events:
                     try:
@@ -767,23 +795,39 @@ async def get_todays_games():
                         home_wp = round(float(prob["homeWinPercentage"]) * 100, 1) if prob.get("homeWinPercentage") else None
                         away_wp = round(float(prob["awayWinPercentage"]) * 100, 1) if prob.get("awayWinPercentage") else None
 
-                        pm_match = None
-                        for key in pm_lookup:
+                        pm_ev = None
+                        for key in pm_event_lookup:
                             if away_name.lower() in key and home_name.lower() in key:
-                                pm_match = pm_lookup[key]
+                                pm_ev = pm_event_lookup[key]
                                 break
 
-                        home_pm_price = away_pm_price = pm_url = None
-                        if pm_match:
-                            pm_url = f"https://polymarket.com/event/{pm_match['slug']}" if pm_match.get("slug") else None
-                            for pk, pv in pm_match["prices"].items():
-                                if home_name.lower() in pk:
-                                    home_pm_price = pv
-                                elif away_name.lower() in pk:
-                                    away_pm_price = pv
+                        pm_url = None
+                        home_pm_price = away_pm_price = None
+                        home_kelly = away_kelly = None
+                        spread_markets = []
 
-                        home_kelly = quarter_kelly(home_wp / 100, home_pm_price) if home_wp is not None and home_pm_price else None
-                        away_kelly = quarter_kelly(away_wp / 100, away_pm_price) if away_wp is not None and away_pm_price else None
+                        if pm_ev:
+                            pm_url = f"https://polymarket.com/event/{pm_ev['slug']}" if pm_ev.get("slug") else None
+                            ml = pm_ev.get("moneyline", {})
+                            for k, v in ml.items():
+                                if home_name.lower() in k: home_pm_price = v
+                                elif away_name.lower() in k: away_pm_price = v
+
+                            home_kelly = quarter_kelly(home_wp / 100, home_pm_price) if home_wp and home_pm_price else None
+                            away_kelly = quarter_kelly(away_wp / 100, away_pm_price) if away_wp and away_pm_price else None
+
+                            for sp in pm_ev.get("spreads", []):
+                                sp_sides = []
+                                for i, (outcome, price) in enumerate(zip(sp["outcomes"], sp["prices"])):
+                                    team_wp = home_wp if home_name.lower() in outcome.lower() else (away_wp if away_name.lower() in outcome.lower() else None)
+                                    k_val = quarter_kelly(team_wp / 100, price) if team_wp and price else None
+                                    sp_sides.append({"outcome": outcome, "price": price, "kelly": k_val})
+                                spread_markets.append({
+                                    "question": sp["question"],
+                                    "condition_id": sp["condition_id"],
+                                    "liquidity": sp["liquidity"],
+                                    "sides": sp_sides,
+                                })
 
                         games.append({
                             "league": league_label,
@@ -794,7 +838,9 @@ async def get_todays_games():
                             "home_wp": home_wp, "away_wp": away_wp,
                             "home_pm_price": home_pm_price, "away_pm_price": away_pm_price,
                             "home_kelly": home_kelly, "away_kelly": away_kelly,
-                            "pm_url": pm_url, "has_market": pm_match is not None,
+                            "spread_markets": spread_markets,
+                            "pm_url": pm_url,
+                            "has_market": pm_ev is not None,
                         })
                     except Exception:
                         continue
@@ -804,25 +850,6 @@ async def get_todays_games():
     except Exception as e:
         logger.error(f"todays-games error: {e}")
         return JSONResponse({"games": [], "error": str(e)})
-
-
-async def get_journal_meta():
-    """Return bot_id and live_buy_tier per condition_id from journal."""
-    try:
-        journal_path = Path(TRADING_DIR) / "journal.json"
-        journal = json.loads(journal_path.read_text()) if journal_path.exists() else {}
-        meta = {}
-        for t in journal.get("trades", []):
-            cid = t.get("condition_id")
-            if cid:
-                meta[cid] = {
-                    "bot_id": t.get("bot_id"),
-                    "live_buy_tier": t.get("live_buy_tier"),
-                }
-        return JSONResponse(meta)
-    except Exception as e:
-        logger.error(f"Journal meta error: {e}")
-        return JSONResponse({})
 
 
 @app.get("/api/balance-history")

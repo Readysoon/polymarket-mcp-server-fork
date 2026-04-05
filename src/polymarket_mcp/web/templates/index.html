@@ -1103,10 +1103,10 @@
                     const leagueColor = leagueColors[g.league] || '#9ca3af';
                     const leagueBadge = `<span style="background:rgba(255,255,255,0.07);color:${leagueColor};font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:3px;">${g.league}</span>`;
 
-                    // Per-team price + Kelly
+                    // Moneyline price + Kelly row
                     function teamPriceInfo(name, price, kelly) {
                         if (!price) return '';
-                        const priceStr = (price * 100).toFixed(0) + '¢';
+                        const priceStr = (price * 100).toFixed(0) + '\u00a2';
                         const kellyPct = kelly != null ? (kelly * 100).toFixed(1) + '%' : null;
                         const kellyColor = kelly > 0.10 ? '#10b981' : kelly > 0 ? '#f59e0b' : '#6b7280';
                         return `<span style="font-size:0.65rem;color:#6b7280;">${name}:</span> ` +
@@ -1115,9 +1115,28 @@
                     }
                     const awayInfo = teamPriceInfo(g.away, g.away_pm_price, g.away_kelly);
                     const homeInfo = teamPriceInfo(g.home, g.home_pm_price, g.home_kelly);
-                    const priceRow = (awayInfo || homeInfo)
-                        ? `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:2px;">${awayInfo}${awayInfo && homeInfo ? '' : ''}${homeInfo}</div>`
+                    const mlRow = (awayInfo || homeInfo)
+                        ? `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:2px;"><span style="font-size:0.6rem;color:#6b7280;padding:1px 4px;background:#1a1a2e;border-radius:3px;">ML</span> ${awayInfo} ${homeInfo}</div>`
                         : '';
+
+                    // Spread markets row
+                    const spreads = g.spread_markets || [];
+                    const spreadRows = spreads.map(sp => {
+                        const sides = (sp.sides || []).map(s => {
+                            const p = (s.price * 100).toFixed(0) + '\u00a2';
+                            const k = s.kelly != null ? (s.kelly * 100).toFixed(1) + '%' : null;
+                            const kc = s.kelly > 0.10 ? '#10b981' : s.kelly > 0 ? '#f59e0b' : '#6b7280';
+                            return `<span style="font-size:0.65rem;color:#9ca3af;">${s.outcome}:</span> <span style="font-size:0.7rem;font-weight:600;color:#818cf8;">${p}</span>` +
+                                   (k ? ` <span style="font-size:0.65rem;color:${kc};">K:${k}</span>` : '');
+                        }).join(' · ');
+                        const liqK = sp.liquidity >= 1000 ? '$' + (sp.liquidity/1000).toFixed(0) + 'K' : '$' + sp.liquidity.toFixed(0);
+                        return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;align-items:center;">
+                            <span style="font-size:0.6rem;color:#f59e0b;padding:1px 4px;background:#1a1a2e;border-radius:3px;">SPREAD</span>
+                            <span style="font-size:0.65rem;color:#6b7280;">${sp.question.replace('Spread: ','')}</span>
+                            ${sides}
+                            <span style="font-size:0.6rem;color:#374151;">${liqK} liq</span>
+                        </div>`;
+                    }).join('');
 
                     return `<div class="trade-row" style="flex-direction:column;align-items:stretch;gap:3px;padding:0.65rem 1rem;">
                         <div style="display:flex;align-items:center;gap:6px;">
@@ -1127,7 +1146,8 @@
                             ${scoreStr ? `<span style="font-size:0.85rem;font-weight:700;font-family:monospace;color:#e5e7eb;">${scoreStr}</span>` : ''}
                             ${pmBadge}
                         </div>
-                        ${priceRow}
+                        ${mlRow}
+                        ${spreadRows}
                         ${wpBars}
                     </div>`;
                 }).join('');
