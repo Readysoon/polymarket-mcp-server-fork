@@ -22,7 +22,7 @@ except:
 if PAPER_TRADING:
     print('📝 PAPER TRADING MODE — kein echtes Geld')
 
-BUY_MAX_PRICE       = 0.80   # only buy if Polymarket price < 80¢ (min 10% edge)
+BUY_MAX_PRICE       = 0.97   # nur kaufen wenn Preis < 97¢ (mind. 3¢ Auszahlungspotenzial)
 BUY_MIN_BET         = 2.50
 BUY_MAX_BET         = 99999.00  # kein Cap — Quarter Kelly bestimmt die Größe
 
