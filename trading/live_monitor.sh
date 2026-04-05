@@ -316,8 +316,26 @@ async def buy_position(token_id, price, size_usd):
     )
     client._initialize_client()
     shares = round(size_usd / price, 2)
-    return await client.post_order(token_id=token_id, price=round(price + 0.01, 3),
-                                   size=shares, side='BUY', order_type='GTC')
+
+    # FOK = Fill or Kill: sofort gefüllt oder sofort storniert
+    # Kein offenes GTC das nie gefüllt wird aber als "Trade" gilt
+    # Preis leicht über Ask damit wir tatsächlich matchen
+    result = await client.post_order(token_id=token_id, price=round(price + 0.01, 3),
+                                     size=shares, side='BUY', order_type='FOK')
+
+    # FOK: prüfe ob wirklich gefüllt — errorMsg "no match" bedeutet nicht gefüllt
+    error_msg = result.get('errorMsg', '') or ''
+    if 'no match' in error_msg.lower() or 'not matched' in error_msg.lower() or 'insufficient' in error_msg.lower():
+        print(f'FOK not filled: {error_msg}')
+        return {'success': False, 'error': error_msg, 'filled': False}
+
+    # Kein orderID zurück → auch nicht gefüllt
+    if not result.get('orderID') and not result.get('order_id'):
+        print(f'FOK no orderID: {result}')
+        return {'success': False, 'error': 'no orderID', 'filled': False}
+
+    result['filled'] = True
+    return result
 
 # ── 1. STOP-LOSS: check existing open trades ──────────────────────────────────
 for trade in open_trades:
@@ -548,6 +566,10 @@ for event in espn_events:
             else:
                 result = asyncio.run(buy_position(token_id, buy_price, bet))
             print(f'BUY result: {result}')
+            filled = result.get('filled', False) or (result.get('success') and result.get('orderID') and PAPER_TRADING)
+            if not filled:
+                print(f'[LIVEBUY] Order not filled (FOK miss or no orderID) — kein Journal-Eintrag')
+                continue
             if result.get('success') or result.get('orderID'):
                 bought_this_run.add((cid, active_tier_idx))
                 journal['trades'].append({
