@@ -275,34 +275,7 @@
         .tl-label.expired { background: rgba(239,68,68,0.15); color: #f87171; }
         .tl-label.failed { background: rgba(239,68,68,0.25); color: #ef4444; }
 
-        /* Activity Timeline */
-        .timeline-section { margin-top: 2rem; }
-        .timeline {
-            position: relative; padding-left: 1.5rem;
-        }
-        .timeline::before {
-            content: ''; position: absolute; left: 5px; top: 8px; bottom: 8px;
-            width: 2px; background: #1e1e2e;
-        }
-        .timeline-entry {
-            position: relative; padding: 0.5rem 0 0.5rem 1rem;
-            font-size: 0.8rem;
-        }
-        .timeline-entry::before {
-            content: ''; position: absolute;
-            left: -1.5rem; top: 0.85rem;
-            width: 8px; height: 8px; border-radius: 50%;
-            background: #2a2a4a; border: 2px solid #1e1e2e;
-        }
-        .timeline-entry.has-trade::before { background: #a855f7; border-color: #7c3aed; }
-        .timeline-entry.no-trade::before { background: #1e1e2e; border-color: #1a1a2a; }
-        .timeline-time {
-            font-family: 'SF Mono', monospace; font-size: 0.7rem;
-            color: #6b7280; margin-bottom: 0.15rem;
-        }
-        .timeline-content { color: #e5e7eb; }
-        .timeline-content.inactive { color: #4b5563; font-style: italic; }
-        .timeline-trade-detail { font-size: 0.7rem; color: #9ca3af; margin-top: 0.1rem; }
+
 
         /* Date Selector for closed positions */
         .date-selector {
@@ -598,31 +571,18 @@
             </div>
         </div>
 
-        <!-- Market Watchlist (scrollable) -->
+        <!-- Today's Games -->
         <div class="trades-section">
             <div class="section-header">
                 <div>
-                    <div class="section-title">Market Watchlist</div>
-                    <div class="section-subtitle" id="wl-count">Loading...</div>
+                    <div class="section-title">🏀 Today's NBA Games</div>
+                    <div class="section-subtitle" id="games-subtitle">Loading...</div>
                 </div>
             </div>
-            <div class="trades-scroll" id="wl-list">
-                <div class="loading-skeleton" style="height: 40px; margin: 8px;"></div>
-                <div class="loading-skeleton" style="height: 40px; margin: 8px;"></div>
-                <div class="loading-skeleton" style="height: 40px; margin: 8px;"></div>
-            </div>
-        </div>
-
-        <!-- Activity Timeline -->
-        <div class="timeline-section">
-            <div class="section-header">
-                <div>
-                    <div class="section-title">Activity Timeline</div>
-                    <div class="section-subtitle">Hourly breakdown of trading activity</div>
-                </div>
-            </div>
-            <div class="timeline" id="activity-timeline">
-                <div class="loading-skeleton" style="height: 200px;"></div>
+            <div class="trades-scroll" id="games-list">
+                <div class="loading-skeleton" style="height: 44px; margin: 8px;"></div>
+                <div class="loading-skeleton" style="height: 44px; margin: 8px;"></div>
+                <div class="loading-skeleton" style="height: 44px; margin: 8px;"></div>
             </div>
         </div>
     </div>
@@ -638,6 +598,7 @@
             loadPortfolio();
             loadTrendingMarkets();
             loadBalanceHistory();
+            loadTodaysGames();
         });
 
         function showTab(tab) {
@@ -1071,232 +1032,85 @@
 
         }
 
-        // ── Watchlist & Timeline ──
-        let watchlistMarkets = [];
-        let allScans = [];
-        let pendingMarkets = [];
-
-        function formatNum(n) {
-            if (n >= 1000000) return '$' + (n/1000000).toFixed(1) + 'M';
-            if (n >= 1000) return '$' + (n/1000).toFixed(0) + 'K';
-            return '$' + n.toFixed(0);
-        }
-
-        async function loadWatchlist() {
+        // ── Today's Games ──
+        async function loadTodaysGames() {
+            const container = document.getElementById('games-list');
+            const subtitle = document.getElementById('games-subtitle');
             try {
-                const res = await fetch('/api/watchlist');
+                const res = await fetch('/api/todays-games');
                 const data = await res.json();
-                watchlistMarkets = data.markets || [];
-                renderWatchlist();
-                document.getElementById('wl-count').textContent =
-                    `${data.count || 0} pending market${(data.count || 0) !== 1 ? 's' : ''} (${data.total_scanned || 0} total scanned)`;
-            } catch (e) {
-                document.getElementById('wl-list').innerHTML =
-                    '<div class="empty-state" style="padding:1.5rem">Failed to load watchlist</div>';
-            }
-        }
+                const games = data.games || [];
 
-        function renderWatchlist() {
-            const container = document.getElementById('wl-list');
-            if (watchlistMarkets.length === 0) {
-                container.innerHTML = '<div class="empty-state" style="padding:1.5rem;font-size:0.85rem">No pending markets</div>';
-                return;
-            }
-            container.innerHTML = watchlistMarkets.map(m => {
-                const endTime = m.end_datetime ? new Date(m.end_datetime).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
-                return `<div class="trade-row">
-                    <span class="wl-price">${m.yes_price != null ? (m.yes_price * 100).toFixed(0) + '¢' : '--'}</span>
-                    <span class="trade-market" title="${m.question}">${m.question}</span>
-                    <span class="wl-meta">${endTime ? 'closes ' + endTime : ''}</span>
-                    <span class="wl-liq">${m.liquidity ? formatNum(m.liquidity) : '--'}</span>
-                </div>`;
-            }).join('');
-        }
+                const total = games.length;
+                const live = games.filter(g => g.status === 'In Progress' || g.status === 'Halftime').length;
+                const withMarket = games.filter(g => g.has_market).length;
+                subtitle.textContent = `${total} games today · ${live} live · ${withMarket} on Polymarket`;
 
-        async function loadScans() {
-            try {
-                const [scanRes, wlRes] = await Promise.all([
-                    fetch('/api/scan-results'),
-                    fetch('/api/watchlist'),
-                ]);
-                const scanData = await scanRes.json();
-                const wlData = await wlRes.json();
-                allScans = scanData.results || [];
-                pendingMarkets = wlData.markets || [];
-                renderTimeline();
-            } catch (e) {
-                document.getElementById('activity-timeline').innerHTML =
-                    '<div class="empty-state" style="padding:1rem">Failed to load activity</div>';
-            }
-        }
-
-        // Map raw result codes to professional labels
-        function resultLabel(raw, action, hoursLeft, endDatetime, reason) {
-            if (raw === 'NOT_READY') {
-                // Check if market has since expired (use end_datetime if available, else hours_left)
-                const nowExpired = endDatetime
-                    ? new Date(endDatetime) < new Date()
-                    : (hoursLeft != null && hoursLeft <= 0);
-                if (nowExpired) {
-                    return { text: 'Expired', cls: 'expired' };
+                if (games.length === 0) {
+                    container.innerHTML = '<div class="empty-state" style="padding:1.5rem;font-size:0.85rem">No games today</div>';
+                    return;
                 }
-                // Pick label based on reason
-                if (reason) {
-                    const r = reason.toLowerCase();
-                    if (r.includes('spread')) return { text: 'Spread Wide', cls: 'skipped' };
-                    if (r.includes('orderbook') || r.includes('no bids') || r.includes('no book')) return { text: 'No Book', cls: 'skipped' };
-                    if (r.includes('liquidity')) return { text: 'Low Liquidity', cls: 'skipped' };
-                }
-                return { text: 'Not Ready', cls: 'skipped' };
-            }
-            const map = {
-                'TRADED': { text: 'Executed', cls: 'executed' },
-                'NO_TRADE': { text: 'Skipped', cls: 'skipped' },
-                'EXPIRED': { text: 'Expired', cls: 'expired' },
-                'TIMEOUT': { text: 'Timed Out', cls: 'expired' },
-                'ERROR': { text: 'Failed', cls: 'failed' },
-            };
-            return map[raw] || { text: raw, cls: 'skipped' };
-        }
 
-        function renderTimeline() {
-            const container = document.getElementById('activity-timeline');
-            if (allScans.length === 0 && pendingMarkets.length === 0) {
-                container.innerHTML = '<div class="empty-state" style="padding:1rem;font-size:0.85rem">No activity today</div>';
-                return;
-            }
+                container.innerHTML = games.map(g => {
+                    const isLive = g.status === 'In Progress' || g.status === 'Halftime';
+                    const isFinal = g.status === 'Final' || g.status === 'Game Over';
+                    const startTime = g.start_iso ? new Date(g.start_iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
 
-            let html = '';
-
-            // ── Pending / Watching block ──
-            // Sort: most progress first, but "done" (no future checks) goes to bottom
-            function getCheckProgress(m) {
-                if (!m.end_datetime) return { done: false, pastChecks: 0, nextCheckMs: Infinity };
-                const end = new Date(m.end_datetime).getTime();
-                const firstCheck = end - 4 * 3600000;
-                const now = Date.now();
-                let t = firstCheck, pastChecks = 0, nextCheckMs = Infinity;
-                while (t < end) {
-                    if (t > now) { nextCheckMs = t; break; }
-                    pastChecks++;
-                    t += 15 * 60000;
-                }
-                const done = nextCheckMs === Infinity; // no future checks left
-                return { done, pastChecks, nextCheckMs };
-            }
-            pendingMarkets.sort((a, b) => {
-                const pa = getCheckProgress(a);
-                const pb = getCheckProgress(b);
-                // Done markets go to bottom
-                if (pa.done !== pb.done) return pa.done ? 1 : -1;
-                // Most past checks first
-                const diff = pb.pastChecks - pa.pastChecks;
-                if (diff !== 0) return diff;
-                // Soonest next check first
-                return pa.nextCheckMs - pb.nextCheckMs;
-            });
-
-            if (pendingMarkets.length > 0) {
-                html += `<div class="timeline-entry has-trade" style="border-left:2px solid #fbbf24;padding-left:0.75rem">
-                    <div class="timeline-time" style="color:#fbbf24">Watching</div>`;
-                pendingMarkets.forEach((m, idx) => {
-                    const price = m.yes_price != null ? (m.yes_price * 100).toFixed(0) + '¢' : '--';
-                    const closes = m.end_datetime
-                        ? new Date(m.end_datetime).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})
-                        : '';
-                    const lastCheck = m.last_check
-                        ? new Date(m.last_check).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-                        : null;
-                    const checkNum = m.check_count > 0 ? `check #${m.check_count}` : 'first check pending';
-                    const countdownId = `pending-countdown-${idx}`;
-                    const nextCheck = m.next_check ? new Date(m.next_check) : null;
-                    const nextCheckTarget = nextCheck ? nextCheck.getTime() : null;
-                    const nextCheckTime = nextCheck
-                        ? nextCheck.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-                        : null;
-
-                    // Estimate total checks: first check at (close - 2h), then every 15min
-                    let scheduleStr = '';
-                    if (m.end_datetime) {
-                        const end = new Date(m.end_datetime).getTime();
-                        const firstCheck = end - 4 * 3600000;
-                        const checkTimes = [];
-                        let t = firstCheck;
-                        while (t < end) {
-                            checkTimes.push(t);
-                            const hoursLeft = (end - t) / 3600000;
-                            t += hoursLeft > 2 ? 30 * 60000 : 15 * 60000;
-                        }
-                        const totalChecks = checkTimes.length;
-                        const now = Date.now();
-
-                        // Find next FUTURE check (skip past ones)
-                        const nextFutureIdx = checkTimes.findIndex(ct => ct > now);
-                        const checksDone = m.check_count || 0;
-
-                        if (nextFutureIdx === -1) {
-                            scheduleStr = `${checksDone}/${totalChecks} done`;
-                        } else {
-                            const nextTime = nextCheck
-                                ? nextCheck.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-                                : new Date(checkTimes[nextFutureIdx]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-                            const followIdx = nextFutureIdx + 1;
-                            const followTime = checkTimes[followIdx]
-                                ? new Date(checkTimes[followIdx]).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-                                : null;
-                            const nextNum = nextFutureIdx + 1;
-                            scheduleStr = `${nextNum}/${totalChecks} @ ${nextTime}`;
-                            if (followTime) scheduleStr += ` → ${nextNum + 1}/${totalChecks} @ ${followTime}`;
-                        }
+                    // Status badge
+                    let statusBadge = '';
+                    if (isLive) {
+                        const clockStr = g.clock ? ` Q${g.period} ${g.clock}` : '';
+                        statusBadge = `<span style="background:rgba(239,68,68,0.2);color:#f87171;font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:3px;">🔴 LIVE${clockStr}</span>`;
+                    } else if (isFinal) {
+                        statusBadge = `<span style="background:rgba(107,114,128,0.2);color:#9ca3af;font-size:0.6rem;font-weight:600;padding:2px 6px;border-radius:3px;">FINAL</span>`;
+                    } else {
+                        statusBadge = `<span style="background:rgba(99,102,241,0.15);color:#a5b4fc;font-size:0.6rem;font-weight:600;padding:2px 6px;border-radius:3px;">${startTime}</span>`;
                     }
 
-                    html += `<div class="timeline-content">
-                        <span class="tl-label pending">Pending</span>
-                        ${m.question}
-                    </div>
-                    <div class="timeline-trade-detail">
-                        YES ${price}${closes ? ' · closes ' + closes : ''}
-                        ${scheduleStr ? ` · check ${scheduleStr}` : ''}
-                        ${nextCheckTarget ? ` · <span id="${countdownId}" data-target="${nextCheckTarget}">…</span>` : ''}
+                    // Score
+                    const scoreStr = (g.away_score || g.home_score)
+                        ? `${g.away_score}–${g.home_score}`
+                        : '';
+
+                    // ESPN win prob bars (only if live)
+                    let wpBars = '';
+                    if (isLive && g.away_wp !== null && g.home_wp !== null) {
+                        const awayColor = g.away_wp >= 90 ? '#10b981' : g.away_wp >= 60 ? '#f59e0b' : '#ef4444';
+                        const homeColor = g.home_wp >= 90 ? '#10b981' : g.home_wp >= 60 ? '#f59e0b' : '#ef4444';
+                        const awayBold = g.away_wp >= 90 ? 'font-weight:700;' : '';
+                        const homeBold = g.home_wp >= 90 ? 'font-weight:700;' : '';
+                        wpBars = `
+                            <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                                <span style="font-size:0.65rem;color:${awayColor};min-width:36px;${awayBold}">${g.away_wp.toFixed(0)}%</span>
+                                <div style="flex:1;height:4px;background:#1a1a2e;border-radius:2px;overflow:hidden;">
+                                    <div style="height:100%;width:${g.away_wp}%;background:${awayColor};border-radius:2px;"></div>
+                                </div>
+                                <div style="flex:1;height:4px;background:#1a1a2e;border-radius:2px;overflow:hidden;transform:scaleX(-1);">
+                                    <div style="height:100%;width:${g.home_wp}%;background:${homeColor};border-radius:2px;"></div>
+                                </div>
+                                <span style="font-size:0.65rem;color:${homeColor};min-width:36px;text-align:right;${homeBold}">${g.home_wp.toFixed(0)}%</span>
+                            </div>`;
+                    }
+
+                    // Polymarket badge
+                    const pmBadge = g.has_market
+                        ? `<a href="${g.pm_url || '#'}" target="_blank" style="background:rgba(168,85,247,0.2);color:#c084fc;font-size:0.6rem;font-weight:600;padding:2px 6px;border-radius:3px;text-decoration:none;margin-left:4px;">PM ↗</a>`
+                        : `<span style="color:#374151;font-size:0.6rem;padding:2px 6px;">no market</span>`;
+
+                    return `<div class="trade-row" style="flex-direction:column;align-items:stretch;gap:4px;padding:0.65rem 1rem;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            ${statusBadge}
+                            <span style="font-size:0.85rem;font-weight:600;flex:1;">${g.away} <span style="color:#6b7280;">@</span> ${g.home}</span>
+                            ${scoreStr ? `<span style="font-size:0.85rem;font-weight:700;font-family:monospace;color:#e5e7eb;">${scoreStr}</span>` : ''}
+                            ${pmBadge}
+                        </div>
+                        ${wpBars}
                     </div>`;
-                });
-                html += '</div>';
+                }).join('');
+            } catch (e) {
+                container.innerHTML = `<div class="empty-state" style="padding:1.5rem">Failed to load games: ${e.message}</div>`;
+                if (subtitle) subtitle.textContent = '';
             }
-
-            const now = new Date();
-            const currentHour = now.getUTCHours();
-
-            // Convert timestamps to local time and group by local hour
-            const scansByHour = {};
-            allScans.forEach(s => {
-                const local = new Date(s.timestamp);
-                const hour = local.getHours();
-                s._localTime = local.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-                if (!scansByHour[hour]) scansByHour[hour] = [];
-                scansByHour[hour].push(s);
-            });
-
-            const activeHours = Object.keys(scansByHour).map(Number).sort((a, b) => b - a);
-            for (const h of activeHours) {
-                const scans = scansByHour[h];
-                const hourStr = String(h).padStart(2, '0') + ':00';
-
-                html += `<div class="timeline-entry has-trade">
-                    <div class="timeline-time">${hourStr} UTC</div>`;
-
-                scans.forEach(s => {
-                    const lbl = resultLabel(s.result, s.action, s.hours_left, s.end_datetime, s.reason);
-                    html += `<div class="timeline-content">
-                        <span class="tl-label ${lbl.cls}">${lbl.text}</span>
-                        ${s.question}
-                    </div>
-                    <div class="timeline-trade-detail">${s.reason ? s.reason.split('\n')[0].slice(0, 80) : ''}</div>`;
-                });
-
-                html += '</div>';
-            }
-
-            container.innerHTML = html;
         }
 
         // ── Date selector for closed positions ──
@@ -1326,30 +1140,8 @@
             renderTreemap();
         }
 
-        // Load watchlist + scans on page load
-        document.addEventListener('DOMContentLoaded', () => { loadWatchlist(); loadScans(); startCountdowns(); });
-
-        // Auto-refresh every 30s (re-renders timeline with updated data)
-        setInterval(() => { loadPortfolio(); loadBalanceHistory(); loadWatchlist(); loadScans(); }, 30000);
-
-        // Live countdown tick every second
-        function startCountdowns() {
-            setInterval(() => {
-                document.querySelectorAll('[data-target]').forEach(el => {
-                    const target = parseInt(el.dataset.target);
-                    const diff = target - Date.now();
-                    if (diff <= 0) {
-                        el.textContent = 'checking…';
-                        // Trigger a fresh load shortly after the check fires
-                        setTimeout(() => loadScans(), 5000);
-                    } else {
-                        const m = Math.floor(diff / 60000);
-                        const s = Math.floor((diff % 60000) / 1000);
-                        el.textContent = m > 0 ? `${m}m ${s}s` : `${s}s`;
-                    }
-                });
-            }, 1000);
-        }
+        // Auto-refresh every 30s
+        setInterval(() => { loadPortfolio(); loadBalanceHistory(); loadTodaysGames(); }, 30000);
 
         // Re-render on window resize
         let resizeTimeout;
