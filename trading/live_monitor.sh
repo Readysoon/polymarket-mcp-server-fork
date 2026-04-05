@@ -169,10 +169,26 @@ def fetch_markets_for_teams(live_teams):
                 q = m.get('question', '')
                 cid = m.get('conditionId', '') or m.get('condition_id', '')
                 if not cid: continue
-                if ' vs. ' not in q and ' vs ' not in q: continue
-                if any(x in q.lower() for x in ['spread', 'o/u', 'over', 'under', 'handicap', 'total', 'map', '+', 'game ']):
+
+                # Erlaubte Markttypen:
+                # 1. Moneyline: "Team A vs. Team B"
+                # 2. Spread: "Spread: Team (-X.5)" oder "Team (-X.5)"
+                # 3. Kein O/U, Handicap, Props, Maps
+                q_lower = q.lower()
+                is_moneyline = (' vs. ' in q or ' vs ' in q)
+                is_spread = ('spread' in q_lower or (team.lower() in q_lower and any(x in q for x in ['-', '+']) and '.5' in q))
+                if not is_moneyline and not is_spread: continue
+                if any(x in q_lower for x in ['o/u', 'over', 'under', 'handicap', 'total', 'map', 'game ', 'pts', 'points', 'assists', 'rebounds', 'wins the']):
                     continue
-                yes_price = float(m.get('outcomePrices', ['0.5','0.5'])[0]) if m.get('outcomePrices') else 0.5
+
+                # outcomePrices kann JSON-String sein
+                oprices_raw = m.get('outcomePrices', ['0.5', '0.5'])
+                if isinstance(oprices_raw, str):
+                    import json as _j
+                    try: oprices_raw = _j.loads(oprices_raw)
+                    except: oprices_raw = ['0.5', '0.5']
+                yes_price = float(oprices_raw[0]) if oprices_raw else 0.5
+
                 tokens = m.get('clobTokenIds', []) or m.get('clob_token_ids', [])
                 results.append({
                     'question': q,
@@ -183,6 +199,7 @@ def fetch_markets_for_teams(live_teams):
                     'no_token_id': tokens[1] if len(tokens) > 1 else '',
                     'end_datetime': m.get('endDate', '') or m.get('end_date_iso', ''),
                     'liquidity': float(m.get('liquidity', 0) or 0),
+                    'market_type': 'spread' if is_spread and not is_moneyline else 'moneyline',
                 })
             return results
         except Exception as e:
@@ -481,11 +498,13 @@ for event in espn_events:
             try:
                 prompt = (
                     f'Polymarket question: "{question}"\n'
-                    f'I want to bet that "{team_name}" WINS this game.\n'
-                    f'YES token price: {yes_mid:.3f} (implies YES team wins with {yes_mid:.0%} prob)\n'
-                    f'NO token price: {no_mid:.3f} (implies YES team loses with {no_mid:.0%} prob)\n'
+                    f'I want to profit if "{team_name}" wins/covers this game.\n'
+                    f'YES token price: {yes_mid:.3f} (implies YES outcome wins with {yes_mid:.0%} prob)\n'
+                    f'NO token price: {no_mid:.3f} (implies YES outcome loses with {no_mid:.0%} prob)\n'
                     f'ESPN win probability for "{team_name}": {espn_wp:.0%}\n\n'
-                    f'Should I buy YES or NO to profit if "{team_name}" wins?\n'
+                    f'For spread markets like "Spread: Team (-X.5)", YES means the team covers.\n'
+                    f'For moneyline markets like "Team A vs Team B", YES means Team A wins.\n'
+                    f'Which token (YES or NO) should I buy to profit if "{team_name}" wins/covers?\n'
                     f'Reply with exactly one word: YES or NO'
                 )
                 r = httpx.post(
