@@ -443,6 +443,15 @@ for event in espn_events:
         yes_token_id = market.get('yes_token_id') or market.get('clob_token_ids', [None])[0]
         no_token_id  = market.get('no_token_id') or (market.get('clob_token_ids', [None, None])[1])
 
+        # Prüfe ob CLOB noch Orders akzeptiert (Markt offen?)
+        try:
+            _clob_info = httpx.get(f'https://clob.polymarket.com/markets/{cid}', timeout=5).json()
+            if not _clob_info.get('accepting_orders', True):
+                print(f'[LIVEBUY] {team} — CLOB accepting_orders=false, Markt geschlossen, skip')
+                continue
+        except Exception as _e:
+            print(f'[LIVEBUY] CLOB market check error: {_e}')
+
         # Live CLOB prices
         yes_clob_bid, yes_clob_ask, yes_clob_mid = get_clob_price(yes_token_id) if yes_token_id else (None, None, None)
         no_clob_bid,  no_clob_ask,  no_clob_mid  = get_clob_price(no_token_id)  if no_token_id  else (None, None, None)
