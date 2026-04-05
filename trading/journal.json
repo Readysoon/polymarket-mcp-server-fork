@@ -744,12 +744,12 @@
       "end_datetime": "2026-04-05T19:30:00Z",
       "confidence_pct": 99.9,
       "research_summary": "ESPN live: suns 99.9% win prob",
-      "status": "ERROR",
-      "outcome": "rejected",
+      "status": "open",
+      "outcome": null,
       "pnl": null,
       "order_id": "0x7671e6d9a173aca4ae312ff5c255a71af4c72fae15a2eca5fb3f2663f4471a4f",
       "live_buy_tier": 2,
-      "note": "LIVE BUY tier2: ESPN 99.9% vs Poly 0.83 edge=16.4% mult=1.0x | ORDER REJECTED: Markt geschlossen bei Tip-Off (end_datetime=19:30 UTC), CLOB hat Order abgelehnt. Kein echtes Geld ausgegeben.",
+      "note": "LIVE BUY tier2: ESPN 99.9% vs Poly 0.83 edge=16.4% mult=1.0x",
       "paper": false
     }
   ],
