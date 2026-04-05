@@ -1,8 +1,8 @@
 {
   "start_balance": 149.18,
-  "current_balance": 301.65,
-  "paper_pnl": 152.47,
-  "updated_at": "2026-04-04T09:55:44.663028+00:00",
+  "current_balance": 354.75,
+  "paper_pnl": 205.57,
+  "updated_at": "2026-04-05T09:27:35.089456+00:00",
   "history": [
     {
       "t": "2026-03-29T23:18:00+00:00",
@@ -153,6 +153,24 @@
       "question": "Spread: Spurs (-3.5)",
       "pnl": 42.57,
       "returned": 67.57
+    },
+    {
+      "t": "2026-04-05T01:15:05.118012+00:00",
+      "balance": 226.8,
+      "event": "paper_live_buy",
+      "question": "Pistons vs. 76ers",
+      "side": "YES",
+      "tier": 3,
+      "espn_wp": 99.9,
+      "price": 0.585,
+      "size_usd": 74.85
+    },
+    {
+      "t": "2026-04-05T09:27:35.089456+00:00",
+      "balance": 354.75,
+      "event": "paper_redeem",
+      "question": "Pistons vs. 76ers",
+      "pnl": 53.1
     }
   ]
 }

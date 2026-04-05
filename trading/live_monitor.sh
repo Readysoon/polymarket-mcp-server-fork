@@ -560,6 +560,7 @@ for event in espn_events:
                     'order_id': result.get('orderID', ''),
                     'live_buy_tier': active_tier_idx,
                     'note': f'LIVE BUY tier{active_tier_idx}: ESPN {wp:.1%} vs Poly {buy_price:.2f} edge={edge:.1%} mult={div_mult}x',
+                    'paper': PAPER_TRADING,
                 })
                 json.dump(journal, open(f'{TRADING_DIR}/journal.json', 'w'), indent=2)
 

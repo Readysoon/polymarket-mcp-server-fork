@@ -35,14 +35,21 @@ if PAPER_TRADING:
         # Mark as needing resolution - check actual outcome via API
         cid = t.get('condition_id', '')
         try:
-            r = __import__('httpx').get(f'https://data-api.polymarket.com/markets/{cid}', timeout=5)
+            # Use CLOB API — tokens[].winner field is authoritative
+            r = __import__('httpx').get(f'https://clob.polymarket.com/markets/{cid}', timeout=5)
             mkt = r.json()
-            resolved = mkt.get('resolved', False)
+            tokens = mkt.get('tokens', [])
+            resolved = mkt.get('closed', False) and any(t2.get('winner') is not None for t2 in tokens)
             winning_outcome = None
             if resolved:
-                for o in mkt.get('outcomes', []):
-                    if o.get('winner'):
-                        winning_outcome = o.get('value', '').lower()
+                for tok in tokens:
+                    if tok.get('winner') is True:
+                        outcome_label = tok.get('outcome', '').lower()
+                        # Map outcome label to YES/NO logic
+                        # For moneyline: outcome = team name, trade_side = YES (bought winning team)
+                        # We store trade_side = YES always for the team we expect to win
+                        # So we need to check if the winning token matches our trade_side
+                        winning_outcome = outcome_label
                         break
         except:
             resolved = False
@@ -54,8 +61,20 @@ if PAPER_TRADING:
             size = t.get('size_usd', 0)
             price = t.get('entry_price', 0.5)
             shares = size / price
-            if (side == 'YES' and winning_outcome in ('yes', '1', 'true')) or \
-               (side == 'NO' and winning_outcome in ('no', '0', 'false')):
+            # Classic YES/NO markets
+            classic_win = (side == 'YES' and winning_outcome in ('yes', '1', 'true')) or \
+                          (side == 'NO' and winning_outcome in ('no', '0', 'false'))
+            # Moneyline markets: outcome = team name, YES token = first team in question
+            # We bought YES = we expect the "Pistons" token (first team) to win
+            # Check the token price directly: winner token has price=1
+            tokens_data = mkt.get('tokens', [])
+            yes_token_winner = False
+            no_token_winner = False
+            if tokens_data:
+                yes_token_winner = tokens_data[0].get('winner', False) is True
+                no_token_winner = tokens_data[1].get('winner', False) is True if len(tokens_data) > 1 else False
+            moneyline_win = (side == 'YES' and yes_token_winner) or (side == 'NO' and no_token_winner)
+            if classic_win or moneyline_win:
                 pnl = round(shares - size, 2)
                 t['status'] = 'WON'
                 t['pnl'] = pnl

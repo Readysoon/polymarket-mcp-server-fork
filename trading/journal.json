@@ -699,6 +699,38 @@
       "note": "LIVE BUY tier2: ESPN 98.8% vs Poly 0.37 edge=61.8% mult=2.0x",
       "paper": true,
       "resolved_at": "2026-04-03T05:00:00+00:00"
+    },
+    {
+      "type": "daily_run",
+      "timestamp": "2026-04-04T16:08:09.838036+00:00",
+      "result": "NO_TRADES",
+      "reason": "Brave API returned no explicit moneyline win probabilities for any watchlist market on 2026-04-04. Only data: Wizards ML 10.2% (not in watchlist). All markets SKIP per rule: Kein Brave-Pick mit Zahl \u2192 SKIP.",
+      "wallet_balance": 150.06,
+      "brave_spend": 10.77,
+      "candidates_scanned": 23,
+      "moneyline_candidates": 11,
+      "trades_placed": 0
+    },
+    {
+      "bot_id": "live_monitor",
+      "timestamp": "2026-04-05T01:15:05.118012+00:00",
+      "question": "Pistons vs. 76ers",
+      "condition_id": "0x836b6b413f708cd929adfa5280fb05be940b164b147df6cb4af9b039da586439",
+      "trade_side": "YES",
+      "entry_price": 0.585,
+      "size_usd": 74.85,
+      "shares": 127.95,
+      "end_datetime": "2026-04-04T23:00:00Z",
+      "confidence_pct": 99.9,
+      "research_summary": "ESPN live: pistons 99.9% win prob",
+      "status": "WON",
+      "outcome": "won",
+      "pnl": 53.1,
+      "order_id": "PAPER-0x836b6b413f708c",
+      "live_buy_tier": 2,
+      "note": "LIVE BUY tier2: ESPN 99.9% vs Poly 0.58 edge=41.4% mult=2.0x",
+      "paper": true,
+      "resolved_at": "2026-04-05T09:27:35.089456+00:00"
     }
   ],
   "deposits": [
@@ -762,6 +794,56 @@
       "reason": "No NBA games on April 4 per Brave. NHL: no per-game win probabilities returned. Scanner candidates: esports (verboten), spreads (verboten), O/U (verboten), UFC/CBB without Brave confidence %. No eligible moneyline market with explicit Brave probability found.",
       "wallet": 150.06,
       "candidates_checked": 15,
+      "brave_picks": []
+    },
+    {
+      "date": "2026-04-04T10:07:22.429192+00:00",
+      "result": "NO_TRADE",
+      "reason": "Brave returned no explicit win probability (%) for April 4, 2026. NBA: no specific game data. NHL: no per-game Moneypuck probs. Scanner: 20 candidates found \u2014 eligible ML types (Spurs/Nuggets, Pistons/76ers, UConn/Illinois, Flames/Ducks, UFC Moicano/Duncan) \u2014 all skipped per rule: no Brave confidence number available.",
+      "wallet": 150.06,
+      "candidates_checked": 20,
+      "eligible_ml_markets": [
+        "Spurs vs. Nuggets",
+        "Pistons vs. 76ers",
+        "Connecticut Huskies vs. Illinois Fighting Illini",
+        "Flames vs. Ducks",
+        "UFC Moicano vs. Duncan"
+      ],
+      "brave_picks": []
+    },
+    {
+      "date": "2026-04-04T12:07:08.479981+00:00",
+      "result": "NO_TRADE",
+      "reason": "Brave returned no explicit win probability (%) for April 4, 2026. NBA: no game data. NHL: no per-game Moneypuck probs. 5 eligible ML markets (Spurs/Nuggets, Pistons/76ers, UConn/Illinois, Flames/Ducks, UFC Moicano/Duncan) all skipped \u2014 rule: no Brave confidence number.",
+      "wallet": 150.06,
+      "candidates_checked": 20,
+      "eligible_ml_markets": [
+        "Spurs vs. Nuggets",
+        "Pistons vs. 76ers",
+        "Connecticut Huskies vs. Illinois Fighting Illini",
+        "Flames vs. Ducks",
+        "UFC Moicano vs. Duncan"
+      ],
+      "brave_picks": []
+    },
+    {
+      "date": "2026-04-04T14:06:08.889954+00:00",
+      "result": "NO_TRADE",
+      "reason": "Brave returned no explicit win probability (%) for April 4, 2026. NBA: no game data. NHL: no per-game Moneypuck probs. 10 eligible ML markets (Spurs/Nuggets, Pistons/76ers, UConn/Illinois, Wild/Senators, Flames/Ducks, Avalanche/Stars, Red Wings/Rangers, Canadiens/Devils, Predators/Sharks, UFC Moicano/Duncan) all skipped \u2014 rule: no Brave confidence number.",
+      "wallet": 150.06,
+      "candidates_checked": 22,
+      "eligible_ml_markets": [
+        "Spurs vs. Nuggets",
+        "Pistons vs. 76ers",
+        "Connecticut Huskies vs. Illinois Fighting Illini",
+        "Wild vs. Senators",
+        "Flames vs. Ducks",
+        "Avalanche vs. Stars",
+        "Red Wings vs. Rangers",
+        "Canadiens vs. Devils",
+        "Predators vs. Sharks",
+        "UFC Moicano vs. Duncan"
+      ],
       "brave_picks": []
     }
   ]
