@@ -376,7 +376,6 @@ for trade in open_trades:
                 json.dump(journal, open(f'{TRADING_DIR}/journal.json', 'w'), indent=2)
                 msg = f'🛑 STOP-LOSS: {question[:40]} | ${cur_value:.2f} zurück | PnL: ${pnl:.2f}'
                 print(f'STOP-LOSS SOLD: {msg}')
-                send_telegram(msg)
 
                 # Paper bankroll: Geld zurückbuchen
                 if PAPER_TRADING:
@@ -590,7 +589,6 @@ for event in espn_events:
 
                 msg = f'⚡ LIVE BUY T{active_tier_idx+1}: {q[:35]} | {buy_side} @{buy_price:.2f} | ESPN {wp:.1%} | ${bet:.2f}'
                 print(msg)
-                send_telegram(msg)
         except Exception as e:
             print(f'Live buy error: {e}')
 
