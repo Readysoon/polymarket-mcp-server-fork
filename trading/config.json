@@ -3,7 +3,7 @@
   "bet_pct_normal": 0.20,
   "balance_threshold": 50,
   "min_bet_usd": 0.50,
-  "max_bet_usd": 25,
+  "max_bet_usd": null,
   "min_yes_price": 0.35,
   "max_yes_price": 0.75,
   "min_liquidity_usd": 10000,
@@ -14,6 +14,6 @@
   "min_cash_reserve": 5.0,
   "stop_drawdown_24h_pct": 0.30,
   "excluded_categories": [],
-  "paper_trading": true,
-  "notes": "PAPER TRADING AKTIV — kein echtes Geld. Updated: min price 0.50 (no underdogs), max spread 5%, min 3h before close, max 2 bets per sport, max 6 open positions, $5 cash reserve"
+  "paper_trading": false,
+  "notes": "LIVE TRADING — echtes Geld. Kein Bet-Cap. Quarter Kelly × ESPN-Divergenz-Multiplikator."
 }
