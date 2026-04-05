@@ -46,7 +46,7 @@ TEMPLATES_DIR = BASE_DIR / "templates"
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
-templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR), auto_reload=True)
 
 # Global state
 config: Optional[PolymarketConfig] = None
