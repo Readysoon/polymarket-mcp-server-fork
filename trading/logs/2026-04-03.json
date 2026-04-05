@@ -1,0 +1,69 @@
+[
+  {
+    "timestamp": "2026-04-03T04:06:38.385259+00:00",
+    "run": "daily_18:00_innsbruck",
+    "wallet_usdc": 150.06,
+    "brave_spend": 10.45,
+    "scanner_candidates": [
+      {
+        "market": "LoL: Gen.G vs KT Rolster",
+        "decision": "SKIP - not NBA/NHL moneyline"
+      },
+      {
+        "market": "Bitcoin above $66k Apr 3",
+        "decision": "SKIP - Crypto banned"
+      },
+      {
+        "market": "Rayo vs Elche O/U 2.5",
+        "decision": "SKIP - O/U banned"
+      }
+    ],
+    "brave_picks": {
+      "NBA": [
+        {
+          "game": "Hornets vs Pacers",
+          "conf": 70,
+          "decision": "SKIP - no matching Polymarket market"
+        },
+        {
+          "game": "Knicks vs Bulls",
+          "conf": 70,
+          "decision": "SKIP - no matching Polymarket market"
+        },
+        {
+          "game": "Hawks vs Nets",
+          "conf": 70,
+          "decision": "SKIP - no matching Polymarket market"
+        },
+        {
+          "game": "Rockets vs Jazz",
+          "conf": 70,
+          "decision": "SKIP - no matching Polymarket market"
+        },
+        {
+          "game": "Raptors vs Grizzlies",
+          "conf": 70,
+          "decision": "SKIP - no matching Polymarket market"
+        },
+        {
+          "game": "Celtics vs Bucks",
+          "conf": 70,
+          "decision": "SKIP - no matching Polymarket market"
+        },
+        {
+          "game": "Timberwolves vs 76ers",
+          "conf": 54,
+          "decision": "SKIP - already open in journal"
+        },
+        {
+          "game": "Magic vs Mavericks",
+          "conf": 74,
+          "decision": "SKIP - no matching Polymarket market"
+        }
+      ],
+      "NHL": "SKIP - no exact per-game probabilities from Brave"
+    },
+    "trades_placed": 0,
+    "notes": "No eligible trades. All scanner candidates disqualified (LoL/Crypto/O/U). No NBA moneyline markets found in scanner. Timberwolves vs 76ers already open."
+  }
+]

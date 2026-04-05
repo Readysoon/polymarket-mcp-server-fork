@@ -1,0 +1,12 @@
+[
+  {
+    "date": "2026-04-02",
+    "time": "2026-04-02T20:07:40.646963+00:00",
+    "brave_result": "No win probabilities returned for NBA/NHL on 2026-04-02",
+    "candidates_from_scanner": 28,
+    "candidates_with_brave_conf": 0,
+    "trades_placed": 0,
+    "wallet_usdc": 150.06,
+    "note": "All skipped - Brave returned no numeric confidence; Spread/OU/Crypto/Esports filtered"
+  }
+]
