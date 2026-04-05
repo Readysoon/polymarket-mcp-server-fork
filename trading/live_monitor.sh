@@ -63,6 +63,7 @@ except Exception as e:
 def get_espn_winprob():
     results = {}      # team_lower → win_pct
     events_raw = []
+    margins = {}      # team_lower → current lead margin (positive = leading, negative = trailing)
 
     # ESPN-based leagues with reliable live win probabilities
     # NBA: year-round | NFL: Sept-Jan | NCAA Football: Sept-Jan | NCAAB: Nov-March
@@ -89,13 +90,25 @@ def get_espn_winprob():
                     continue
                 competitors = comp.get('competitors', [])
                 teams = []
+                scores = {}
                 for c in competitors:
                     name = c['team']['shortDisplayName']
                     home = c.get('homeAway', '') == 'home'
                     wp   = prob.get('homeWinPercentage' if home else 'awayWinPercentage', None)
+                    try:
+                        score = int(c.get('score', 0) or 0)
+                    except:
+                        score = 0
+                    scores[name.lower()] = score
                     if wp is not None:
                         results[name.lower()] = round(wp, 4)
                         teams.append(name.lower())
+                # Calculate margins: positive = leading
+                if len(teams) == 2:
+                    t0, t1 = teams[0], teams[1]
+                    margin_t0 = scores.get(t0, 0) - scores.get(t1, 0)
+                    margins[t0] = margin_t0
+                    margins[t1] = -margin_t0
                 if teams:
                     events_raw.append({'teams': teams, 'league': league})
         except Exception as e:
@@ -120,7 +133,7 @@ def get_espn_winprob():
     except Exception as e:
         print(f'Fangraphs MLB error: {e}')
 
-    return results, events_raw
+    return results, events_raw, margins
 
 # Punkt 2: CLOB Live-Preis abfragen
 def get_clob_price(token_id):
@@ -140,7 +153,7 @@ def get_clob_price(token_id):
     except:
         return None, None, None
 
-espn_data, espn_events = get_espn_winprob()
+espn_data, espn_events, espn_margins = get_espn_winprob()
 if not espn_data:
     print('No ESPN live games')
     sys.exit(0)
@@ -486,6 +499,26 @@ for event in espn_events:
                 continue
         except Exception as _e:
             print(f'[LIVEBUY] CLOB market check error: {_e}')
+
+        # Spread-Check: nur kaufen wenn aktueller Vorsprung > Spread-Linie
+        market_type = market.get('market_type', 'moneyline')
+        if market_type == 'spread':
+            # Spread-Linie aus Frage extrahieren: "Spread: Cavaliers (-13.5)" → 13.5
+            import re as _re
+            spread_match = _re.search(r'\([-+]?(\d+\.?\d*)\)', q)
+            if spread_match:
+                spread_line = float(spread_match.group(1))
+                current_margin = espn_margins.get(team, None)
+                if current_margin is None:
+                    print(f'[LIVEBUY] {team} spread — kein Spielstand verfügbar, skip')
+                    continue
+                if current_margin <= spread_line:
+                    print(f'[LIVEBUY] {team} spread {spread_line} — Vorsprung {current_margin:.0f} Punkte reicht nicht, skip')
+                    continue
+                print(f'[LIVEBUY] {team} spread {spread_line} ✓ — Vorsprung {current_margin:.0f} Punkte deckt Spread')
+            else:
+                print(f'[LIVEBUY] {team} — Spread-Linie nicht lesbar aus "{q}", skip')
+                continue
 
         # Live CLOB prices
         yes_clob_bid, yes_clob_ask, yes_clob_mid = get_clob_price(yes_token_id) if yes_token_id else (None, None, None)
