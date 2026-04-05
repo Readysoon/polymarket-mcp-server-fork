@@ -575,7 +575,7 @@
         <div class="trades-section">
             <div class="section-header">
                 <div>
-                    <div class="section-title">🏀 Today's NBA Games</div>
+                    <div class="section-title">🏟️ Today's Games</div>
                     <div class="section-subtitle" id="games-subtitle">Loading...</div>
                 </div>
             </div>
@@ -1044,7 +1044,8 @@
                 const total = games.length;
                 const live = games.filter(g => g.status === 'In Progress' || g.status === 'Halftime').length;
                 const withMarket = games.filter(g => g.has_market).length;
-                subtitle.textContent = `${total} games today · ${live} live · ${withMarket} on Polymarket`;
+                const leagues = [...new Set(games.map(g => g.league))].join(' · ');
+                subtitle.textContent = `${total} games today (${leagues}) · ${live} live · ${withMarket} on Polymarket`;
 
                 if (games.length === 0) {
                     container.innerHTML = '<div class="empty-state" style="padding:1.5rem;font-size:0.85rem">No games today</div>';
@@ -1097,13 +1098,36 @@
                         ? `<a href="${g.pm_url || '#'}" target="_blank" style="background:rgba(168,85,247,0.2);color:#c084fc;font-size:0.6rem;font-weight:600;padding:2px 6px;border-radius:3px;text-decoration:none;margin-left:4px;">PM ↗</a>`
                         : `<span style="color:#374151;font-size:0.6rem;padding:2px 6px;">no market</span>`;
 
-                    return `<div class="trade-row" style="flex-direction:column;align-items:stretch;gap:4px;padding:0.65rem 1rem;">
-                        <div style="display:flex;align-items:center;gap:8px;">
+                    // League badge
+                    const leagueColors = {NBA:'#c084fc', NFL:'#60a5fa', NCAAB:'#fb923c', MLB:'#34d399'};
+                    const leagueColor = leagueColors[g.league] || '#9ca3af';
+                    const leagueBadge = `<span style="background:rgba(255,255,255,0.07);color:${leagueColor};font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:3px;">${g.league}</span>`;
+
+                    // Per-team price + Kelly
+                    function teamPriceInfo(name, price, kelly) {
+                        if (!price) return '';
+                        const priceStr = (price * 100).toFixed(0) + '¢';
+                        const kellyPct = kelly != null ? (kelly * 100).toFixed(1) + '%' : null;
+                        const kellyColor = kelly > 0.10 ? '#10b981' : kelly > 0 ? '#f59e0b' : '#6b7280';
+                        return `<span style="font-size:0.65rem;color:#6b7280;">${name}:</span> ` +
+                               `<span style="font-size:0.7rem;font-weight:600;color:#a855f7;">${priceStr}</span>` +
+                               (kellyPct ? ` <span style="font-size:0.65rem;color:${kellyColor};">K:${kellyPct}</span>` : '');
+                    }
+                    const awayInfo = teamPriceInfo(g.away, g.away_pm_price, g.away_kelly);
+                    const homeInfo = teamPriceInfo(g.home, g.home_pm_price, g.home_kelly);
+                    const priceRow = (awayInfo || homeInfo)
+                        ? `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:2px;">${awayInfo}${awayInfo && homeInfo ? '' : ''}${homeInfo}</div>`
+                        : '';
+
+                    return `<div class="trade-row" style="flex-direction:column;align-items:stretch;gap:3px;padding:0.65rem 1rem;">
+                        <div style="display:flex;align-items:center;gap:6px;">
+                            ${leagueBadge}
                             ${statusBadge}
                             <span style="font-size:0.85rem;font-weight:600;flex:1;">${g.away} <span style="color:#6b7280;">@</span> ${g.home}</span>
                             ${scoreStr ? `<span style="font-size:0.85rem;font-weight:700;font-family:monospace;color:#e5e7eb;">${scoreStr}</span>` : ''}
                             ${pmBadge}
                         </div>
+                        ${priceRow}
                         ${wpBars}
                     </div>`;
                 }).join('');

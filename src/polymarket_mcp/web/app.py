@@ -46,7 +46,7 @@ TEMPLATES_DIR = BASE_DIR / "templates"
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
-templates = Jinja2Templates(directory=str(TEMPLATES_DIR), auto_reload=True)
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # Global state
 config: Optional[PolymarketConfig] = None
@@ -678,110 +678,127 @@ async def get_live_winprob():
 
 @app.get("/api/todays-games")
 async def get_todays_games():
-    """Get today's NBA games with ESPN status + Polymarket market prices."""
+    """Get today's games (NBA + NFL + NCAAB + MLB) with ESPN status, Polymarket prices, and Kelly sizing."""
     import httpx as _httpx
-    from datetime import timezone
+
+    def quarter_kelly(wp: float, price: float) -> float:
+        if price <= 0 or price >= 1:
+            return 0.0
+        b = (1 - price) / price
+        kelly = (wp * b - (1 - wp)) / b
+        return round(max(0.0, kelly * 0.25), 4)
+
     try:
-        now = datetime.now(timezone.utc)
         games = []
+        espn_sources = [
+            ("NBA", "basketball", "nba"),
+            ("NFL", "football", "nfl"),
+            ("NCAAB", "basketball", "mens-college-basketball"),
+            ("MLB", "baseball", "mlb"),
+        ]
+        pm_tag_map = {"NBA": "nba", "NFL": "nfl", "NCAAB": "ncaab", "MLB": "mlb"}
 
         async with _httpx.AsyncClient() as hc:
-            # 1. ESPN NBA scoreboard
-            r = await hc.get(
-                "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard",
-                timeout=8.0
-            )
-            espn_events = r.json().get("events", []) if r.status_code == 200 else []
-
-            # 2. Polymarket NBA markets today
-            pm_r = await hc.get(
-                "https://gamma-api.polymarket.com/events",
-                params={"tag_slug": "nba", "limit": 50, "closed": "false"},
-                timeout=8.0
-            )
-            pm_events = pm_r.json() if pm_r.status_code == 200 else []
-
-            # Build Polymarket lookup: team keywords → market info
-            pm_lookup = {}
-            for ev in pm_events:
-                title = ev.get("title", "")
-                if " vs" not in title or any(x in title for x in ["Series", "Champion", "Conference", "Division"]):
-                    continue
-                end = ev.get("endDate", "")
-                markets = ev.get("markets", [])
-                prices = {}
-                for m in markets:
-                    outcomes = m.get("outcomes", [])
-                    outcome_prices = m.get("outcomePrices", [])
-                    if outcomes and outcome_prices and len(outcomes) == 2:
-                        for i, o in enumerate(outcomes):
-                            try:
-                                prices[o.lower()] = float(outcome_prices[i])
-                            except:
-                                pass
-                pm_lookup[title.lower()] = {
-                    "title": title,
-                    "end": end,
-                    "prices": prices,
-                    "slug": ev.get("slug", ""),
-                }
-
-            for event in espn_events:
-                comp = event["competitions"][0]
-                status_desc = event["status"]["type"]["description"]
-                competitors = comp["competitors"]
-                home = next((c for c in competitors if c.get("homeAway") == "home"), competitors[0])
-                away = next((c for c in competitors if c.get("homeAway") == "away"), competitors[1])
-                home_name = home["team"]["shortDisplayName"]
-                away_name = away["team"]["shortDisplayName"]
-                home_score = home.get("score", "")
-                away_score = away.get("score", "")
-                start_iso = event.get("date", "")
-                clock = event["status"].get("displayClock", "")
-                period = event["status"].get("period", 0)
-
-                # ESPN win prob (only if in progress)
-                prob = comp.get("situation", {}).get("lastPlay", {}).get("probability", {})
-                home_wp = round(float(prob["homeWinPercentage"]) * 100, 1) if prob.get("homeWinPercentage") else None
-                away_wp = round(float(prob["awayWinPercentage"]) * 100, 1) if prob.get("awayWinPercentage") else None
-
-                # Find Polymarket match
-                pm_match = None
-                search_key = f"{away_name.lower()} vs. {home_name.lower()}"
-                search_key2 = f"{home_name.lower()} vs. {away_name.lower()}"
-                for key in pm_lookup:
-                    if away_name.lower() in key and home_name.lower() in key:
-                        pm_match = pm_lookup[key]
-                        break
-
-                pm_yes_price = None
-                pm_url = None
-                if pm_match:
-                    # Try to find the away team price (typical YES)
-                    for team_key in [away_name.lower(), home_name.lower()]:
-                        for pk, pv in pm_match["prices"].items():
-                            if team_key in pk:
-                                pm_yes_price = pv
+            # Fetch Polymarket events per sport
+            pm_lookups = {}
+            for league_label, pm_tag in pm_tag_map.items():
+                try:
+                    r = await hc.get(
+                        "https://gamma-api.polymarket.com/events",
+                        params={"tag_slug": pm_tag, "limit": 50, "closed": "false", "active": "true"},
+                        timeout=8.0
+                    )
+                    evs = r.json() if r.status_code == 200 else []
+                except Exception:
+                    evs = []
+                lookup = {}
+                for ev in evs:
+                    title = ev.get("title", "")
+                    if " vs" not in title or any(x in title for x in ["Series", "Champion", "Conference", "Division", "Season"]):
+                        continue
+                    prices = {}
+                    for m in ev.get("markets", []):
+                        q = m.get("question", "").lower()
+                        if any(x in q for x in ["spread", "over", "under", "total", "point"]):
+                            continue
+                        import json as _json
+                        outcomes_raw = m.get("outcomes", [])
+                        outcomes = _json.loads(outcomes_raw) if isinstance(outcomes_raw, str) else outcomes_raw
+                        oprices_raw = m.get("outcomePrices", [])
+                        oprices = _json.loads(oprices_raw) if isinstance(oprices_raw, str) else oprices_raw
+                        if len(outcomes) == 2 and len(oprices) == 2:
+                            for i, o in enumerate(outcomes):
+                                try:
+                                    prices[o.lower()] = float(oprices[i])
+                                except Exception:
+                                    pass
+                            if prices:
                                 break
-                    pm_url = f"https://polymarket.com/event/{pm_match['slug']}" if pm_match.get("slug") else None
+                    lookup[title.lower()] = {"title": title, "prices": prices, "slug": ev.get("slug", "")}
+                pm_lookups[league_label] = lookup
 
-                games.append({
-                    "home": home_name,
-                    "away": away_name,
-                    "home_score": home_score,
-                    "away_score": away_score,
-                    "status": status_desc,
-                    "start_iso": start_iso,
-                    "clock": clock,
-                    "period": period,
-                    "home_wp": home_wp,
-                    "away_wp": away_wp,
-                    "pm_end": pm_match["end"] if pm_match else None,
-                    "pm_url": pm_url,
-                    "has_market": pm_match is not None,
-                })
+            # Fetch ESPN scoreboards
+            for league_label, sport, league in espn_sources:
+                try:
+                    url = f"https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/scoreboard"
+                    r = await hc.get(url, timeout=8.0)
+                    if r.status_code != 200:
+                        continue
+                    espn_events = r.json().get("events", [])
+                except Exception:
+                    continue
 
-        # Sort by start time
+                pm_lookup = pm_lookups.get(league_label, {})
+
+                for event in espn_events:
+                    try:
+                        comp = event["competitions"][0]
+                        status_desc = event["status"]["type"]["description"]
+                        competitors = comp["competitors"]
+                        home = next((c for c in competitors if c.get("homeAway") == "home"), competitors[0])
+                        away = next((c for c in competitors if c.get("homeAway") == "away"), competitors[1])
+                        home_name = home["team"]["shortDisplayName"]
+                        away_name = away["team"]["shortDisplayName"]
+                        start_iso = event.get("date", "")
+                        clock = event["status"].get("displayClock", "")
+                        period = event["status"].get("period", 0)
+
+                        prob = comp.get("situation", {}).get("lastPlay", {}).get("probability", {})
+                        home_wp = round(float(prob["homeWinPercentage"]) * 100, 1) if prob.get("homeWinPercentage") else None
+                        away_wp = round(float(prob["awayWinPercentage"]) * 100, 1) if prob.get("awayWinPercentage") else None
+
+                        pm_match = None
+                        for key in pm_lookup:
+                            if away_name.lower() in key and home_name.lower() in key:
+                                pm_match = pm_lookup[key]
+                                break
+
+                        home_pm_price = away_pm_price = pm_url = None
+                        if pm_match:
+                            pm_url = f"https://polymarket.com/event/{pm_match['slug']}" if pm_match.get("slug") else None
+                            for pk, pv in pm_match["prices"].items():
+                                if home_name.lower() in pk:
+                                    home_pm_price = pv
+                                elif away_name.lower() in pk:
+                                    away_pm_price = pv
+
+                        home_kelly = quarter_kelly(home_wp / 100, home_pm_price) if home_wp is not None and home_pm_price else None
+                        away_kelly = quarter_kelly(away_wp / 100, away_pm_price) if away_wp is not None and away_pm_price else None
+
+                        games.append({
+                            "league": league_label,
+                            "home": home_name, "away": away_name,
+                            "home_score": home.get("score", ""), "away_score": away.get("score", ""),
+                            "status": status_desc, "start_iso": start_iso,
+                            "clock": clock, "period": period,
+                            "home_wp": home_wp, "away_wp": away_wp,
+                            "home_pm_price": home_pm_price, "away_pm_price": away_pm_price,
+                            "home_kelly": home_kelly, "away_kelly": away_kelly,
+                            "pm_url": pm_url, "has_market": pm_match is not None,
+                        })
+                    except Exception:
+                        continue
+
         games.sort(key=lambda g: g["start_iso"])
         return JSONResponse({"games": games})
     except Exception as e:
@@ -789,7 +806,6 @@ async def get_todays_games():
         return JSONResponse({"games": [], "error": str(e)})
 
 
-@app.get("/api/journal-meta")
 async def get_journal_meta():
     """Return bot_id and live_buy_tier per condition_id from journal."""
     try:
