@@ -764,6 +764,7 @@ async def get_todays_games():
                     pm_event_lookup[title.lower()] = {
                         "title": title,
                         "slug": ev.get("slug", ""),
+                        "end": ev.get("endDate", ""),
                         "moneyline": moneyline_prices,
                         "spreads": spreads[:3],
                     }
@@ -829,13 +830,13 @@ async def get_todays_games():
                                     "sides": sp_sides,
                                 })
 
-                        # Nur Spiele die innerhalb der letzten 14h oder in der Zukunft liegen
+                        # Nur Spiele der letzten 14h oder Zukunft anzeigen
                         from datetime import timezone as _tz
                         try:
                             game_dt = datetime.fromisoformat(start_iso.replace('Z', '+00:00'))
                             age_hours = (datetime.now(_tz.utc) - game_dt).total_seconds() / 3600
                             if age_hours > 14:
-                                continue  # Spiel zu alt (>14h), nicht mehr anzeigen
+                                continue
                         except Exception:
                             pass
 
@@ -854,6 +855,46 @@ async def get_todays_games():
                         })
                     except Exception:
                         continue
+
+        # Als Ergänzung: kommende Polymarket Spiele (noch nicht auf ESPN) hinzufügen
+        existing_titles = {(g["away"].lower(), g["home"].lower()) for g in games}
+        for key, pm_ev in pm_event_lookup.items():
+            if True:
+                league_label = "NBA"  # Vereinfacht
+                title = pm_ev.get("title", "")
+                if " vs" not in title:
+                    continue
+                # Parse teams from title
+                parts = title.split(" vs. ", 1) if " vs. " in title else title.split(" vs ", 1)
+                if len(parts) != 2:
+                    continue
+                away_t, home_t = parts[0].strip().lower(), parts[1].strip().lower()
+                if (away_t, home_t) in existing_titles or (home_t, away_t) in existing_titles:
+                    continue  # Schon von ESPN dabei
+                # Zeige nur wenn Spiel noch nicht gestartet oder in Zukunft
+                pm_end = pm_ev.get("end", "")
+                try:
+                    end_dt = datetime.fromisoformat(pm_end.replace('Z', '+00:00'))
+                    from datetime import timezone as _tz2
+                    if (end_dt - datetime.now(_tz2.utc)).total_seconds() < -7200:
+                        continue  # Mehr als 2h vorbei
+                    start_iso_pm = pm_end  # Approximation
+                except Exception:
+                    continue
+                games.append({
+                    "league": league_label,
+                    "home": parts[1].strip(), "away": parts[0].strip(),
+                    "home_score": "", "away_score": "",
+                    "status": "Scheduled", "start_iso": start_iso_pm,
+                    "clock": "", "period": 0,
+                    "home_wp": None, "away_wp": None,
+                    "home_pm_price": pm_ev.get("moneyline", {}).get(parts[1].strip().lower()),
+                    "away_pm_price": pm_ev.get("moneyline", {}).get(parts[0].strip().lower()),
+                    "home_kelly": None, "away_kelly": None,
+                    "spread_markets": [],
+                    "pm_url": f"https://polymarket.com/event/{pm_ev.get('slug','')}" if pm_ev.get("slug") else None,
+                    "has_market": True,
+                })
 
         games.sort(key=lambda g: g["start_iso"])
         return JSONResponse({"games": games})
