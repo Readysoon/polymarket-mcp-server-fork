@@ -407,23 +407,20 @@ async def buy_position(token_id, price, size_usd):
     client._initialize_client()
     shares = round(size_usd / price, 2)
 
-    # FOK = Fill or Kill: sofort gefüllt oder sofort storniert
-    # Kein offenes GTC das nie gefüllt wird aber als "Trade" gilt
-    # Preis leicht über Ask damit wir tatsächlich matchen
-    order_price = round(price + 0.01, 2)  # 2 decimal places → maker_amount stays clean
-    shares = round(size_usd / order_price, 2)  # 2 decimal shares: price*shares has max 4 digits
+    # FAK = Fill and Kill: füllt so viele Shares wie verfügbar, Rest wird storniert
+    # Erlaubt Partial Fill — besser als FOK für illiquide Spread-Märkte
+    order_price = round(price + 0.01, 2)
+    shares = round(size_usd / order_price, 2)
     result = await client.post_order(token_id=token_id, price=order_price,
-                                     size=shares, side='BUY', order_type='FOK')
+                                     size=shares, side='BUY', order_type='FAK')
 
-    # FOK: prüfe ob wirklich gefüllt — errorMsg "no match" bedeutet nicht gefüllt
     error_msg = result.get('errorMsg', '') or ''
-    if 'no match' in error_msg.lower() or 'not matched' in error_msg.lower() or 'insufficient' in error_msg.lower():
-        print(f'FOK not filled: {error_msg}')
+    if 'no match' in error_msg.lower() or 'not matched' in error_msg.lower():
+        print(f'FAK not filled: {error_msg}')
         return {'success': False, 'error': error_msg, 'filled': False}
 
-    # Kein orderID zurück → auch nicht gefüllt
     if not result.get('orderID') and not result.get('order_id'):
-        print(f'FOK no orderID: {result}')
+        print(f'FAK no orderID: {result}')
         return {'success': False, 'error': 'no orderID', 'filled': False}
 
     result['filled'] = True
@@ -678,68 +675,8 @@ for event in espn_events:
                 result = {'success': True, 'orderID': f'PAPER-{cid[:16]}', 'status': 'paper', 'paper': True}
                 print(f'📝 PAPER LIVE BUY: würde {buy_side} @{buy_price:.3f} für ${bet:.2f} kaufen')
             else:
-                # Prüfe verfügbare Liquidität im Ask-Buch
-                shares_wanted = round(bet / buy_price, 2)
-                available_shares = 0.0
-                try:
-                    book = httpx.get(f'https://clob.polymarket.com/book?token_id={token_id}', timeout=5).json()
-                    for ask in book.get('asks', []):
-                        if float(ask.get('price', 1)) <= buy_price + 0.02:  # leichte Toleranz
-                            available_shares += float(ask.get('size', 0))
-                except Exception as _be:
-                    print(f'Book check error: {_be}')
-                    available_shares = shares_wanted  # assume ok if check fails
-
-                if available_shares <= 0:
-                    print(f'[LIVEBUY] Kein Liquidität im Ask-Buch, skip')
-                    continue
-
-                # Wenn nicht genug für volle Order → halbe Shares probieren (min 2 Retries)
-                actual_shares = shares_wanted
-                actual_bet = bet
-                if available_shares < shares_wanted:
-                    actual_shares = round(min(available_shares * 0.9, shares_wanted / 2), 2)
-                    actual_bet = round(actual_shares * buy_price, 2)
-                    print(f'[LIVEBUY] Nur {available_shares:.1f} Shares verfügbar → reduziere auf {actual_shares:.1f} Shares (${actual_bet:.2f})')
-                    if actual_bet < BUY_MIN_BET:
-                        print(f'[LIVEBUY] Reduzierter Bet ${actual_bet:.2f} < Min ${BUY_MIN_BET:.2f}, skip')
-                        continue
-
-                # Loop: probiere immer kleinere Beträge bis FOK erfolgreich
-                total_filled_shares = 0.0
-                total_filled_usd = 0.0
-                attempt_shares = actual_shares
-                attempt_bet = actual_bet
-                last_result = None
-                while attempt_bet >= BUY_MIN_BET:
-                    attempt_result = asyncio.run(buy_position(token_id, buy_price, attempt_bet))
-                    print(f'  Attempt {attempt_shares:.1f} shares ${attempt_bet:.2f}: filled={attempt_result.get("filled")} err={attempt_result.get("error","")}')
-                    if attempt_result.get('filled'):
-                        total_filled_shares += attempt_shares
-                        total_filled_usd += attempt_bet
-                        last_result = attempt_result
-                        print(f'  ✓ Filled {attempt_shares:.1f} shares — total so far: {total_filled_shares:.1f} shares ${total_filled_usd:.2f}')
-                        # Prüfe ob noch mehr Liquidität vorhanden
-                        remaining = actual_shares - total_filled_shares
-                        if remaining < 1:
-                            break
-                        next_shares = round(min(remaining, attempt_shares), 2)
-                        next_bet = round(next_shares * buy_price, 2)
-                        if next_bet < BUY_MIN_BET:
-                            break
-                        attempt_shares = next_shares
-                        attempt_bet = next_bet
-                    else:
-                        # FOK miss — halbiere und probiere nochmal
-                        attempt_shares = round(attempt_shares / 2, 2)
-                        attempt_bet = round(attempt_shares * buy_price, 2)
-                        if attempt_bet < BUY_MIN_BET:
-                            break
-
-                result = last_result or {'filled': False}
-                bet = total_filled_usd if total_filled_usd > 0 else bet
-                actual_shares = total_filled_shares if total_filled_shares > 0 else actual_shares
-                print(f'[LIVEBUY] Gesamt gefüllt: {total_filled_shares:.1f} shares / ${total_filled_usd:.2f} von Ziel ${actual_bet:.2f}')
+                # FAK: kaufe so viele Shares wie verfügbar, Rest wird automatisch storniert
+                result = asyncio.run(buy_position(token_id, buy_price, bet))
 
             print(f'BUY result: {result}')
             filled = result.get('filled', False) or (result.get('success') and result.get('orderID') and PAPER_TRADING)
