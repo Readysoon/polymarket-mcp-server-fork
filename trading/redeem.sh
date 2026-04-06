@@ -28,7 +28,7 @@ if PAPER_TRADING:
     pb = _json.load(open(pb_path)) if __import__('os').path.exists(pb_path) else {'current_balance': 149.18, 'paper_pnl': 0.0, 'history': []}
     redeemed_paper = []
     for t in journal.get('trades', []):
-        if not t.get('paper'): continue
+        if t.get('paper') is not True: continue  # nur echte paper=True Trades
         if t.get('status') not in ('open', 'OPEN'): continue
         end = t.get('end_datetime', '')
         if end and datetime.fromisoformat(end.replace('Z','+00:00')) > now_p: continue
