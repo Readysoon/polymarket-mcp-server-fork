@@ -408,8 +408,20 @@ async def buy_position(token_id, price, size_usd):
     shares = round(size_usd / price, 2)
 
     # FAK = Fill and Kill: füllt so viele Shares wie verfügbar, Rest wird storniert
-    # Erlaubt Partial Fill — besser als FOK für illiquide Spread-Märkte
-    order_price = round(price + 0.01, 2)
+    # Nimm den echten besten Ask aus dem CLOB — garantiert Fill wenn Liquidität vorhanden
+    import httpx as _hx
+    order_price = price + 0.01  # fallback
+    try:
+        book = _hx.get(f'https://clob.polymarket.com/book?token_id={token_id}', timeout=5).json()
+        asks = book.get('asks', [])
+        if asks:
+            best_ask = float(asks[0].get('price', price + 0.01))
+            # Zahle max 3¢ über unserem Zielpreis (Edge bleibt noch positiv)
+            order_price = min(best_ask + 0.005, price + 0.03)
+            order_price = round(order_price, 3)
+            print(f'  Best ask: {best_ask:.3f} → order price: {order_price:.3f}')
+    except Exception as _be:
+        print(f'  Book check failed: {_be}, using fallback price')
     shares = round(size_usd / order_price, 2)
     result = await client.post_order(token_id=token_id, price=order_price,
                                      size=shares, side='BUY', order_type='FAK')
