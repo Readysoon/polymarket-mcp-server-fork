@@ -871,14 +871,15 @@ async def get_todays_games():
                 away_t, home_t = parts[0].strip().lower(), parts[1].strip().lower()
                 if (away_t, home_t) in existing_titles or (home_t, away_t) in existing_titles:
                     continue  # Schon von ESPN dabei
-                # Zeige nur wenn Spiel noch nicht gestartet oder in Zukunft
+                # Nur Spiele die innerhalb von -3h bis +48h liegen
                 pm_end = pm_ev.get("end", "")
                 try:
-                    end_dt = datetime.fromisoformat(pm_end.replace('Z', '+00:00'))
                     from datetime import timezone as _tz2
-                    if (end_dt - datetime.now(_tz2.utc)).total_seconds() < -7200:
-                        continue  # Mehr als 2h vorbei
-                    start_iso_pm = pm_end  # Approximation
+                    end_dt = datetime.fromisoformat(pm_end.replace('Z', '+00:00'))
+                    hours_from_now = (end_dt - datetime.now(_tz2.utc)).total_seconds() / 3600
+                    if hours_from_now < -3 or hours_from_now > 48:
+                        continue  # Zu alt oder zu weit in der Zukunft
+                    start_iso_pm = pm_end
                 except Exception:
                     continue
                 # Spreads aus pm_ev laden
