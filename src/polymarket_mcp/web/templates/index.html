@@ -968,8 +968,8 @@
                 const x = padL + (idx / (history.length - 1)) * chartW;
                 const t = times[idx];
                 const label = activeRangeHours > 24
-                    ? t.toLocaleDateString([], { month: 'short', day: 'numeric' })
-                    : t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    ? t.toLocaleDateString('de-AT', { timeZone: 'Europe/Vienna', month: 'short', day: 'numeric' })
+                    : t.toLocaleTimeString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' });
                 ctx.fillText(label, x, H - 4);
             }
 
@@ -1055,7 +1055,8 @@
                 container.innerHTML = games.map(g => {
                     const isLive = g.status === 'In Progress' || g.status === 'Halftime';
                     const isFinal = g.status === 'Final' || g.status === 'Game Over';
-                    const startTime = g.start_iso ? new Date(g.start_iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+                    const INN = {timeZone: 'Europe/Vienna', hour:'2-digit', minute:'2-digit'};
+                    const startTime = g.start_iso ? new Date(g.start_iso).toLocaleTimeString('de-AT', INN) : '';
 
                     // Status badge
                     let statusBadge = '';
