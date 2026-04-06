@@ -678,246 +678,297 @@ async def get_live_winprob():
 
 @app.get("/api/todays-games")
 async def get_todays_games():
-    """Get today's games with ESPN status, Moneyline + Spread markets, Kelly sizing."""
+    """Get today's games (NBA/NFL/NCAAB/MLB) with ESPN status + Polymarket prices + spreads."""
     import httpx as _httpx
-    import json as _json
-
-    def quarter_kelly(wp: float, price: float) -> float:
-        if price <= 0 or price >= 1:
-            return 0.0
-        b = (1 - price) / price
-        kelly = (wp * b - (1 - wp)) / b
-        return round(max(0.0, kelly * 0.25), 4)
-
-    def parse_json_field(val, default):
-        if isinstance(val, str):
-            try: return _json.loads(val)
-            except: return default
-        return val if val is not None else default
-
+    from datetime import timezone, timedelta
     try:
+        now = datetime.now(timezone.utc)
         games = []
-        espn_sources = [
-            ("NBA", "basketball", "nba"),
-            ("NFL", "football", "nfl"),
-            ("NCAAB", "basketball", "mens-college-basketball"),
-            ("MLB", "baseball", "mlb"),
-        ]
-        pm_tag_map = {"NBA": "nba", "NFL": "nfl", "NCAAB": "ncaab", "MLB": "mlb"}
 
         async with _httpx.AsyncClient() as hc:
-            pm_event_lookup = {}
-            for league_label, pm_tag in pm_tag_map.items():
-                try:
-                    r = await hc.get(
-                        "https://gamma-api.polymarket.com/events",
-                        params={"tag_slug": pm_tag, "limit": 50, "closed": "false", "active": "true"},
-                        timeout=8.0
-                    )
-                    evs = r.json() if r.status_code == 200 else []
-                except Exception:
-                    evs = []
+            # 1. ESPN scoreboards (NBA + NFL + NCAAB + MLB) in parallel
+            espn_urls = [
+                ("NBA", "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"),
+                ("NFL", "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"),
+                ("NCAAB", "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard"),
+                ("MLB", "https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard"),
+            ]
+            import asyncio as _asyncio
+            espn_resps = await _asyncio.gather(
+                *[hc.get(url, timeout=8.0) for _, url in espn_urls],
+                return_exceptions=True
+            )
+            espn_by_league = {}
+            for (league, _), resp in zip(espn_urls, espn_resps):
+                if not isinstance(resp, Exception) and resp.status_code == 200:
+                    espn_by_league[league] = resp.json().get("events", [])
+                else:
+                    espn_by_league[league] = []
 
-                for ev in evs:
-                    title = ev.get("title", "")
-                    if " vs" not in title or any(x in title for x in ["Series", "Champion", "Conference", "Division", "Season"]):
-                        continue
+            # 2. Polymarket NBA events (today + next 48h)
+            end_min = (now - timedelta(hours=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
+            pm_r = await hc.get(
+                "https://gamma-api.polymarket.com/events",
+                params={"tag_slug": "nba", "limit": 50, "end_date_min": end_min},
+                timeout=8.0
+            )
+            pm_events = pm_r.json() if pm_r.status_code == 200 else []
 
-                    moneyline_prices = {}
-                    spreads = []
-
-                    for m in ev.get("markets", []):
-                        q = m.get("question", "")
-                        q_lower = q.lower()
-                        outcomes = parse_json_field(m.get("outcomes", []), [])
-                        oprices = parse_json_field(m.get("outcomePrices", []), [])
-                        liq = float(m.get("liquidity", 0) or 0)
-                        tokens = parse_json_field(m.get("clobTokenIds", []), [])
-                        cid = m.get("conditionId", "")
-
-                        if len(outcomes) != 2 or len(oprices) < 2:
-                            continue
-                        if any(x in q_lower for x in ["o/u", "over", "under", "total", "pts", "points", "assists", "rebounds", "1h "]):
-                            continue
-
-                        try:
-                            p0 = float(oprices[0])
-                            p1 = float(oprices[1])
-                        except:
-                            continue
-
-                        if q == title:
-                            for i, o in enumerate(outcomes):
-                                moneyline_prices[o.lower()] = float(oprices[i])
-                        elif "spread" in q_lower or ((".5" in q or "-" in q) and "o/u" not in q_lower):
-                            spreads.append({
-                                "question": q,
-                                "outcomes": outcomes,
-                                "prices": [p0, p1],
-                                "yes_token_id": tokens[0] if tokens else "",
-                                "no_token_id": tokens[1] if len(tokens) > 1 else "",
-                                "condition_id": cid,
-                                "liquidity": liq,
-                            })
-
-                    spreads.sort(key=lambda x: x["liquidity"], reverse=True)
-                    pm_event_lookup[title.lower()] = {
-                        "title": title,
-                        "slug": ev.get("slug", ""),
-                        "end": ev.get("endDate", ""),
-                        "moneyline": moneyline_prices,
-                        "spreads": spreads[:3],
-                    }
-
-            for league_label, sport, league in espn_sources:
-                try:
-                    url = f"https://site.api.espn.com/apis/site/v2/sports/{sport}/{league}/scoreboard"
-                    r = await hc.get(url, timeout=8.0)
-                    if r.status_code != 200:
-                        continue
-                    espn_events = r.json().get("events", [])
-                except Exception:
+            # Build Polymarket lookup: title.lower() → market info (moneyline + spreads)
+            pm_lookup = {}
+            for ev in pm_events:
+                title = ev.get("title", "")
+                if " vs" not in title or any(x in title for x in ["Series", "Champion", "Conference", "Division", "Play-In"]):
                     continue
+                end_date = ev.get("endDate", "")
+                # Only within 48h window
+                try:
+                    end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+                    if (end_dt - now).total_seconds() / 3600 > 48:
+                        continue
+                except Exception:
+                    pass
 
-                for event in espn_events:
+                markets = ev.get("markets", [])
+                moneyline_prices = {}
+                spread_markets = []
+
+                for m in markets:
+                    q = m.get("question", "")
+                    outcomes_raw = m.get("outcomes", "[]")
+                    prices_raw = m.get("outcomePrices", "[]")
                     try:
-                        comp = event["competitions"][0]
-                        status_desc = event["status"]["type"]["description"]
-                        competitors = comp["competitors"]
-                        home = next((c for c in competitors if c.get("homeAway") == "home"), competitors[0])
-                        away = next((c for c in competitors if c.get("homeAway") == "away"), competitors[1])
-                        home_name = home["team"]["shortDisplayName"]
-                        away_name = away["team"]["shortDisplayName"]
-                        start_iso = event.get("date", "")
-                        clock = event["status"].get("displayClock", "")
-                        period = event["status"].get("period", 0)
-
-                        prob = comp.get("situation", {}).get("lastPlay", {}).get("probability", {})
-                        home_wp = round(float(prob["homeWinPercentage"]) * 100, 1) if prob.get("homeWinPercentage") else None
-                        away_wp = round(float(prob["awayWinPercentage"]) * 100, 1) if prob.get("awayWinPercentage") else None
-
-                        pm_ev = None
-                        for key in pm_event_lookup:
-                            if away_name.lower() in key and home_name.lower() in key:
-                                pm_ev = pm_event_lookup[key]
-                                break
-
-                        pm_url = None
-                        home_pm_price = away_pm_price = None
-                        home_kelly = away_kelly = None
-                        spread_markets = []
-
-                        if pm_ev:
-                            pm_url = f"https://polymarket.com/event/{pm_ev['slug']}" if pm_ev.get("slug") else None
-                            ml = pm_ev.get("moneyline", {})
-                            for k, v in ml.items():
-                                if home_name.lower() in k: home_pm_price = v
-                                elif away_name.lower() in k: away_pm_price = v
-
-                            home_kelly = quarter_kelly(home_wp / 100, home_pm_price) if home_wp and home_pm_price else None
-                            away_kelly = quarter_kelly(away_wp / 100, away_pm_price) if away_wp and away_pm_price else None
-
-                            for sp in pm_ev.get("spreads", []):
-                                sp_sides = []
-                                for i, (outcome, price) in enumerate(zip(sp["outcomes"], sp["prices"])):
-                                    team_wp = home_wp if home_name.lower() in outcome.lower() else (away_wp if away_name.lower() in outcome.lower() else None)
-                                    k_val = quarter_kelly(team_wp / 100, price) if team_wp and price else None
-                                    sp_sides.append({"outcome": outcome, "price": price, "kelly": k_val})
-                                spread_markets.append({
-                                    "question": sp["question"],
-                                    "condition_id": sp["condition_id"],
-                                    "liquidity": sp["liquidity"],
-                                    "sides": sp_sides,
-                                })
-
-                        # Nur Spiele der letzten 14h oder Zukunft anzeigen
-                        from datetime import timezone as _tz
-                        try:
-                            game_dt = datetime.fromisoformat(start_iso.replace('Z', '+00:00'))
-                            age_hours = (datetime.now(_tz.utc) - game_dt).total_seconds() / 3600
-                            if age_hours > 14:
-                                continue
-                        except Exception:
-                            pass
-
-                        games.append({
-                            "league": league_label,
-                            "home": home_name, "away": away_name,
-                            "home_score": home.get("score", ""), "away_score": away.get("score", ""),
-                            "status": status_desc, "start_iso": start_iso,
-                            "clock": clock, "period": period,
-                            "home_wp": home_wp, "away_wp": away_wp,
-                            "home_pm_price": home_pm_price, "away_pm_price": away_pm_price,
-                            "home_kelly": home_kelly, "away_kelly": away_kelly,
-                            "spread_markets": spread_markets,
-                            "pm_url": pm_url,
-                            "has_market": pm_ev is not None,
-                        })
+                        outcomes = json.loads(outcomes_raw) if isinstance(outcomes_raw, str) else outcomes_raw
+                        prices = json.loads(prices_raw) if isinstance(prices_raw, str) else prices_raw
                     except Exception:
                         continue
 
-        # Als Ergänzung: kommende Polymarket Spiele (noch nicht auf ESPN) hinzufügen
-        existing_titles = {(g["away"].lower(), g["home"].lower()) for g in games}
-        for key, pm_ev in pm_event_lookup.items():
-            if True:
-                league_label = "NBA"  # Vereinfacht
-                title = pm_ev.get("title", "")
+                    if not outcomes or not prices or len(outcomes) != 2:
+                        continue
+
+                    cid = m.get("conditionId", "")
+                    liq = float(m.get("liquidityNum", 0) or 0)
+                    raw_tokens = m.get("clobTokenIds", "[]")
+                    try:
+                        tokens = json.loads(raw_tokens) if isinstance(raw_tokens, str) else (raw_tokens or [])
+                    except Exception:
+                        tokens = []
+                    if not tokens:
+                        raw_tokens = m.get("clob_token_ids", "[]")
+                        try:
+                            tokens = json.loads(raw_tokens) if isinstance(raw_tokens, str) else raw_tokens
+                        except Exception:
+                            tokens = []
+
+                    try:
+                        p0 = float(prices[0])
+                        p1 = float(prices[1])
+                    except Exception:
+                        continue
+
+                    # Moneyline: no spread in question
+                    if "Spread" not in q and "+" not in q and not any(c.isdigit() and q[i-1:i] in "+-" for i, c in enumerate(q) if c.isdigit()):
+                        for i, o in enumerate(outcomes):
+                            moneyline_prices[o.lower()] = float(prices[i])
+                    else:
+                        spread_markets.append({
+                            "question": q,
+                            "condition_id": cid,
+                            "outcomes": outcomes,
+                            "prices": [p0, p1],
+                            "liquidity": liq,
+                            "yes_token_id": tokens[0] if tokens else "",
+                            "no_token_id": tokens[1] if len(tokens) > 1 else "",
+                        })
+
+                spread_markets.sort(key=lambda x: x["liquidity"], reverse=True)
+                pm_lookup[title.lower()] = {
+                    "title": title,
+                    "end": end_date,
+                    "moneyline": moneyline_prices,
+                    "spreads": spread_markets[:3],
+                    "slug": ev.get("slug", ""),
+                }
+
+            def kelly(win_prob, price):
+                """Quarter Kelly bet size as fraction."""
+                if not win_prob or not price or price <= 0 or price >= 1:
+                    return None
+                edge = win_prob / 100.0 - price
+                if edge <= 0:
+                    return None
+                full_kelly = edge / (1 - price)
+                return round(full_kelly * 0.25 * 100, 1)  # Quarter Kelly as %
+
+            seen_pairs = set()
+
+            # 3. Build games from ESPN
+            for league, espn_events in espn_by_league.items():
+                for event in espn_events:
+                    comp = event["competitions"][0]
+                    status_desc = event["status"]["type"]["description"]
+                    competitors = comp["competitors"]
+                    home = next((c for c in competitors if c.get("homeAway") == "home"), competitors[0])
+                    away = next((c for c in competitors if c.get("homeAway") == "away"), competitors[1])
+                    home_name = home["team"]["shortDisplayName"]
+                    away_name = away["team"]["shortDisplayName"]
+                    home_score = home.get("score", "")
+                    away_score = away.get("score", "")
+                    start_iso = event.get("date", "")
+                    clock = event["status"].get("displayClock", "")
+                    period = event["status"].get("period", 0)
+
+                    # Only games from last 14h or future
+                    try:
+                        game_dt = datetime.fromisoformat(start_iso.replace("Z", "+00:00"))
+                        if (now - game_dt).total_seconds() / 3600 > 14:
+                            continue
+                    except Exception:
+                        pass
+
+                    # ESPN win prob
+                    prob = comp.get("situation", {}).get("lastPlay", {}).get("probability", {})
+                    home_wp = round(float(prob["homeWinPercentage"]) * 100, 1) if prob.get("homeWinPercentage") else None
+                    away_wp = round(float(prob["awayWinPercentage"]) * 100, 1) if prob.get("awayWinPercentage") else None
+
+                    # Find Polymarket match
+                    pm_match = None
+                    for key in pm_lookup:
+                        if away_name.lower() in key and home_name.lower() in key:
+                            pm_match = pm_lookup[key]
+                            break
+
+                    home_pm = away_pm = None
+                    spread_out = []
+                    pm_url = None
+                    if pm_match:
+                        ml = pm_match["moneyline"]
+                        for k, v in ml.items():
+                            if home_name.lower() in k:
+                                home_pm = v
+                            elif away_name.lower() in k:
+                                away_pm = v
+                        for sp in pm_match["spreads"]:
+                            sides = []
+                            for i, (o, p) in enumerate(zip(sp["outcomes"], sp["prices"])):
+                                k_val = kelly(home_wp if home_name.lower() in o.lower() else away_wp, p)
+                                sides.append({"outcome": o, "price": p, "kelly": k_val})
+                            spread_out.append({
+                                "question": sp["question"],
+                                "condition_id": sp["condition_id"],
+                                "liquidity": sp["liquidity"],
+                                "sides": sides,
+                            })
+                        pm_url = f"https://polymarket.com/event/{pm_match['slug']}" if pm_match.get("slug") else None
+
+                    pair = tuple(sorted([home_name.lower(), away_name.lower()]))
+                    seen_pairs.add(pair)
+
+                    games.append({
+                        "league": league,
+                        "home": home_name, "away": away_name,
+                        "home_score": home_score, "away_score": away_score,
+                        "status": status_desc, "start_iso": start_iso,
+                        "clock": clock, "period": period,
+                        "home_wp": home_wp, "away_wp": away_wp,
+                        "home_pm_price": home_pm, "away_pm_price": away_pm,
+                        "home_kelly": kelly(home_wp, home_pm),
+                        "away_kelly": kelly(away_wp, away_pm),
+                        "spread_markets": spread_out,
+                        "pm_url": pm_url,
+                        "has_market": pm_match is not None,
+                    })
+
+            # 4. Add Polymarket-only games not on ESPN yet (Scheduled)
+            for key, pm_ev in pm_lookup.items():
+                title = pm_ev["title"]
                 if " vs" not in title:
                     continue
-                # Parse teams from title
                 parts = title.split(" vs. ", 1) if " vs. " in title else title.split(" vs ", 1)
                 if len(parts) != 2:
                     continue
-                away_t, home_t = parts[0].strip().lower(), parts[1].strip().lower()
-                if (away_t, home_t) in existing_titles or (home_t, away_t) in existing_titles:
-                    continue  # Schon von ESPN dabei
-                # Nur Spiele die innerhalb von -3h bis +48h liegen
+                away_t = parts[0].strip()
+                home_t = parts[1].strip()
+                pair = tuple(sorted([home_t.lower(), away_t.lower()]))
+                if pair in seen_pairs:
+                    continue
+
+                # Only within 48h
                 pm_end = pm_ev.get("end", "")
                 try:
-                    from datetime import timezone as _tz2
-                    end_dt = datetime.fromisoformat(pm_end.replace('Z', '+00:00'))
-                    hours_from_now = (end_dt - datetime.now(_tz2.utc)).total_seconds() / 3600
+                    end_dt = datetime.fromisoformat(pm_end.replace("Z", "+00:00"))
+                    hours_from_now = (end_dt - now).total_seconds() / 3600
                     if hours_from_now < -3 or hours_from_now > 48:
-                        continue  # Zu alt oder zu weit in der Zukunft
+                        continue
                     start_iso_pm = pm_end
                 except Exception:
                     continue
-                # Spreads aus pm_ev laden
-                pm_spreads = []
+
+                ml = pm_ev.get("moneyline", {})
+                home_pm = ml.get(home_t.lower())
+                away_pm = ml.get(away_t.lower())
+                # Fuzzy fallback
+                if home_pm is None:
+                    for k, v in ml.items():
+                        if home_t.lower() in k:
+                            home_pm = v
+                if away_pm is None:
+                    for k, v in ml.items():
+                        if away_t.lower() in k:
+                            away_pm = v
+
+                spread_out = []
                 for sp in pm_ev.get("spreads", []):
-                    sp_sides = []
-                    for i, (outcome, price) in enumerate(zip(sp["outcomes"], sp["prices"])):
-                        sp_sides.append({"outcome": outcome, "price": price, "kelly": None})
-                    pm_spreads.append({
+                    sides = [{"outcome": o, "price": p, "kelly": None}
+                             for o, p in zip(sp["outcomes"], sp["prices"])]
+                    spread_out.append({
                         "question": sp["question"],
                         "condition_id": sp["condition_id"],
                         "liquidity": sp["liquidity"],
-                        "sides": sp_sides,
+                        "sides": sides,
                     })
 
-                home_pm = pm_ev.get("moneyline", {}).get(parts[1].strip().lower())
-                away_pm = pm_ev.get("moneyline", {}).get(parts[0].strip().lower())
-
                 games.append({
-                    "league": league_label,
-                    "home": parts[1].strip(), "away": parts[0].strip(),
+                    "league": "NBA",
+                    "home": home_t, "away": away_t,
                     "home_score": "", "away_score": "",
                     "status": "Scheduled", "start_iso": start_iso_pm,
                     "clock": "", "period": 0,
                     "home_wp": None, "away_wp": None,
-                    "home_pm_price": home_pm,
-                    "away_pm_price": away_pm,
+                    "home_pm_price": home_pm, "away_pm_price": away_pm,
                     "home_kelly": None, "away_kelly": None,
-                    "spread_markets": pm_spreads,
+                    "spread_markets": spread_out,
                     "pm_url": f"https://polymarket.com/event/{pm_ev.get('slug','')}" if pm_ev.get("slug") else None,
                     "has_market": True,
                 })
 
+        # Sort by start time
         games.sort(key=lambda g: g["start_iso"])
         return JSONResponse({"games": games})
     except Exception as e:
-        logger.error(f"todays-games error: {e}")
+        import traceback
+        logger.error(f"todays-games error: {e}\n{traceback.format_exc()}")
         return JSONResponse({"games": [], "error": str(e)})
+
+
+@app.get("/api/journal-meta")
+async def get_journal_meta():
+    """Return bot_id and live_buy_tier per condition_id from journal."""
+    try:
+        journal_path = Path(TRADING_DIR) / "journal.json"
+        journal = json.loads(journal_path.read_text()) if journal_path.exists() else {}
+        meta = {}
+        for t in journal.get("trades", []):
+            cid = t.get("condition_id")
+            if cid:
+                meta[cid] = {
+                    "bot_id": t.get("bot_id"),
+                    "live_buy_tier": t.get("live_buy_tier"),
+                }
+        return JSONResponse(meta)
+    except Exception as e:
+        logger.error(f"Journal meta error: {e}")
+        return JSONResponse({})
 
 
 @app.get("/api/balance-history")
