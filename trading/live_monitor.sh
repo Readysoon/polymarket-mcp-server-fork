@@ -645,13 +645,46 @@ for event in espn_events:
                         print(f'[LIVEBUY] Reduzierter Bet ${actual_bet:.2f} < Min ${BUY_MIN_BET:.2f}, skip')
                         continue
 
-                result = asyncio.run(buy_position(token_id, buy_price, actual_bet))
-                bet = actual_bet  # Update für Journal-Eintrag
+                # Loop: probiere immer kleinere Beträge bis FOK erfolgreich
+                total_filled_shares = 0.0
+                total_filled_usd = 0.0
+                attempt_shares = actual_shares
+                attempt_bet = actual_bet
+                last_result = None
+                while attempt_bet >= BUY_MIN_BET:
+                    attempt_result = asyncio.run(buy_position(token_id, buy_price, attempt_bet))
+                    print(f'  Attempt {attempt_shares:.1f} shares ${attempt_bet:.2f}: filled={attempt_result.get("filled")} err={attempt_result.get("error","")}')
+                    if attempt_result.get('filled'):
+                        total_filled_shares += attempt_shares
+                        total_filled_usd += attempt_bet
+                        last_result = attempt_result
+                        print(f'  ✓ Filled {attempt_shares:.1f} shares — total so far: {total_filled_shares:.1f} shares ${total_filled_usd:.2f}')
+                        # Prüfe ob noch mehr Liquidität vorhanden
+                        remaining = actual_shares - total_filled_shares
+                        if remaining < 1:
+                            break
+                        next_shares = round(min(remaining, attempt_shares), 2)
+                        next_bet = round(next_shares * buy_price, 2)
+                        if next_bet < BUY_MIN_BET:
+                            break
+                        attempt_shares = next_shares
+                        attempt_bet = next_bet
+                    else:
+                        # FOK miss — halbiere und probiere nochmal
+                        attempt_shares = round(attempt_shares / 2, 2)
+                        attempt_bet = round(attempt_shares * buy_price, 2)
+                        if attempt_bet < BUY_MIN_BET:
+                            break
+
+                result = last_result or {'filled': False}
+                bet = total_filled_usd if total_filled_usd > 0 else bet
+                actual_shares = total_filled_shares if total_filled_shares > 0 else actual_shares
+                print(f'[LIVEBUY] Gesamt gefüllt: {total_filled_shares:.1f} shares / ${total_filled_usd:.2f} von Ziel ${actual_bet:.2f}')
 
             print(f'BUY result: {result}')
             filled = result.get('filled', False) or (result.get('success') and result.get('orderID') and PAPER_TRADING)
             if not filled:
-                print(f'[LIVEBUY] Order not filled (FOK miss oder kein orderID) — kein Journal-Eintrag')
+                print(f'[LIVEBUY] Keine einzige Order gefüllt — kein Journal-Eintrag')
                 continue
             if result.get('success') or result.get('orderID'):
                 bought_this_run.add((cid, active_tier_idx))
