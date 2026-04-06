@@ -829,6 +829,16 @@ async def get_todays_games():
                                     "sides": sp_sides,
                                 })
 
+                        # Nur Spiele die innerhalb der letzten 14h oder in der Zukunft liegen
+                        from datetime import timezone as _tz
+                        try:
+                            game_dt = datetime.fromisoformat(start_iso.replace('Z', '+00:00'))
+                            age_hours = (datetime.now(_tz.utc) - game_dt).total_seconds() / 3600
+                            if age_hours > 14:
+                                continue  # Spiel zu alt (>14h), nicht mehr anzeigen
+                        except Exception:
+                            pass
+
                         games.append({
                             "league": league_label,
                             "home": home_name, "away": away_name,
