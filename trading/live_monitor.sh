@@ -350,7 +350,9 @@ async def buy_position(token_id, price, size_usd):
     # FOK = Fill or Kill: sofort gefüllt oder sofort storniert
     # Kein offenes GTC das nie gefüllt wird aber als "Trade" gilt
     # Preis leicht über Ask damit wir tatsächlich matchen
-    result = await client.post_order(token_id=token_id, price=round(price + 0.01, 3),
+    order_price = round(price + 0.01, 2)  # 2 decimal places → maker_amount stays clean
+    shares = round(size_usd / order_price, 2)  # 2 decimal shares: price*shares has max 4 digits
+    result = await client.post_order(token_id=token_id, price=order_price,
                                      size=shares, side='BUY', order_type='FOK')
 
     # FOK: prüfe ob wirklich gefüllt — errorMsg "no match" bedeutet nicht gefüllt
@@ -616,11 +618,40 @@ for event in espn_events:
                 result = {'success': True, 'orderID': f'PAPER-{cid[:16]}', 'status': 'paper', 'paper': True}
                 print(f'📝 PAPER LIVE BUY: würde {buy_side} @{buy_price:.3f} für ${bet:.2f} kaufen')
             else:
-                result = asyncio.run(buy_position(token_id, buy_price, bet))
+                # Prüfe verfügbare Liquidität im Ask-Buch
+                shares_wanted = round(bet / buy_price, 2)
+                available_shares = 0.0
+                try:
+                    book = httpx.get(f'https://clob.polymarket.com/book?token_id={token_id}', timeout=5).json()
+                    for ask in book.get('asks', []):
+                        if float(ask.get('price', 1)) <= buy_price + 0.02:  # leichte Toleranz
+                            available_shares += float(ask.get('size', 0))
+                except Exception as _be:
+                    print(f'Book check error: {_be}')
+                    available_shares = shares_wanted  # assume ok if check fails
+
+                if available_shares <= 0:
+                    print(f'[LIVEBUY] Kein Liquidität im Ask-Buch, skip')
+                    continue
+
+                # Wenn nicht genug für volle Order → halbe Shares probieren (min 2 Retries)
+                actual_shares = shares_wanted
+                actual_bet = bet
+                if available_shares < shares_wanted:
+                    actual_shares = round(min(available_shares * 0.9, shares_wanted / 2), 2)
+                    actual_bet = round(actual_shares * buy_price, 2)
+                    print(f'[LIVEBUY] Nur {available_shares:.1f} Shares verfügbar → reduziere auf {actual_shares:.1f} Shares (${actual_bet:.2f})')
+                    if actual_bet < BUY_MIN_BET:
+                        print(f'[LIVEBUY] Reduzierter Bet ${actual_bet:.2f} < Min ${BUY_MIN_BET:.2f}, skip')
+                        continue
+
+                result = asyncio.run(buy_position(token_id, buy_price, actual_bet))
+                bet = actual_bet  # Update für Journal-Eintrag
+
             print(f'BUY result: {result}')
             filled = result.get('filled', False) or (result.get('success') and result.get('orderID') and PAPER_TRADING)
             if not filled:
-                print(f'[LIVEBUY] Order not filled (FOK miss or no orderID) — kein Journal-Eintrag')
+                print(f'[LIVEBUY] Order not filled (FOK miss oder kein orderID) — kein Journal-Eintrag')
                 continue
             if result.get('success') or result.get('orderID'):
                 bought_this_run.add((cid, active_tier_idx))
