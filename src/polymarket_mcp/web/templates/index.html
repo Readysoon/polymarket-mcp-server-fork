@@ -575,7 +575,7 @@
         <div class="trades-section">
             <div class="section-header">
                 <div>
-                    <div class="section-title">🏟️ Today's Games</div>
+                    <div class="section-title">🏀 Today's NBA Games</div>
                     <div class="section-subtitle" id="games-subtitle">Loading...</div>
                 </div>
             </div>
@@ -968,8 +968,8 @@
                 const x = padL + (idx / (history.length - 1)) * chartW;
                 const t = times[idx];
                 const label = activeRangeHours > 24
-                    ? t.toLocaleDateString('de-AT', { timeZone: 'Europe/Vienna', month: 'short', day: 'numeric' })
-                    : t.toLocaleTimeString('de-AT', { timeZone: 'Europe/Vienna', hour: '2-digit', minute: '2-digit' });
+                    ? t.toLocaleDateString([], { month: 'short', day: 'numeric' })
+                    : t.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 ctx.fillText(label, x, H - 4);
             }
 
@@ -1044,8 +1044,7 @@
                 const total = games.length;
                 const live = games.filter(g => g.status === 'In Progress' || g.status === 'Halftime').length;
                 const withMarket = games.filter(g => g.has_market).length;
-                const leagues = [...new Set(games.map(g => g.league))].join(' · ');
-                subtitle.textContent = `${total} games today (${leagues}) · ${live} live · ${withMarket} on Polymarket`;
+                subtitle.textContent = `${total} games today · ${live} live · ${withMarket} on Polymarket`;
 
                 if (games.length === 0) {
                     container.innerHTML = '<div class="empty-state" style="padding:1.5rem;font-size:0.85rem">No games today</div>';
@@ -1055,8 +1054,7 @@
                 container.innerHTML = games.map(g => {
                     const isLive = g.status === 'In Progress' || g.status === 'Halftime';
                     const isFinal = g.status === 'Final' || g.status === 'Game Over';
-                    const INN = {timeZone: 'Europe/Vienna', hour:'2-digit', minute:'2-digit'};
-                    const startTime = g.start_iso ? new Date(g.start_iso).toLocaleTimeString('de-AT', INN) : '';
+                    const startTime = g.start_iso ? new Date(g.start_iso).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
 
                     // Status badge
                     let statusBadge = '';
@@ -1100,56 +1098,42 @@
                         : `<span style="color:#374151;font-size:0.6rem;padding:2px 6px;">no market</span>`;
 
                     // League badge
-                    const leagueColors = {NBA:'#c084fc', NFL:'#60a5fa', NCAAB:'#fb923c', MLB:'#34d399'};
-                    const leagueColor = leagueColors[g.league] || '#9ca3af';
-                    const leagueBadge = `<span style="background:rgba(255,255,255,0.07);color:${leagueColor};font-size:0.6rem;font-weight:700;padding:2px 6px;border-radius:3px;">${g.league}</span>`;
+                    const leagueColors = {NBA:'#a855f7',NFL:'#3b82f6',NCAAB:'#f97316',MLB:'#22c55e'};
+                    const leagueColor = leagueColors[g.league] || '#6b7280';
+                    const leagueBadge = g.league ? `<span style="background:${leagueColor}22;color:${leagueColor};font-size:0.55rem;font-weight:700;padding:1px 5px;border-radius:3px;">${g.league}</span>` : '';
 
-                    // Moneyline price + Kelly row
-                    function teamPriceInfo(name, price, kelly) {
-                        if (!price) return '';
-                        const priceStr = (price * 100).toFixed(0) + '\u00a2';
-                        const kellyPct = kelly != null ? (kelly * 100).toFixed(1) + '%' : null;
-                        const kellyColor = kelly > 0.10 ? '#10b981' : kelly > 0 ? '#f59e0b' : '#6b7280';
-                        return `<span style="font-size:0.65rem;color:#6b7280;">${name}:</span> ` +
-                               `<span style="font-size:0.7rem;font-weight:600;color:#a855f7;">${priceStr}</span>` +
-                               (kellyPct ? ` <span style="font-size:0.65rem;color:${kellyColor};">K:${kellyPct}</span>` : '');
+                    // ML prices row
+                    let mlRow = '';
+                    if (g.away_pm_price !== null && g.away_pm_price !== undefined) {
+                        const fmt = p => p !== null && p !== undefined ? Math.round(p * 100) + '¢' : '—';
+                        const awayK = g.away_kelly ? ` <span style="color:#10b981;font-size:0.6rem">(K:${g.away_kelly}%)</span>` : '';
+                        const homeK = g.home_kelly ? ` <span style="color:#10b981;font-size:0.6rem">(K:${g.home_kelly}%)</span>` : '';
+                        mlRow = `<div style="font-size:0.7rem;color:#9ca3af;margin-top:3px;">ML ${g.away}: <b style="color:#e5e7eb">${fmt(g.away_pm_price)}</b>${awayK} · ${g.home}: <b style="color:#e5e7eb">${fmt(g.home_pm_price)}</b>${homeK}</div>`;
                     }
-                    const awayInfo = teamPriceInfo(g.away, g.away_pm_price, g.away_kelly);
-                    const homeInfo = teamPriceInfo(g.home, g.home_pm_price, g.home_kelly);
-                    const mlRow = (awayInfo || homeInfo)
-                        ? `<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:2px;"><span style="font-size:0.6rem;color:#6b7280;padding:1px 4px;background:#1a1a2e;border-radius:3px;">ML</span> ${awayInfo} ${homeInfo}</div>`
-                        : '';
 
-                    // Spread markets row
-                    const spreads = g.spread_markets || [];
-                    const spreadRows = spreads.map(sp => {
-                        const sides = (sp.sides || []).map(s => {
-                            const p = (s.price * 100).toFixed(0) + '\u00a2';
-                            const k = s.kelly != null ? (s.kelly * 100).toFixed(1) + '%' : null;
-                            const kc = s.kelly > 0.10 ? '#10b981' : s.kelly > 0 ? '#f59e0b' : '#6b7280';
-                            return `<span style="font-size:0.65rem;color:#9ca3af;">${s.outcome}:</span> <span style="font-size:0.7rem;font-weight:600;color:#818cf8;">${p}</span>` +
-                                   (k ? ` <span style="font-size:0.65rem;color:${kc};">K:${k}</span>` : '');
-                        }).join(' · ');
-                        const liqK = sp.liquidity >= 1000 ? '$' + (sp.liquidity/1000).toFixed(0) + 'K' : '$' + sp.liquidity.toFixed(0);
-                        return `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;align-items:center;">
-                            <span style="font-size:0.6rem;color:#f59e0b;padding:1px 4px;background:#1a1a2e;border-radius:3px;">SPREAD</span>
-                            <span style="font-size:0.65rem;color:#6b7280;">${sp.question.replace('Spread: ','')}</span>
-                            ${sides}
-                            <span style="font-size:0.6rem;color:#374151;">${liqK} liq</span>
-                        </div>`;
-                    }).join('');
+                    // Spread markets
+                    let spreadsHtml = '';
+                    if (g.spread_markets && g.spread_markets.length > 0) {
+                        spreadsHtml = g.spread_markets.map(sp => {
+                            const sides = (sp.sides || []).map(s => {
+                                const k = s.kelly ? ` <span style="color:#10b981">(K:${s.kelly}%)</span>` : '';
+                                return `${s.outcome}: <b style="color:#e5e7eb">${Math.round(s.price*100)}¢</b>${k}`;
+                            }).join(' · ');
+                            const liq = sp.liquidity >= 1000 ? '$' + Math.round(sp.liquidity/1000) + 'k' : '$' + Math.round(sp.liquidity);
+                            return `<div style="font-size:0.68rem;color:#9ca3af;margin-top:2px;"><span style="color:#6366f1;font-weight:600">SPREAD</span> ${sp.question}: ${sides} <span style="color:#4b5563">${liq} liq</span></div>`;
+                        }).join('');
+                    }
 
-                    return `<div class="trade-row" style="flex-direction:column;align-items:stretch;gap:3px;padding:0.65rem 1rem;">
+                    return `<div class="trade-row" style="flex-direction:column;align-items:stretch;gap:4px;padding:0.65rem 1rem;">
                         <div style="display:flex;align-items:center;gap:6px;">
-                            ${leagueBadge}
-                            ${statusBadge}
+                            ${leagueBadge}${statusBadge}
                             <span style="font-size:0.85rem;font-weight:600;flex:1;">${g.away} <span style="color:#6b7280;">@</span> ${g.home}</span>
                             ${scoreStr ? `<span style="font-size:0.85rem;font-weight:700;font-family:monospace;color:#e5e7eb;">${scoreStr}</span>` : ''}
                             ${pmBadge}
                         </div>
-                        ${mlRow}
-                        ${spreadRows}
                         ${wpBars}
+                        ${mlRow}
+                        ${spreadsHtml}
                     </div>`;
                 }).join('');
             } catch (e) {
