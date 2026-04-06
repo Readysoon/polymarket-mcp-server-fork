@@ -881,6 +881,22 @@ async def get_todays_games():
                     start_iso_pm = pm_end  # Approximation
                 except Exception:
                     continue
+                # Spreads aus pm_ev laden
+                pm_spreads = []
+                for sp in pm_ev.get("spreads", []):
+                    sp_sides = []
+                    for i, (outcome, price) in enumerate(zip(sp["outcomes"], sp["prices"])):
+                        sp_sides.append({"outcome": outcome, "price": price, "kelly": None})
+                    pm_spreads.append({
+                        "question": sp["question"],
+                        "condition_id": sp["condition_id"],
+                        "liquidity": sp["liquidity"],
+                        "sides": sp_sides,
+                    })
+
+                home_pm = pm_ev.get("moneyline", {}).get(parts[1].strip().lower())
+                away_pm = pm_ev.get("moneyline", {}).get(parts[0].strip().lower())
+
                 games.append({
                     "league": league_label,
                     "home": parts[1].strip(), "away": parts[0].strip(),
@@ -888,10 +904,10 @@ async def get_todays_games():
                     "status": "Scheduled", "start_iso": start_iso_pm,
                     "clock": "", "period": 0,
                     "home_wp": None, "away_wp": None,
-                    "home_pm_price": pm_ev.get("moneyline", {}).get(parts[1].strip().lower()),
-                    "away_pm_price": pm_ev.get("moneyline", {}).get(parts[0].strip().lower()),
+                    "home_pm_price": home_pm,
+                    "away_pm_price": away_pm,
                     "home_kelly": None, "away_kelly": None,
-                    "spread_markets": [],
+                    "spread_markets": pm_spreads,
                     "pm_url": f"https://polymarket.com/event/{pm_ev.get('slug','')}" if pm_ev.get("slug") else None,
                     "has_market": True,
                 })
