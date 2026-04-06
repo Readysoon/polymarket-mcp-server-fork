@@ -171,14 +171,29 @@ def fetch_markets_for_teams(live_teams):
 
     def search_team(team):
         try:
-            r = httpx.get(
-                'https://gamma-api.polymarket.com/markets',
-                params={'active': 'true', 'closed': 'false', 'limit': '10', 'search': team},
-                timeout=6
-            )
-            data = r.json() if isinstance(r.json(), list) else r.json().get('markets', r.json())
+            # Probiere mehrere Suchanfragen: Kurzname, Varianten
+            candidates = []
+            for search_term in [team, team.title()]:
+                for endpoint, params in [
+                    ('https://gamma-api.polymarket.com/markets', {'active': 'true', 'closed': 'false', 'limit': '20', 'search': search_term}),
+                    ('https://gamma-api.polymarket.com/events', {'active': 'true', 'closed': 'false', 'limit': '10', 'search': search_term, 'tag_slug': 'nba'}),
+                ]:
+                    try:
+                        r = httpx.get(endpoint, params=params, timeout=6)
+                        raw = r.json()
+                        # Events API gibt Liste von Events mit markets drin
+                        if 'events' in endpoint or (isinstance(raw, list) and raw and 'markets' in raw[0]):
+                            for ev in (raw if isinstance(raw, list) else []):
+                                for m in ev.get('markets', []):
+                                    candidates.append(m)
+                        else:
+                            data = raw if isinstance(raw, list) else raw.get('markets', raw)
+                            candidates.extend(data if isinstance(data, list) else [])
+                    except:
+                        pass
             results = []
-            for m in (data if isinstance(data, list) else []):
+            seen = set()
+            for m in candidates:
                 q = m.get('question', '')
                 cid = m.get('conditionId', '') or m.get('condition_id', '')
                 if not cid: continue
@@ -214,6 +229,7 @@ def fetch_markets_for_teams(live_teams):
                     'liquidity': float(m.get('liquidity', 0) or 0),
                     'market_type': 'spread' if is_spread and not is_moneyline else 'moneyline',
                 })
+                seen.add(cid)
             return results
         except Exception as e:
             print(f'Polymarket search error ({team}): {e}')
@@ -228,13 +244,57 @@ def fetch_markets_for_teams(live_teams):
                     seen_cids.add(m['condition_id'])
                     markets.append(m)
 
-    # Fallback to watchlist if nothing found
+    # Fallback: alle heutigen NBA/MLB Events direkt von Polymarket laden
     if not markets:
         try:
-            markets = json.load(open(f'{TRADING_DIR}/watchlist.json')).get('markets', [])
-            print(f'Fallback: watchlist ({len(markets)} markets)')
-        except:
-            pass
+            fallback = []
+            seen_fb = set()
+            for tag in ['nba', 'mlb', 'nfl']:
+                r = httpx.get('https://gamma-api.polymarket.com/events',
+                    params={'tag_slug': tag, 'active': 'true', 'closed': 'false', 'limit': 50},
+                    timeout=8)
+                for ev in r.json():
+                    title = ev.get('title','')
+                    if ' vs' not in title: continue
+                    for m in ev.get('markets', []):
+                        q = m.get('question','')
+                        cid = m.get('conditionId','') or m.get('condition_id','')
+                        if not cid or cid in seen_fb: continue
+                        q_lower = q.lower()
+                        if any(x in q_lower for x in ['o/u','over','under','total','pts','points','assists','rebounds','1h ']):
+                            continue
+                        oprices_raw = m.get('outcomePrices', ['0.5','0.5'])
+                        if isinstance(oprices_raw, str):
+                            import json as _jj
+                            try: oprices_raw = _jj.loads(oprices_raw)
+                            except: oprices_raw = ['0.5','0.5']
+                        yes_price = float(oprices_raw[0]) if oprices_raw else 0.5
+                        tokens = m.get('clobTokenIds',[]) or []
+                        if isinstance(tokens, str):
+                            import json as _jj
+                            try: tokens = _jj.loads(tokens)
+                            except: tokens = []
+                        seen_fb.add(cid)
+                        fallback.append({
+                            'question': q,
+                            'condition_id': cid,
+                            'yes_price': yes_price,
+                            'no_price': round(1 - yes_price, 4),
+                            'yes_token_id': tokens[0] if len(tokens) > 0 else '',
+                            'no_token_id': tokens[1] if len(tokens) > 1 else '',
+                            'end_datetime': m.get('endDate','') or '',
+                            'liquidity': float(m.get('liquidity', 0) or 0),
+                            'market_type': 'spread' if 'spread' in q_lower else 'moneyline',
+                        })
+            if fallback:
+                markets = fallback
+                print(f'Fallback: {len(markets)} Polymarket markets from today events')
+            else:
+                # Letzter Fallback: Watchlist
+                markets = json.load(open(f'{TRADING_DIR}/watchlist.json')).get('markets', [])
+                print(f'Fallback: watchlist ({len(markets)} markets)')
+        except Exception as _fe:
+            print(f'Fallback error: {_fe}')
     print(f'Markets fetched for {len(live_teams)} live teams: {len(markets)} found')
     return markets
 
