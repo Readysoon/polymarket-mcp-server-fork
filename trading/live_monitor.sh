@@ -422,9 +422,10 @@ async def buy_position(token_id, price, size_usd):
             print(f'  Best ask: {best_ask:.3f} → order price: {order_price:.3f}')
     except Exception as _be:
         print(f'  Book check failed: {_be}, using fallback price')
-    shares = round(size_usd / order_price, 2)
+    # FAK BUY: size = USD-Betrag (nicht Shares!) laut Polymarket Docs
+    # "BUY: specify the dollar amount you want to spend"
     result = await client.post_order(token_id=token_id, price=order_price,
-                                     size=shares, side='BUY', order_type='FAK')
+                                     size=size_usd, side='BUY', order_type='FAK')
 
     error_msg = result.get('errorMsg', '') or ''
     if 'no match' in error_msg.lower() or 'not matched' in error_msg.lower():

@@ -267,11 +267,21 @@ class PolymarketClient:
             )
 
         try:
+            # FAK/FOK BUY: size = USD amount (not shares) per Polymarket docs
+            # GTC/GTD BUY: size = shares
+            actual_size = size
+            if order_type.upper() in ('FAK', 'FOK') and side.upper() == 'BUY':
+                # size_usd is passed in, keep as-is (USD amount)
+                actual_size = size
+            elif order_type.upper() in ('GTC', 'GTD') and side.upper() == 'BUY':
+                # size in shares — already correct
+                actual_size = size
+
             # Build order args (OrderArgs does not accept order_type)
             order_args = OrderArgs(
                 token_id=token_id,
                 price=price,
-                size=size,
+                size=actual_size,
                 side=side.upper(),
             )
 
