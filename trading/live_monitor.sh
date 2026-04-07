@@ -86,23 +86,23 @@ def get_espn_winprob():
                 if desc not in ('In Progress', 'Halftime', 'In Progress - Rain Delay'):
                     continue
                 prob = comp.get('situation', {}).get('lastPlay', {}).get('probability', {})
-                if not prob:
-                    continue
+                # NOTE: prob kann leer sein (Timeout, zwischen Quarters, Dead Ball)
+                # Wir tracken das Spiel trotzdem — Win% nur wenn vorhanden
                 competitors = comp.get('competitors', [])
                 teams = []
                 scores = {}
                 for c in competitors:
                     name = c['team']['shortDisplayName']
                     home = c.get('homeAway', '') == 'home'
-                    wp   = prob.get('homeWinPercentage' if home else 'awayWinPercentage', None)
+                    wp   = prob.get('homeWinPercentage' if home else 'awayWinPercentage', None) if prob else None
                     try:
                         score = int(c.get('score', 0) or 0)
                     except:
                         score = 0
                     scores[name.lower()] = score
+                    teams.append(name.lower())
                     if wp is not None:
                         results[name.lower()] = round(wp, 4)
-                        teams.append(name.lower())
                 # Calculate margins: positive = leading
                 if len(teams) == 2:
                     t0, t1 = teams[0], teams[1]
@@ -154,9 +154,11 @@ def get_clob_price(token_id):
         return None, None, None
 
 espn_data, espn_events, espn_margins = get_espn_winprob()
-if not espn_data:
+if not espn_events:
     print('No ESPN live games')
     sys.exit(0)
+if not espn_data:
+    print(f'ESPN live games found ({len(espn_events)}) but no win probability data yet (timeout/between quarters) — continuing for market search')
 
 print(f'ESPN live: {list(espn_data.keys())}')
 
