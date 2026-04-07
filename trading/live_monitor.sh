@@ -675,10 +675,16 @@ for event in espn_events:
         buy_side = ask_claude_side(q, team, wp, yes_mid, no_mid)
 
         if buy_side == 'YES':
-            buy_price = yes_clob_ask if yes_clob_ask else yes_price
+            if yes_clob_ask is None:
+                print(f'[LIVEBUY] {team} — YES ask=None (kein Angebot im CLOB), skip')
+                continue
+            buy_price = yes_clob_ask
             token_id  = yes_token_id
         else:
-            buy_price = no_clob_ask if no_clob_ask else no_price
+            if no_clob_ask is None:
+                print(f'[LIVEBUY] {team} — NO ask=None (kein Angebot im CLOB), skip')
+                continue
+            buy_price = no_clob_ask
             token_id  = no_token_id
 
         print(f'[SIDE] {team} ESPN={wp:.1%} | YES={yes_mid:.3f} NO={no_mid:.3f} → Claude says: {buy_side} @{buy_price:.3f}')
