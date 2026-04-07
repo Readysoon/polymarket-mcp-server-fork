@@ -447,15 +447,23 @@ async def buy_position(token_id, price, size_usd):
     # Nimm den echten besten Ask aus dem CLOB — garantiert Fill wenn Liquidität vorhanden
     import httpx as _hx
     order_price = price + 0.01  # fallback
+    best_ask = None
+    ask_size_usd = 0
     try:
         book = _hx.get(f'https://clob.polymarket.com/book?token_id={token_id}', timeout=5).json()
         asks = book.get('asks', [])
         if asks:
             best_ask = float(asks[0].get('price', price + 0.01))
+            ask_size_usd = float(asks[0].get('size', 0)) * best_ask
             # Zahle max 3¢ über unserem Zielpreis (Edge bleibt noch positiv)
             order_price = min(best_ask + 0.005, price + 0.03)
             order_price = round(order_price, 3)
-            print(f'  Best ask: {best_ask:.3f} → order price: {order_price:.3f}')
+            print(f'  Best ask: {best_ask:.3f} size_usd≈{ask_size_usd:.2f} → order price: {order_price:.3f}')
+            # Warnung wenn keine ausreichende Liquidität im CLOB
+            if ask_size_usd < size_usd * 0.5:
+                print(f'  ⚠️ Geringe Liquidität: nur ${ask_size_usd:.2f} verfügbar vs ${size_usd:.2f} gewünscht')
+        else:
+            print(f'  ⚠️ Kein Ask im CLOB — FAK wird wahrscheinlich scheitern')
     except Exception as _be:
         print(f'  Book check failed: {_be}, using fallback price')
     # FAK BUY: size = USD-Betrag (nicht Shares!) laut Polymarket Docs
@@ -464,13 +472,23 @@ async def buy_position(token_id, price, size_usd):
                                      size=size_usd, side='BUY', order_type='FAK')
 
     error_msg = result.get('errorMsg', '') or ''
-    if 'no match' in error_msg.lower() or 'not matched' in error_msg.lower():
-        print(f'FAK not filled: {error_msg}')
-        return {'success': False, 'error': error_msg, 'filled': False}
-
-    if not result.get('orderID') and not result.get('order_id'):
-        print(f'FAK no orderID: {result}')
-        return {'success': False, 'error': 'no orderID', 'filled': False}
+    if 'no match' in error_msg.lower() or 'not matched' in error_msg.lower() or not result.get('orderID'):
+        # FAK fehlgeschlagen — versuche GTC als Fallback (bleibt im Buch bis gefüllt)
+        print(f'FAK not filled ({error_msg or "no orderID"}), trying GTC fallback...')
+        import asyncio as _aio
+        await _aio.sleep(1)
+        gtc_price = round(order_price + 0.01, 3)  # Leicht aggressiver für GTC
+        gtc_price = min(gtc_price, price + 0.05)  # Aber max 5¢ über Ziel
+        result_gtc = await client.post_order(token_id=token_id, price=gtc_price,
+                                             size=size_usd, side='BUY', order_type='GTC')
+        gtc_error = result_gtc.get('errorMsg', '') or ''
+        print(f'GTC fallback result: {result_gtc}')
+        if result_gtc.get('orderID') and not gtc_error:
+            result_gtc['filled'] = True
+            result_gtc['order_type_used'] = 'GTC_fallback'
+            return result_gtc
+        return {'success': False, 'error': f'FAK: {error_msg} | GTC: {gtc_error}', 'filled': False,
+                'fak_result': result, 'gtc_result': result_gtc}
 
     result['filled'] = True
     return result
@@ -736,7 +754,29 @@ for event in espn_events:
             print(f'BUY result: {result}')
             filled = result.get('filled', False) or (result.get('success') and result.get('orderID') and PAPER_TRADING)
             if not filled:
-                print(f'[LIVEBUY] Keine einzige Order gefüllt — kein Journal-Eintrag')
+                err_detail = result.get('error', str(result))
+                print(f'[LIVEBUY] Keine einzige Order gefüllt — schreibe ERROR ins Journal')
+                journal['trades'].append({
+                    'bot_id': 'live_monitor',
+                    'timestamp': now.isoformat(),
+                    'question': market.get('question', ''),
+                    'condition_id': cid,
+                    'trade_side': buy_side,
+                    'entry_price': buy_price,
+                    'size_usd': bet,
+                    'shares': round(bet / buy_price, 2),
+                    'end_datetime': market.get('end_datetime', ''),
+                    'confidence_pct': round(wp * 100, 1),
+                    'research_summary': f'ESPN live: {team} {wp:.1%} win prob',
+                    'status': 'ERROR',
+                    'outcome': 'fok_not_filled',
+                    'pnl': None,
+                    'order_id': result.get('orderID') or result.get('fak_result', {}).get('orderID', ''),
+                    'live_buy_tier': active_tier_idx,
+                    'note': f'LIVE BUY tier{active_tier_idx}: ESPN {wp:.1%} vs Poly {buy_price:.2f} edge={edge:.1%} mult={div_mult}x | FAK+GTC not filled — {err_detail[:120]}',
+                    'paper': PAPER_TRADING,
+                })
+                json.dump(journal, open(f'{TRADING_DIR}/journal.json', 'w'), indent=2)
                 continue
             if result.get('success') or result.get('orderID'):
                 bought_this_run.add((cid, active_tier_idx))
