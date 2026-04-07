@@ -114,24 +114,58 @@ def get_espn_winprob():
         except Exception as e:
             print(f'ESPN {league} error: {e}')
 
-    # MLB via Fangraphs live win probability
+    # MLB via ESPN Summary win probability (Fangraphs blocked by Cloudflare)
     try:
-        r = httpx.get('https://www.fangraphs.com/api/livescoreboard', timeout=8)
-        for game in r.json().get('games', []):
-            if game.get('GameStatus') != 'Inprogress':
+        mlb_sb = httpx.get('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard', timeout=8)
+        for event in mlb_sb.json().get('events', []):
+            desc = event.get('status', {}).get('type', {}).get('description', '')
+            if desc not in ('In Progress', 'Halftime', 'In Progress - Rain Delay'):
                 continue
-            home_wp = game.get('HomeWinProbability')
-            away_wp = game.get('AwayWinProbability')
-            home_team = game.get('HomeTeamShortName', '').lower()
-            away_team = game.get('AwayTeamShortName', '').lower()
-            if home_wp is not None and home_team:
-                results[home_team] = round(float(home_wp), 4)
-            if away_wp is not None and away_team:
-                results[away_team] = round(float(away_wp), 4)
-            if home_team and away_team:
-                events_raw.append({'teams': [home_team, away_team], 'league': 'mlb'})
+            event_id = event.get('id', '')
+            comp = event.get('competitions', [{}])[0]
+            competitors = comp.get('competitors', [])
+            home_team = None
+            away_team = None
+            home_score = 0
+            away_score = 0
+            for c in competitors:
+                name = c['team']['shortDisplayName'].lower()
+                try:
+                    score = int(c.get('score', 0) or 0)
+                except:
+                    score = 0
+                if c.get('homeAway') == 'home':
+                    home_team = name
+                    home_score = score
+                else:
+                    away_team = name
+                    away_score = score
+            # Fetch win probability from ESPN summary endpoint
+            if event_id and home_team and away_team:
+                try:
+                    summary_r = httpx.get(
+                        f'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/summary?event={event_id}',
+                        timeout=6
+                    )
+                    wp_list = summary_r.json().get('winprobability', [])
+                    if wp_list:
+                        home_wp = wp_list[-1].get('homeWinPercentage', 0.5)
+                        away_wp = round(1 - home_wp, 4)
+                        results[home_team] = round(float(home_wp), 4)
+                        results[away_team] = away_wp
+                        margin = home_score - away_score
+                        margins[home_team] = margin
+                        margins[away_team] = -margin
+                        events_raw.append({'teams': [home_team, away_team], 'league': 'mlb'})
+                        print(f'MLB ESPN summary: {away_team}@{home_team} | home_wp={home_wp:.3f}')
+                    else:
+                        # No win prob yet — still register the game
+                        events_raw.append({'teams': [home_team, away_team], 'league': 'mlb'})
+                except Exception as e2:
+                    print(f'MLB ESPN summary error ({event_id}): {e2}')
+                    events_raw.append({'teams': [home_team, away_team], 'league': 'mlb'})
     except Exception as e:
-        print(f'Fangraphs MLB error: {e}')
+        print(f'MLB ESPN error: {e}')
 
     return results, events_raw, margins
 
