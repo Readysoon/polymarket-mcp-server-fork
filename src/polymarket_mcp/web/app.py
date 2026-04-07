@@ -43,6 +43,7 @@ app = FastAPI(
 BASE_DIR = Path(__file__).parent
 STATIC_DIR = BASE_DIR / "static"
 TEMPLATES_DIR = BASE_DIR / "templates"
+TRADING_DIR = os.environ.get("TRADING_DIR", "/home/node/.openclaw/workspace/trading")
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -1040,6 +1041,9 @@ async def get_trending_markets(limit: int = 10):
         if result and len(result) > 0:
             import json
             data = json.loads(result[0].text)
+            # Normalize: wrap list in {"markets": [...]}
+            if isinstance(data, list):
+                return JSONResponse({"markets": data})
             return JSONResponse(data)
 
         return JSONResponse({"markets": []})
