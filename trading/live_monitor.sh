@@ -27,7 +27,7 @@ BUY_MIN_BET         = 2.50
 BUY_MAX_BET         = 99999.00  # kein Cap — Quarter Kelly bestimmt die Größe
 
 # 3 buy tiers per game — buy once per tier
-BUY_TIERS = [0.90, 0.95, 0.98]  # ESPN thresholds
+BUY_TIERS = [0.85, 0.90, 0.95]  # ESPN thresholds (T1=85%, T2=90%, T3=95%)
 
 TELEGRAM_BOT = 'https://api.telegram.org/bot8599638540:AAFVTzaLBWQmStBfdd3xSlPEJJQuMH4cEBI/sendMessage'
 CHAT_ID = '866661912'
