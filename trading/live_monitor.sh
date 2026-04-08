@@ -242,7 +242,7 @@ def fetch_markets_for_teams(live_teams):
                 is_moneyline = (' vs. ' in q or ' vs ' in q)
                 is_spread = ('spread' in q_lower or (team.lower() in q_lower and any(x in q for x in ['-', '+']) and '.5' in q))
                 if not is_moneyline and not is_spread: continue
-                if any(x in q_lower for x in ['o/u', 'over', 'under', 'handicap', 'total', 'map', 'game ', 'pts', 'points', 'assists', 'rebounds', 'wins the']):
+                if any(x in q_lower for x in ['o/u', 'over', ' under', 'handicap', 'total', 'map', 'game ', 'pts', 'points', 'assists', 'rebounds', 'wins the']):
                     continue
 
                 # outcomePrices kann JSON-String sein
@@ -297,7 +297,7 @@ def fetch_markets_for_teams(live_teams):
                         cid = m.get('conditionId','') or m.get('condition_id','')
                         if not cid or cid in seen_fb: continue
                         q_lower = q.lower()
-                        if any(x in q_lower for x in ['o/u','over','under','total','pts','points','assists','rebounds','1h ']):
+                        if any(x in q_lower for x in ['o/u','over',' under','total','pts','points','assists','rebounds','1h ']):
                             continue
                         oprices_raw = m.get('outcomePrices', ['0.5','0.5'])
                         if isinstance(oprices_raw, str):
