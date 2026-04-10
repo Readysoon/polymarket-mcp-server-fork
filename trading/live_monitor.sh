@@ -66,14 +66,14 @@ def get_espn_winprob():
     margins = {}      # team_lower → current lead margin (positive = leading, negative = trailing)
 
     # ESPN-based leagues with reliable live win probabilities
-    # NBA: year-round | NFL: Sept-Jan | NCAA Football: Sept-Jan | NCAAB: Nov-March
+    # NBA: year-round | NHL: Oct-June | NFL: Sept-Jan | NCAAB: Nov-March
     espn_sports = [
         ('nba',   'basketball'),
+        ('nhl',   'hockey'),
         ('nfl',   'football'),
         ('college-football', 'football'),
         ('ncaab', 'basketball/college-basketball'),
     ]
-    # Note: NHL excluded — no reliable live win probability source
     for league, sport in espn_sports:
         try:
             r = httpx.get(
